@@ -1,30 +1,19 @@
-import "@/app/globals.css";
-
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-
-import Providers from "@/components/Providers";
-
-const inter = Inter({ subsets: ["latin"] });
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Vet Management System",
-  description: "A sytem for managing vet activities",
+  description: "Fresh frontend and backend starter for vet management system.",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <ToastContainer />
-        <Providers>{children}</Providers>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

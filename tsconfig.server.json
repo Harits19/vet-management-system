@@ -17,7 +17,6 @@
   },
   "include": [
     "server/src/**/*.ts",
-    "src/database/**/*.ts",
-    "src/lib/**/*.ts"
+    "src/shared/**/*.ts"
   ]
 }

@@ -1,17 +1,11 @@
-import dotenv from "dotenv";
 import http from "http";
 import app from "./app";
-import { getApiPort } from "../../src/lib/env";
-
-dotenv.config({ path: ".env.local" });
-dotenv.config();
-
-const port = getApiPort();
+import { serverEnv } from "./config/env";
 
 const server = http.createServer(app);
 
-server.listen(port, () => {
-  console.log(`Express API running on http://localhost:${port}`);
+server.listen(serverEnv.apiPort, () => {
+  console.log(`Express API running on http://localhost:${serverEnv.apiPort}`);
 });
 
 const shutdown = (signal: string) => {

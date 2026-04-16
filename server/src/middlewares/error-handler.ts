@@ -9,7 +9,14 @@ export function errorHandler(
   const message =
     error instanceof Error ? error.message : "Terjadi kesalahan pada server.";
 
-  return res.status(400).json({
+  const normalized = message.toLowerCase();
+  const statusCode =
+    normalized.includes("unauthorized") ||
+    normalized.includes("email atau password salah")
+      ? 401
+      : 400;
+
+  return res.status(statusCode).json({
     success: false,
     message,
   });

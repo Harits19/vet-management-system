@@ -13,6 +13,9 @@ export default function HomePage() {
           </p>
         </div>
         <div className="actions">
+          <Link className="button secondary" href="/login">
+            Login
+          </Link>
           <Link className="button" href="/products">
             Buka Produk
           </Link>

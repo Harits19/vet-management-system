@@ -4,8 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
+    "dev:server": "tsx watch server/src/server.ts",
+    "dev:full": "concurrently -k -n next,api -c blue,green \"npm run dev\" \"npm run dev:server\"",
     "build": "next build",
+    "build:full": "npm run build && npm run build:server",
+    "build:server": "tsc -p tsconfig.server.json",
     "start": "next start",
+    "start:server": "node server/dist/server.js",
+    "start:full": "concurrently -k -n next,api -c blue,green \"npm run start\" \"npm run start:server\"",
     "lint": "next lint"
   },
   "dependencies": {
@@ -19,6 +25,9 @@
     "@material-tailwind/react": "^2.1.8",
     "@types/nodemailer": "^6.4.11",
     "bcrypt": "^5.1.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "mongoose": "^7.5.3",
     "next": "^14.0.1",
     "next-auth": "^4.24.5",
@@ -31,14 +40,18 @@
   "devDependencies": {
     "@faker-js/faker": "^8.1.0",
     "@types/bcrypt": "^5.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10",
+    "concurrently": "^9.2.1",
     "eslint": "^8",
     "eslint-config-next": "^13",
     "postcss": "^8",
     "tailwindcss": "^3",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

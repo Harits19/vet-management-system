@@ -1,39 +1,14 @@
 import { Product, ProductInput } from "@/shared/types";
+import { ProductDB } from "../models/product-model";
+import { mongoDBService } from "./mongodb-service";
 
 const now = () => new Date().toISOString();
 
-const products: Product[] = [
-  {
-    id: "prod-001",
-    kategori: "Obat",
-    kode: "OBT-001",
-    nama: "Salep Antiseptik",
-    deskripsi: "Salep untuk membantu perawatan luka ringan pada hewan.",
-    stok: 18,
-    pokok: 25000,
-    jual: 40000,
-    online: 38000,
-    tampil: true,
-    createdAt: now(),
-  },
-  {
-    id: "prod-002",
-    kategori: "Makanan",
-    kode: "MKN-002",
-    nama: "Dry Food Adult 1kg",
-    deskripsi: "Makanan kering premium untuk anjing dan kucing dewasa.",
-    stok: 32,
-    pokok: 58000,
-    jual: 76000,
-    online: 73000,
-    tampil: true,
-    createdAt: now(),
-  },
-];
-
 class ProductService {
-  getAll() {
-    return [...products];
+  async getAll() {
+    await mongoDBService.connect();
+    const products = await ProductDB.find().lean();
+    return products;
   }
 
   create(input: ProductInput) {
@@ -73,8 +48,6 @@ class ProductService {
       createdAt: now(),
       ...normalized,
     };
-
-    products.unshift(product);
 
     return product;
   }

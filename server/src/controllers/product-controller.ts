@@ -1,12 +1,17 @@
 import { NextFunction, Request, Response } from "express";
-import { ProductInput, ProductResponse, ProductsResponse } from "@/shared/types";
+import {
+  ProductInput,
+  ProductResponse,
+  ProductsResponse,
+} from "@/shared/types";
 import { productService } from "../services/product-service";
 
-export function getProducts(_req: Request, res: Response) {
+export async function getProducts(_req: Request, res: Response) {
+  const products = await productService.getAll();
   const response: ProductsResponse = {
     success: true,
     message: "Produk berhasil diambil.",
-    data: productService.getAll(),
+    data: products,
   };
 
   return res.json(response);

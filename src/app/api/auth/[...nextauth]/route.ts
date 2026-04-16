@@ -1,65 +1,24 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import { NextResponse } from "next/server";
 
-import connectDB from "@/database/connection";
-import User, { UserProps } from "@/database/models/User";
+const message =
+  "Autentikasi NextAuth sudah dimigrasikan ke Express. Gunakan backend Express /api/auth/login.";
 
-export const authOptions: NextAuthOptions = {
-  session: {
-    strategy: "jwt",
-    maxAge: 60 * 60,
-  },
-  providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      type: "credentials",
-      credentials: {
-        email: { label: "Username", type: "text", placeholder: "username" },
-        password: { label: "Password", type: "password" },
-      },
-
-      async authorize(credentials) {
-        await connectDB();
-
-        const user = await User.findByCredentials(
-          credentials?.email.trim()!,
-          credentials?.password.trim()!
-        );
-
-        return {
-          email: user.email,
-          image: "",
-          name: `${user.firstName} ${user.lastName}`,
-          id: user._id.toString(),
-          role: user.role,
-        };
-      },
-    }),
-  ],
-
-  callbacks: {
-    jwt: async ({ token, user }) => {
-      if (user)
-        token.user = {
-          ...token.user,
-          role: (user as unknown as UserProps).role,
-        };
-      return token;
+export async function GET() {
+  return NextResponse.json(
+    {
+      success: false,
+      message,
     },
-    session: async ({ session, token }) => {
-      if (session.user) {
-        session.user.role = token.user.role;
-      }
-      return session;
+    { status: 410 }
+  );
+}
+
+export async function POST() {
+  return NextResponse.json(
+    {
+      success: false,
+      message,
     },
-  },
-
-  pages: {
-    signIn: "/",
-    error: "/",
-  },
-};
-
-const handler = NextAuth(authOptions);
-
-export { handler as GET, handler as POST };
+    { status: 410 }
+  );
+}

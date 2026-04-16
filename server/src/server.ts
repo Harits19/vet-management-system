@@ -1,8 +1,12 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import http from "http";
 import app from "./app";
+import { getApiPort } from "../../src/lib/env";
 
-const port = Number(process.env.API_PORT || 4000);
+dotenv.config({ path: ".env.local" });
+dotenv.config();
+
+const port = getApiPort();
 
 const server = http.createServer(app);
 

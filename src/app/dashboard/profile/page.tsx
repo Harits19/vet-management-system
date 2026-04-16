@@ -1,14 +1,18 @@
-import { getServerSession } from "next-auth";
-
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 import Profile from "@/components/dashboard/Profile";
+import { getAuthUserFromCookies } from "@/lib/auth-next";
 
 export const revalidate = 0;
 
 const fetchUserDetails = async () => {
-  const session = await getServerSession(authOptions);
-  const name = session?.user?.name!;
-  const email = session?.user?.email!;
+  const user = await getAuthUserFromCookies();
+
+  if (!user) {
+    redirect("/");
+  }
+
+  const name = user.name;
+  const email = user.email;
   return { name, email };
 };
 

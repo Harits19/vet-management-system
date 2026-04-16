@@ -2,7 +2,6 @@
 
 import { FormEvent, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
 import { toast } from "react-toastify";
 import {
   Card,
@@ -15,6 +14,9 @@ import {
   CardFooter,
 } from "@material-tailwind/react";
 import Link from "next/link";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
 async function createUser(
   firstName: string,
@@ -52,10 +54,10 @@ const SignupForm = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const router = useRouter();
   const params = useSearchParams();
   const query = params?.get("callbackUrl");
-  const { data: session } = useSession();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -96,11 +98,25 @@ const SignupForm = () => {
     try {
       await createUser(firstName, lastName, email, password, confirmPassword);
 
-      await signIn("credentials", {
-        email,
-        password,
-        callbackUrl: "/dashboard",
+      const loginResponse = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
+
+      const loginResult = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        throw new Error(loginResult.error || "Login setelah registrasi gagal.");
+      }
+
+      router.replace("/dashboard");
     } catch (e) {
       setLoading(false);
       toast.error((e as Error).message, {
@@ -117,12 +133,26 @@ const SignupForm = () => {
   };
 
   useEffect(() => {
-    if (session) {
-      router.replace(query ? query.toString() : "/dashboard");
-    }
-  }, [router, query, session]);
+    const checkSession = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          credentials: "include",
+        });
 
-  if (session) {
+        if (response.ok) {
+          router.replace(query ? query.toString() : "/dashboard");
+          return;
+        }
+      } catch (_error) {
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
+    checkSession();
+  }, [router, query]);
+
+  if (checkingSession) {
     return (
       <div className="flex flex-col justify-center items-center flex-1 text-2xl">
         Redirecting...

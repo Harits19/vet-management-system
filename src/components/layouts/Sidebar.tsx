@@ -1,7 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { PowerIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import {
@@ -19,6 +18,9 @@ import {
   Typography,
 } from "@material-tailwind/react";
 import { useLayoutContext } from "@/contexts/layout-context";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
 interface SidenavType {
   dark: string;
@@ -41,11 +43,24 @@ const Sidebar = ({
   } = useLayoutContext();
 
   const pathname = usePathname();
+  const router = useRouter();
 
   const sidenavTypes: SidenavType = {
     dark: "bg-gradient-to-br from-blue-gray-800 to-blue-gray-900",
     white: "bg-white shadow-lg",
     transparent: "bg-transparent",
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } finally {
+      router.push("/");
+      router.refresh();
+    }
   };
 
   return (
@@ -111,7 +126,7 @@ const Sidebar = ({
       </div>
       <div className="flex-1 flex">
         <button
-          onClick={() => signOut()}
+          onClick={handleLogout}
           className="w-full self-end py-4 px-8 text-white bg-red-400 hover:bg-red-500 rounded-b-xl flex items-center"
         >
           <PowerIcon className="h-5 w-5 mr-4" />

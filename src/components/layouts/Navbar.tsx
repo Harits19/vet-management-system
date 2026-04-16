@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Navbar as DashNavbar,
   Typography,
@@ -34,15 +33,31 @@ import {
 
 import { useLayoutContext } from "@/contexts/layout-context";
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+
 const Navbar = () => {
   const {
     state: { fixedNavbar, openSidenav },
     dispatch,
   } = useLayoutContext();
   const pathname = usePathname();
+  const router = useRouter();
   const currentPage = pathname
     .split("/")
     .filter((el) => el !== "dashboard" && el !== "");
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } finally {
+      router.push("/");
+      router.refresh();
+    }
+  };
   return (
     <DashNavbar
       color={fixedNavbar ? "white" : "transparent"}
@@ -151,7 +166,7 @@ const Navbar = () => {
               <hr className="my-2 border-blue-gray-50" />
               <MenuItem
                 className="flex items-center gap-2 focus:bg-red-400 focus:text-white"
-                onClick={() => signOut()}
+                onClick={handleLogout}
               >
                 <PowerIcon className="h-5 w-5" />
                 <Typography variant="small" className="font-normal">

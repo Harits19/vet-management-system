@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-
-import { authOptions } from "../auth/[...nextauth]/route";
 import User from "@/database/models/User";
 import { hashPassword } from "@/database/auth";
 import connectDB from "@/database/connection";
+import { getAuthUserFromRequest } from "@/lib/auth-next";
 
 // Add new employee in the database
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const sessionUser = await getAuthUserFromRequest(req);
 
     // check if user session exists
-    if (!session) {
+    if (!sessionUser) {
       return NextResponse.json(
         {
           error: "Not Allowed to Access this resource",
@@ -24,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
     await connectDB();
 
-    const user = await User.findOne({ email: session.user?.email });
+    const user = await User.findOne({ email: sessionUser.email });
     //   check if uses who has active session exists
     if (!user || user.role !== "doctor") {
       return NextResponse.json(
@@ -104,10 +102,10 @@ export async function POST(req: NextRequest) {
 // Change employee details in the database
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const sessionUser = await getAuthUserFromRequest(req);
 
     // check if user session exists
-    if (!session) {
+    if (!sessionUser) {
       return NextResponse.json(
         {
           error: "Not Allowed to Access this resource",
@@ -120,7 +118,7 @@ export async function PATCH(req: NextRequest) {
 
     await connectDB();
 
-    const user = await User.findOne({ email: session.user?.email });
+    const user = await User.findOne({ email: sessionUser.email });
     //   check if user who has active session exists
     if (!user || user.role !== "doctor") {
       return NextResponse.json(
@@ -208,10 +206,10 @@ export async function PATCH(req: NextRequest) {
 // Delete employee from database
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const sessionUser = await getAuthUserFromRequest(req);
 
     // check if user session exists
-    if (!session) {
+    if (!sessionUser) {
       return NextResponse.json(
         {
           error: "Not Allowed to Access this resource",
@@ -223,7 +221,7 @@ export async function DELETE(req: NextRequest) {
     }
     await connectDB();
 
-    const currUser = await User.findOne({ email: session.user?.email });
+    const currUser = await User.findOne({ email: sessionUser.email });
     //   check if uses who has active session exists
     if (!currUser || currUser.role !== "doctor") {
       return NextResponse.json(

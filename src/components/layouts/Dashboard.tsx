@@ -14,7 +14,8 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         <Navbar />
         <Configurator />
         <ConfiguratorBtn />
-        <main className="flex-grow">{children}</main>
+
+        <main className="flex-grow mt-12">{children}</main>
         <Footer />
       </div>
     </div>

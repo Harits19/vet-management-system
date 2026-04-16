@@ -157,6 +157,12 @@ const routes = [
     icon: <BellIcon {...icon} />,
     path: "/dashboard/notifications",
   },
+  {
+    name: "Product",
+    icon: <BellIcon {...icon} />,
+    path: "/dashboard/product",
+  
+  }
 ];
 
 export default Sidebar;

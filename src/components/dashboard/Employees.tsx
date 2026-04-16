@@ -54,7 +54,7 @@ const Employees = ({ data }: EmployeesProps) => {
   }, [searchEmployee, data]);
 
   return (
-    <Card className="mt-12 mb-8 flex flex-col">
+    <Card className=" mb-8 flex flex-col">
       <CardHeader floated={false} shadow={false} className="rounded-none p-4">
         <div className="mb-8 flex items-center justify-between gap-8">
           <div>
@@ -183,7 +183,7 @@ const Employees = ({ data }: EmployeesProps) => {
                     </td>
                   </tr>
                 );
-              }
+              },
             )}
           </tbody>
         </table>

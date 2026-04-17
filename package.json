@@ -1,0 +1,17 @@
+{
+  "name": "vet-management-system",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c green,blue \"npm run dev --workspace @vet/backend\" \"npm run dev --workspace @vet/frontend\"",
+    "build": "npm run build --workspace @vet/shared-types && npm run build --workspace @vet/backend && npm run build --workspace @vet/frontend",
+    "typecheck": "npm run typecheck --workspace @vet/shared-types && npm run typecheck --workspace @vet/backend && npm run typecheck --workspace @vet/frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3"
+  }
+}

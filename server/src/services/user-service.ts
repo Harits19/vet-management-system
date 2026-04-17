@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
-import { User } from "../models/user-model";
 import { serverEnv } from "../config/env";
+import { UserDB } from "@/shared/types";
 
 class UserService {
   async ensureDefaultAdmin() {
-    const existingAdmin = await User.findOne({
+    const existingAdmin = await UserDB.findOne({
       email: serverEnv.seedAdminEmail.toLowerCase(),
     });
 
@@ -14,7 +14,7 @@ class UserService {
 
     const passwordHash = await bcrypt.hash(serverEnv.seedAdminPassword, 10);
 
-    return User.create({
+    return UserDB.create({
       name: "Vet Admin",
       email: serverEnv.seedAdminEmail.toLowerCase(),
       passwordHash,
@@ -23,7 +23,7 @@ class UserService {
   }
 
   async findByEmail(email: string) {
-    return User.findOne({ email: email.trim().toLowerCase() });
+    return UserDB.findOne({ email: email.trim().toLowerCase() });
   }
 }
 

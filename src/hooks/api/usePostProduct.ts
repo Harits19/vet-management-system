@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { API_BASE_URL } from "@/lib/api";
-import { ProductInput, ProductResponse } from "@/shared/types";
+import { ProductRequest, ProductResponse } from "@/shared/types";
 
 export default function usePostProduct() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  async function postProduct(payload: ProductInput) {
+  async function postProduct(payload: ProductRequest) {
     try {
       setIsLoading(true);
       setErrorMessage("");

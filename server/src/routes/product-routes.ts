@@ -10,7 +10,7 @@ class ProductRouter {
   }
 
   private initializeRoutes() {
-    this.router.get("/", productController.get);
+    this.router.get("/", productController.getAll);
     this.router.post("/", productController.create);
   }
 }

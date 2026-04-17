@@ -1,3 +1,5 @@
+import "reflect-metadata";
+
 import http, { Server } from "http";
 import app from "./app";
 import { serverEnv } from "./config/env";

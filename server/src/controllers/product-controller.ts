@@ -1,20 +1,26 @@
 import { NextFunction, Request, Response } from "express";
 import {
-  ProductInput,
+  createProductSchema,
+  ProductDB,
+  ProductRequest,
   ProductResponse,
   ProductsResponse,
 } from "@/shared/types";
 import { productService } from "../services/product-service";
+import { paginationQuerySchema } from "@/shared/types/pagination";
 
 class ProductController {
-  get = async (_req: Request, res: Response, next: NextFunction) => {
+  getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const products = await productService.getAll();
+      const query = paginationQuerySchema.parse(req.query);
+
+      const result = await productService.getAll(query);
 
       const response: ProductsResponse = {
         success: true,
         message: "Produk berhasil diambil.",
-        data: products,
+        data: result.data,
+        pagination: result.pagination,
       };
 
       return res.json(response);
@@ -24,16 +30,17 @@ class ProductController {
   };
 
   create = async (
-    req: Request<unknown, unknown, ProductInput>,
+    req: Request<unknown, unknown, ProductRequest>,
     res: Response,
     next: NextFunction,
   ) => {
     try {
-      const product = await productService.create(req.body);
+      const body = createProductSchema.parse(req.body);
+      const product = await ProductDB.create(body);
 
       const response: ProductResponse = {
         success: true,
-        message: `Produk ${product.nama} berhasil dibuat.`,
+        message: `Produk ${product.name} berhasil dibuat.`,
         data: product,
       };
 

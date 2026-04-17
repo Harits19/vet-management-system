@@ -1,7 +1,8 @@
+
 import cors from "cors";
 import express, { Application } from "express";
 import { serverEnv } from "./config/env";
-import { errorMiddleware } from "./middlewares/error-handler";
+import { errorMiddleware } from "./middlewares/error-middleware";
 import { apiRouter } from "./routes";
 
 class App {

@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import usePostProduct from "@/hooks/api/usePostProduct";
-import { ProductInput } from "@/shared/types";
+import { ProductRequest } from "@/shared/types";
 
-const defaultValues: ProductInput = {
+const defaultValues: ProductRequest = {
   kategori: "Obat",
   kode: "",
   nama: "",
@@ -26,13 +26,13 @@ export default function ProductForm() {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<ProductInput>({ defaultValues });
+  } = useForm<ProductRequest>({ defaultValues });
 
   const stok = watch("stok") || 0;
   const pokok = watch("pokok") || 0;
   const jual = watch("jual") || 0;
 
-  async function onSubmit(values: ProductInput) {
+  async function onSubmit(values: ProductRequest) {
     await postProduct({
       ...values,
       kode: values.kode.trim().toUpperCase(),
@@ -62,7 +62,9 @@ export default function ProductForm() {
       <form className="panel form-grid" onSubmit={handleSubmit(onSubmit)}>
         <label>
           <span>Kategori</span>
-          <select {...register("kategori", { required: "Kategori wajib diisi." })}>
+          <select
+            {...register("kategori", { required: "Kategori wajib diisi." })}
+          >
             <option value="Obat">Obat</option>
             <option value="Makanan">Makanan</option>
             <option value="Vitamin">Vitamin</option>
@@ -144,7 +146,8 @@ export default function ProductForm() {
             {...register("jual", {
               valueAsNumber: true,
               validate: (value) =>
-                value >= pokok || "Harga jual tidak boleh lebih kecil dari pokok.",
+                value >= pokok ||
+                "Harga jual tidak boleh lebih kecil dari pokok.",
             })}
           />
           <small>{errors.jual?.message}</small>
@@ -157,7 +160,8 @@ export default function ProductForm() {
             {...register("online", {
               valueAsNumber: true,
               validate: (value) =>
-                value <= jual || "Harga online tidak boleh lebih besar dari jual.",
+                value <= jual ||
+                "Harga online tidak boleh lebih besar dari jual.",
             })}
           />
           <small>{errors.online?.message}</small>
@@ -171,9 +175,7 @@ export default function ProductForm() {
         <div className="summary full">
           <div>
             <span>Nilai stok</span>
-            <strong>
-              Rp {(stok * pokok).toLocaleString("id-ID")}
-            </strong>
+            <strong>Rp {(stok * pokok).toLocaleString("id-ID")}</strong>
           </div>
           <div>
             <span>Status submit</span>
@@ -181,7 +183,9 @@ export default function ProductForm() {
           </div>
         </div>
 
-        {errorMessage ? <p className="error-text full">{errorMessage}</p> : null}
+        {errorMessage ? (
+          <p className="error-text full">{errorMessage}</p>
+        ) : null}
 
         <div className="actions full">
           <Link className="button secondary" href="/products">

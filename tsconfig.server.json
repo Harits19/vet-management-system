@@ -13,10 +13,9 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
-  "include": [
-    "server/src/**/*.ts",
-    "src/shared/**/*.ts"
-  ]
+  "include": ["server/src/**/*.ts", "src/shared/**/*.ts"]
 }

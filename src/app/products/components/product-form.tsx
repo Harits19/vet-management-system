@@ -6,18 +6,6 @@ import { useForm } from "react-hook-form";
 import usePostProduct from "@/hooks/api/usePostProduct";
 import { ProductRequest } from "@/shared/types";
 
-const defaultValues: ProductRequest = {
-  kategori: "Obat",
-  kode: "",
-  nama: "",
-  deskripsi: "",
-  stok: 0,
-  pokok: 0,
-  jual: 0,
-  online: 0,
-  tampil: true,
-};
-
 export default function ProductForm() {
   const router = useRouter();
   const { postProduct, isLoading, errorMessage } = usePostProduct();
@@ -26,19 +14,28 @@ export default function ProductForm() {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<ProductRequest>({ defaultValues });
+  } = useForm<ProductRequest>({
+    defaultValues: {
+      category: "Obat",
+      isVisible: true,
+      code: "",
+      name: "",
+      description: "",
+      stock: 0,
+      price: {
+        cost: 0,
+        sale: 0,
+        online: 0,
+      },
+    },
+  });
 
-  const stok = watch("stok") || 0;
-  const pokok = watch("pokok") || 0;
-  const jual = watch("jual") || 0;
+  const stock = watch("stock") || 0;
+  const cost = watch("price.cost") || 0;
+  const sale = watch("price.sale") || 0;
 
   async function onSubmit(values: ProductRequest) {
-    await postProduct({
-      ...values,
-      kode: values.kode.trim().toUpperCase(),
-      nama: values.nama.trim(),
-      deskripsi: values.deskripsi.trim(),
-    });
+    await postProduct(values);
 
     router.push("/products");
     router.refresh();
@@ -63,20 +60,20 @@ export default function ProductForm() {
         <label>
           <span>Kategori</span>
           <select
-            {...register("kategori", { required: "Kategori wajib diisi." })}
+            {...register("category", { required: "Kategori wajib diisi." })}
           >
             <option value="Obat">Obat</option>
             <option value="Makanan">Makanan</option>
             <option value="Vitamin">Vitamin</option>
             <option value="Aksesoris">Aksesoris</option>
           </select>
-          <small>{errors.kategori?.message}</small>
+          <small>{errors.category?.message}</small>
         </label>
 
         <label>
           <span>Kode</span>
           <input
-            {...register("kode", {
+            {...register("code", {
               required: "Kode wajib diisi.",
               minLength: {
                 value: 3,
@@ -85,24 +82,24 @@ export default function ProductForm() {
             })}
             placeholder="PRD-001"
           />
-          <small>{errors.kode?.message}</small>
+          <small>{errors.code?.message}</small>
         </label>
 
         <label className="full">
           <span>Nama</span>
           <input
-            {...register("nama", {
+            {...register("name", {
               required: "Nama wajib diisi.",
             })}
             placeholder="Dry Food Premium"
           />
-          <small>{errors.nama?.message}</small>
+          <small>{errors.name?.message}</small>
         </label>
 
         <label className="full">
           <span>Deskripsi</span>
           <textarea
-            {...register("deskripsi", {
+            {...register("description", {
               required: "Deskripsi wajib diisi.",
               minLength: {
                 value: 10,
@@ -112,70 +109,70 @@ export default function ProductForm() {
             rows={4}
             placeholder="Deskripsi singkat produk"
           />
-          <small>{errors.deskripsi?.message}</small>
+          <small>{errors.description?.message}</small>
         </label>
 
         <label>
           <span>Stok</span>
           <input
             type="number"
-            {...register("stok", {
+            {...register("stock", {
               valueAsNumber: true,
               min: { value: 0, message: "Stok minimal 0." },
             })}
           />
-          <small>{errors.stok?.message}</small>
+          <small>{errors.stock?.message}</small>
         </label>
 
         <label>
           <span>Harga Pokok</span>
           <input
             type="number"
-            {...register("pokok", {
+            {...register("price.cost", {
               valueAsNumber: true,
               min: { value: 1, message: "Harga pokok minimal 1." },
             })}
           />
-          <small>{errors.pokok?.message}</small>
+          <small>{errors.price?.cost?.message}</small>
         </label>
 
         <label>
           <span>Harga Jual</span>
           <input
             type="number"
-            {...register("jual", {
+            {...register("price.sale", {
               valueAsNumber: true,
               validate: (value) =>
-                value >= pokok ||
+                value >= cost ||
                 "Harga jual tidak boleh lebih kecil dari pokok.",
             })}
           />
-          <small>{errors.jual?.message}</small>
+          <small>{errors.price?.sale?.message}</small>
         </label>
 
         <label>
           <span>Harga Online</span>
           <input
             type="number"
-            {...register("online", {
+            {...register("price.online", {
               valueAsNumber: true,
               validate: (value) =>
-                value <= jual ||
+                value <= sale ||
                 "Harga online tidak boleh lebih besar dari jual.",
             })}
           />
-          <small>{errors.online?.message}</small>
+          <small>{errors.price?.online?.message}</small>
         </label>
 
         <label className="toggle">
-          <input type="checkbox" {...register("tampil")} />
+          <input type="checkbox" {...register("isVisible")} />
           <span>Tampilkan produk di daftar</span>
         </label>
 
         <div className="summary full">
           <div>
             <span>Nilai stok</span>
-            <strong>Rp {(stok * pokok).toLocaleString("id-ID")}</strong>
+            <strong>Rp {(stock * cost).toLocaleString("id-ID")}</strong>
           </div>
           <div>
             <span>Status submit</span>

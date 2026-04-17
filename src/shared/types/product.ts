@@ -7,6 +7,17 @@ import { ApiSuccess } from "./api";
     timestamps: true,
   },
 })
+export class Price {
+  @prop({ type: () => Number, required: true })
+  public sale!: number;
+
+  @prop({ type: () => Number, required: true })
+  public online!: number;
+
+  @prop({ type: () => Number, required: true })
+  public cost!: number;
+}
+
 export class Product {
   @prop({ type: () => String, required: true, trim: true })
   public category!: string;
@@ -23,14 +34,8 @@ export class Product {
   @prop({ type: () => Number, default: 0 })
   public stock!: number;
 
-  @prop({ type: () => Number, required: true })
-  public costPrice!: number;
-
-  @prop({ type: () => Number, required: true })
-  public sellingPrice!: number;
-
-  @prop({ type: () => Number, default: 0 })
-  public onlinePrice!: number;
+  @prop({ type: () => Price, _id: false, required: true })
+  public price!: Price;
 
   @prop({ type: () => Boolean, default: true })
   public isVisible!: boolean;
@@ -61,13 +66,15 @@ export const createProductSchema = z
     description: z.string().optional(),
 
     stock: z.coerce.number().min(0),
-    costPrice: z.coerce.number().min(1),
-    sellingPrice: z.coerce.number(),
-    onlinePrice: z.coerce.number(),
+    price: z.object({
+      cost: z.coerce.number().min(1),
+      sale: z.coerce.number(),
+      online: z.coerce.number(),
+    }),
     isVisible: z.coerce.boolean(),
   })
   .superRefine((data, ctx) => {
-    if (data.sellingPrice < data.costPrice) {
+    if (data.price.sale < data.price.cost) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Selling price must be >= cost price",
@@ -75,11 +82,11 @@ export const createProductSchema = z
       });
     }
 
-    if (data.onlinePrice < 1 || data.onlinePrice > data.sellingPrice) {
+    if (data.price.online < 1 || data.price.online > data.price.sale) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Online price must be between 1 and selling price",
         path: ["onlinePrice"],
       });
     }
-  });
+  }) satisfies z.ZodType<Product>;

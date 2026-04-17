@@ -66,18 +66,17 @@ export default function ProductList() {
               </thead>
               <tbody>
                 {products.map((product) => (
-                  <tr key={product.id}>
-                    <td>{product.kode}</td>
+                  <tr key={product.code}>
+                    <td>{product.code}</td>
                     <td>
-                      <strong>{product.nama}</strong>
-                      <div className="cell-subtext">{product.deskripsi}</div>
+                      <strong>{product.name}</strong>
                     </td>
-                    <td>{product.kategori}</td>
-                    <td>{product.stok}</td>
-                    <td>{currencyFormatter.format(product.pokok)}</td>
-                    <td>{currencyFormatter.format(product.jual)}</td>
-                    <td>{currencyFormatter.format(product.online)}</td>
-                    <td>{product.tampil ? "Ya" : "Tidak"}</td>
+                    <td>{product.category}</td>
+                    <td>{product.stock}</td>
+                    <td>{currencyFormatter.format(product.price.cost)}</td>
+                    <td>{currencyFormatter.format(product.price.sale)}</td>
+                    <td>{currencyFormatter.format(product.price.online)}</td>
+                    <td>{product.isVisible ? "Ya" : "Tidak"}</td>
                   </tr>
                 ))}
               </tbody>

@@ -5,9 +5,9 @@ import {
   ProductRequest,
   ProductResponse,
   ProductsResponse,
-} from "@/shared/types";
+} from "@/types";
 import { productService } from "../services/product-service";
-import { paginationQuerySchema } from "@/shared/types/pagination";
+import { paginationQuerySchema } from "@/types/pagination";
 
 class ProductController {
   getAll = async (req: Request, res: Response, next: NextFunction) => {

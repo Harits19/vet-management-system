@@ -1,5 +1,5 @@
-import { Product, ProductDB } from "@/shared/types";
-import { PaginationQuery } from "@/shared/types/pagination";
+import { Product, ProductDB } from "@/types";
+import { PaginationQuery } from "@/types/pagination";
 
 class ProductService {
   async getAll(query: PaginationQuery) {

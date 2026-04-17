@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { parse } from "cookie";
-import { AuthResponse, LoginInput } from "@/shared/types";
+import { AuthResponse, LoginInput } from "@/types";
 import { authService } from "../services/auth-service";
 import { serverEnv } from "../config/env";
 

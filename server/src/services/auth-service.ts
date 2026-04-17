@@ -1,4 +1,4 @@
-import { AuthUser, LoginInput } from "@/shared/types";
+import { AuthUser, LoginInput } from "@/types";
 import { mongoDBService } from "./mongodb-service";
 import { userService } from "./user-service";
 import { JWTPayload, jwtVerify, SignJWT } from "jose";

@@ -2,11 +2,6 @@ import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
 import { z } from "zod";
 import { ApiSuccess } from "./api";
 
-@modelOptions({
-  schemaOptions: {
-    timestamps: true,
-  },
-})
 export class Price {
   @prop({ type: () => Number, required: true })
   public sale!: number;
@@ -18,6 +13,11 @@ export class Price {
   public cost!: number;
 }
 
+@modelOptions({
+  schemaOptions: {
+    timestamps: true,
+  },
+})
 export class Product {
   @prop({ type: () => String, required: true, trim: true })
   public category!: string;

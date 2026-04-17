@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import { serverEnv } from "../config/env";
-import { UserDB } from "@/shared/types";
+import { UserDB } from "@/types";
 
 class UserService {
   async ensureDefaultAdmin() {

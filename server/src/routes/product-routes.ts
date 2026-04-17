@@ -1,7 +1,18 @@
 import { Router } from "express";
-import { createProduct, getProducts } from "../controllers/product-controller";
+import { productController } from "../controllers/product-controller";
 
-export const productRouter = Router();
+class ProductRouter {
+  public router: Router;
 
-productRouter.get("/", getProducts);
-productRouter.post("/", createProduct);
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
+
+  private initializeRoutes() {
+    this.router.get("/", productController.get);
+    this.router.post("/", productController.create);
+  }
+}
+
+export const productRouter = new ProductRouter();

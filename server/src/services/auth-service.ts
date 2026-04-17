@@ -1,17 +1,25 @@
 import { AuthUser, LoginInput } from "@/shared/types";
-import { createAuthCookie, signAccessToken } from "../lib/auth";
 import { mongoDBService } from "./mongodb-service";
 import { userService } from "./user-service";
+import { JWTPayload, jwtVerify, SignJWT } from "jose";
+import { serverEnv } from "../config/env";
+import { serialize } from "cookie";
+
+export interface SessionPayload extends JWTPayload {
+  sub: string;
+  email: string;
+  name: string;
+  role: "admin" | "staff";
+}
 
 class AuthService {
+  encoder = new TextEncoder();
+
   async bootstrap() {
-    await mongoDBService.connect();
     await userService.ensureDefaultAdmin();
   }
 
   async login(input: LoginInput) {
-    await mongoDBService.connect();
-
     const user = await userService.findByEmail(input.email);
 
     if (!user) {
@@ -31,7 +39,7 @@ class AuthService {
       role: user.role,
     };
 
-    const token = await signAccessToken({
+    const token = await this.signAccessToken({
       sub: authUser.id,
       email: authUser.email,
       name: authUser.name,
@@ -40,8 +48,45 @@ class AuthService {
 
     return {
       user: authUser,
-      cookie: createAuthCookie(token),
+      cookie: this.createAuthCookie(token),
     };
+  }
+
+  async signAccessToken(payload: SessionPayload) {
+    return new SignJWT(payload)
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("7d")
+      .sign(this.encoder.encode(serverEnv.authSecret));
+  }
+
+  async verifyAccessToken(token: string) {
+    const { payload } = await jwtVerify(
+      token,
+      this.encoder.encode(serverEnv.authSecret),
+    );
+
+    return payload as unknown as SessionPayload;
+  }
+
+  createAuthCookie(token: string) {
+    return serialize(serverEnv.cookieName, token, {
+      httpOnly: true,
+      secure: serverEnv.isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+  }
+
+  clearAuthCookie() {
+    return serialize(serverEnv.cookieName, "", {
+      httpOnly: true,
+      secure: serverEnv.isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+    });
   }
 }
 

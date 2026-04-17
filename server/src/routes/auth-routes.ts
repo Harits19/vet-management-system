@@ -1,8 +1,20 @@
 import { Router } from "express";
-import { login, logout, me } from "../controllers/auth-controller";
+import { authController } from "../controllers/auth-controller";
 
-export const authRouter = Router();
+class AuthRouter {
+  public router: Router;
 
-authRouter.post("/login", login);
-authRouter.get("/me", me);
-authRouter.post("/logout", logout);
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
+
+  private initializeRoutes() {
+    this.router.post("/login", authController.login);
+    this.router.get("/me", authController.me);
+    this.router.post("/logout", authController.logout);
+  }
+}
+
+// export instance
+export const authRouter = new AuthRouter();

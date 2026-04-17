@@ -3,8 +3,20 @@ import { authRouter } from "./auth-routes";
 import { healthRouter } from "./health-routes";
 import { productRouter } from "./product-routes";
 
-export const apiRouter = Router();
+class ApiRouter {
+  public router: Router;
 
-apiRouter.use("/auth", authRouter);
-apiRouter.use("/health", healthRouter);
-apiRouter.use("/products", productRouter);
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
+
+  private initializeRoutes() {
+    this.router.use("/auth", authRouter.router);
+    this.router.use("/health", healthRouter.router);
+    this.router.use("/products", productRouter.router);
+  }
+}
+
+// export instance
+export const apiRouter = new ApiRouter();

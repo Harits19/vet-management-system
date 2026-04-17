@@ -6,7 +6,6 @@ const now = () => new Date().toISOString();
 
 class ProductService {
   async getAll() {
-    await mongoDBService.connect();
     const products = await ProductDB.find().lean();
     return products;
   }

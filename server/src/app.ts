@@ -1,28 +1,40 @@
 import cors from "cors";
-import express from "express";
+import express, { Application } from "express";
 import { serverEnv } from "./config/env";
-import { errorHandler } from "./middlewares/error-handler";
-import { notFoundHandler } from "./middlewares/not-found-handler";
+import { errorMiddleware } from "./middlewares/error-handler";
 import { apiRouter } from "./routes";
 
-export function createApp() {
-  const app = express();
+class App {
+  public app: Application;
 
-  app.use(
-    cors({
-      origin: serverEnv.appOrigin,
-      credentials: true,
-    }),
-  );
-  app.use(express.json());
+  constructor() {
+    this.app = express();
+    this.initializeMiddlewares();
+    this.initializeRoutes();
+    this.initializeErrorHandling();
+  }
 
-  app.use("/api", apiRouter);
-  app.use(notFoundHandler);
-  app.use(errorHandler);
+  private initializeMiddlewares() {
+    this.app.use(
+      cors({
+        origin: serverEnv.appOrigin,
+        credentials: true,
+      }),
+    );
 
-  return app;
+    this.app.use(express.json());
+  }
+
+  private initializeRoutes() {
+    this.app.use("/api", apiRouter.router);
+  }
+
+  private initializeErrorHandling() {
+    this.app.use(errorMiddleware.notFoundHandler);
+    this.app.use(errorMiddleware.handle);
+  }
 }
 
-const app = createApp();
-
-export default app;
+// export instance
+export const appInstance = new App().app;
+export default appInstance;

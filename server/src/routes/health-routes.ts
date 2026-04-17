@@ -1,6 +1,18 @@
 import { Router } from "express";
-import { getHealth } from "../controllers/health-controller";
+import { healthController } from "../controllers/health-controller";
 
-export const healthRouter = Router();
+class HealthRouter {
+  public router: Router;
 
-healthRouter.get("/", getHealth);
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
+
+  private initializeRoutes() {
+    this.router.get("/", healthController.get);
+  }
+}
+
+// export instance
+export const healthRouter = new HealthRouter();

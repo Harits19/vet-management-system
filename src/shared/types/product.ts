@@ -12,17 +12,7 @@ export interface Product {
   createdAt: string;
 }
 
-export interface ProductInput {
-  kategori: string;
-  kode: string;
-  nama: string;
-  deskripsi: string;
-  stok: number;
-  pokok: number;
-  jual: number;
-  online: number;
-  tampil: boolean;
-}
+export interface ProductInput extends Omit<Product, "id" | "createdAt"> {}
 
 export interface ApiSuccess<T> {
   success: true;

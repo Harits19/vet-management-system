@@ -1,20 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { IProduct } from "../../../shared/types/product";
 
-export interface IProduct extends Document {
-  name: string;
-  barcode?: string;
-  category: string;
-  cost_price: number;
-  sell_price: number;
-  stock: number;
-  unit: string;
-  expired_date?: Date;
-  is_active: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export interface Product extends IProduct, Document {}
 
-const ProductSchema = new Schema<IProduct>(
+const ProductSchema = new Schema<Product>(
   {
     name: {
       type: String,
@@ -75,4 +64,4 @@ const ProductSchema = new Schema<IProduct>(
   },
 );
 
-export const ProductModel = mongoose.model<IProduct>("Product", ProductSchema);
+export const ProductModel = mongoose.model<Product>("Product", ProductSchema);

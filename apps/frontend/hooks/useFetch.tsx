@@ -21,7 +21,7 @@ export async function fetcher<T = any>({
     headers: {
       "Content-Type": "application/json",
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body && method !== "GET" ? JSON.stringify(body) : undefined,
   });
 
   if (!res.ok) {

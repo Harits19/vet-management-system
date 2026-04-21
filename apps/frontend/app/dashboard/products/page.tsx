@@ -1,12 +1,11 @@
+"use client";
+
+import useGetProducts from "@/api/product";
 import { Button, Table } from "antd";
 
-const columns = [
-  { title: "Nama Produk", dataIndex: "name" },
-  { title: "Harga", dataIndex: "price" },
-  { title: "Stok", dataIndex: "stock" },
-];
-
 export default function ProductsPage() {
+  const { data, loading } = useGetProducts();
+  const products = data?.data ?? [];
   return (
     <div>
       <Button
@@ -17,7 +16,15 @@ export default function ProductsPage() {
         Tambah Produk
       </Button>
 
-      <Table columns={columns} dataSource={[]} rowKey="id" />
+      <Table
+        columns={[
+          { title: "Nama Produk", dataIndex: "name", key: "name" },
+          { title: "Harga", dataIndex: "sell_price", key: "sell_price" },
+          { title: "Stok", dataIndex: "stock", key: "stock" },
+        ]}
+        dataSource={products}
+        rowKey="_id"
+      />
     </div>
   );
 }

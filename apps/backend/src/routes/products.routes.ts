@@ -1,18 +1,9 @@
 import { Router } from "express";
-import { ApiResponse } from "../../../shared/types/api";
-import { Product } from "../../../shared/types/product";
-import { ProductModel } from "src/models/product.model";
 import { authMiddleware } from "src/middlewares/auth.middleware";
+import { getProducts } from "src/controllers/product.controller";
 
 const productRouter = Router();
 
-productRouter.get("/", authMiddleware, async (_request, response) => {
-  const products = await ProductModel.find().sort({ createdAt: -1 }).exec();
-
-  response.json({
-    success: true,
-    data: products,
-  } satisfies ApiResponse<Product[]>);
-});
+productRouter.get("/", authMiddleware, getProducts);
 
 export default productRouter;

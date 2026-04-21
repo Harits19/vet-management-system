@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 interface FetchProps {
   body?: Record<string, any>;
-  path?: "/api/auth/login" | "" | "/api/products";
+  path?: "/api/auth/login" | "" | "/api/products" | "/api/auth/logout";
   method?: "POST" | "GET" | "PUT" | "DELETE";
   runOnMount?: boolean;
 }
@@ -14,13 +14,10 @@ export async function fetcher<T = any>({
   method = "GET",
 }: FetchProps): Promise<T> {
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-  console.log("body", body);
-  console.log("path", path);
-  console.log("method", method);
-  console.log("BASE_URL", BASE_URL);
 
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
@@ -59,8 +56,7 @@ export default function useFetch<TResponse = any>({
     setLoading(true);
     setError(undefined);
     setData(undefined);
-    console.log("body", body);
-    console.log("mutateBody", mutateBody);
+
     try {
       const data = await fetcher<TResponse>({
         body: { ...body, ...mutateBody },

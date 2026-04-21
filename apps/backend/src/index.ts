@@ -6,14 +6,17 @@ import mongoose from "mongoose";
 import authRouter from "./routes/auth.route.js";
 import productRouter from "./routes/products.routes.js";
 import { seedSuperAdmin } from "./services/auth.service.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 const port = Number(4000);
 const mongoUri = "mongodb://root:root@localhost:27017/";
+app.use(cookieParser());
 
 app.use(
   cors({
     origin: "http://localhost:3002",
+    credentials: true, // 🔥 WAJIB untuk cookie
   }),
 );
 app.use(express.json());

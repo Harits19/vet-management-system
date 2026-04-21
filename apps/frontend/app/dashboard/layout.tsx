@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 import { useRouter, usePathname } from "next/navigation";
 import React, { useState } from "react";
+import DashboardHeader from "./components/DashboardHeader";
 
 const { Header, Sider, Content } = Layout;
 
@@ -61,18 +62,7 @@ export default function DashboardLayout({
       </Sider>
 
       <Layout>
-        <Header
-          style={{
-            padding: "0 16px",
-            background: colorBgContainer,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div>Dashboard</div>
-          <div>Admin</div>
-        </Header>
+        <DashboardHeader />
 
         <Content style={{ margin: "16px" }}>
           <div

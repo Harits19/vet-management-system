@@ -3,14 +3,15 @@
 import { Button, Card, Form, Input, Typography } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import usePostLogin from "@/hooks/api/usePostLogin";
-
+import { useRouter } from "next/navigation";
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const { data, mutate, loading } = usePostLogin();
-  const onFinish = (values: any) => {
-    console.log("Login:", values);
-    mutate({ body: values });
+  const router = useRouter();
+  const onFinish = async (values: any) => {
+    await mutate({ body: values });
+    router.push("/dashboard");
   };
 
   return (

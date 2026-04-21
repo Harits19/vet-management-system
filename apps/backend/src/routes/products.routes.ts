@@ -3,9 +3,9 @@ import { ApiResponse } from "../../../shared/types/api";
 import { Product } from "../../../shared/types/product";
 import { ProductModel } from "src/models/product.model";
 
-const router = Router();
+const productRouter = Router();
 
-router.get("/", async (_request, response) => {
+productRouter.get("/", async (_request, response) => {
   const products = await ProductModel.find().sort({ createdAt: -1 }).exec();
 
   response.json({
@@ -14,4 +14,4 @@ router.get("/", async (_request, response) => {
   } satisfies ApiResponse<Product[]>);
 });
 
-export default router;
+export default productRouter;

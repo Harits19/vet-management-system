@@ -2,7 +2,9 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import mongoose from "mongoose";
-import patientsRouter from "./routes/products.routes.js";
+import authRouter from "./routes/auth.route.js";
+import productRouter from "./routes/products.routes.js";
+import { seedSuperAdmin } from "./services/auth.service.js";
 
 const app = express();
 const port = Number(4000);
@@ -24,10 +26,12 @@ app.get("/api/health", (_request, response) => {
   });
 });
 
-app.use("/api/products", patientsRouter);
+app.use("/api/products", productRouter);
+app.use("/api/auth", authRouter);
 
 async function bootstrap() {
   await mongoose.connect(mongoUri);
+  await seedSuperAdmin();
 
   app.listen(port, () => {
     console.log(`Backend running on http://localhost:${port}`);

@@ -1,0 +1,104 @@
+"use client";
+
+import { Layout, Menu, theme } from "antd";
+import {
+  DashboardOutlined,
+  ShoppingCartOutlined,
+  AppstoreOutlined,
+} from "@ant-design/icons";
+import { useRouter, usePathname } from "next/navigation";
+import React, { useState } from "react";
+
+const { Header, Sider, Content } = Layout;
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const {
+    token: { colorBgContainer },
+  } = theme.useToken();
+
+  const menuItems = [
+    {
+      key: "/dashboard",
+      icon: <DashboardOutlined />,
+      label: "Dashboard",
+    },
+    {
+      key: "/dashboard/products",
+      icon: <AppstoreOutlined />,
+      label: "Products",
+    },
+    {
+      key: "/dashboard/pos",
+      icon: <ShoppingCartOutlined />,
+      label: "POS",
+    },
+  ];
+
+  return (
+    <Layout style={{ minHeight: "100vh" }}>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={(value) => setCollapsed(value)}
+      >
+        <div style={styles.logo}>{collapsed ? "PC" : "Pet Clinic"}</div>
+
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={[pathname]}
+          items={menuItems}
+          onClick={(e) => router.push(e.key)}
+        />
+      </Sider>
+
+      <Layout>
+        <Header
+          style={{
+            padding: "0 16px",
+            background: colorBgContainer,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>Dashboard</div>
+          <div>Admin</div>
+        </Header>
+
+        <Content style={{ margin: "16px" }}>
+          <div
+            style={{
+              padding: 16,
+              minHeight: 360,
+              background: colorBgContainer,
+              borderRadius: 8,
+            }}
+          >
+            {children}
+          </div>
+        </Content>
+      </Layout>
+    </Layout>
+  );
+}
+
+const styles: { [key: string]: React.CSSProperties } = {
+  logo: {
+    height: 64,
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "bold",
+    fontSize: 18,
+  },
+};

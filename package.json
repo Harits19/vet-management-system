@@ -8,10 +8,18 @@
   "scripts": {
     "dev": "concurrently -n backend,frontend -c green,blue \"npm run dev --workspace @vet/backend\" \"npm run dev --workspace @vet/frontend\"",
     "build": "npm run build --workspace @vet/shared-types && npm run build --workspace @vet/backend && npm run build --workspace @vet/frontend",
+    "dev:frontend": "npm run dev --workspace @vet/frontend",
+    "dev:backend": "npm run dev --workspace @vet/backend",
     "typecheck": "npm run typecheck --workspace @vet/shared-types && npm run typecheck --workspace @vet/backend && npm run typecheck --workspace @vet/frontend"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "concurrently": "^9.2.1",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "jsonwebtoken": "^9.0.3"
   }
 }

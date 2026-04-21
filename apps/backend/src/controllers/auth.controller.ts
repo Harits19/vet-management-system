@@ -12,6 +12,7 @@ export const login = async (req: Request, res: Response) => {
       data,
     });
   } catch (error: any) {
+    console.error(error);
     res.status(401).json({
       success: false,
       message: error.message,

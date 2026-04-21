@@ -2,13 +2,15 @@
 
 import { Button, Card, Form, Input, Typography } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
+import usePostLogin from "@/hooks/api/usePostLogin";
 
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
+  const { data, mutate, loading } = usePostLogin();
   const onFinish = (values: any) => {
     console.log("Login:", values);
-    // TODO: connect ke API
+    mutate({ body: values });
   };
 
   return (
@@ -18,6 +20,7 @@ export default function LoginPage() {
           <Title level={3}>Pet Clinic System</Title>
           <Text type="secondary">Login untuk melanjutkan</Text>
         </div>
+        {/* {JSON.stringify(data, null, 2)} */}
 
         <Form
           name="login"
@@ -53,7 +56,13 @@ export default function LoginPage() {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block size="large">
+            <Button
+              loading={loading}
+              type="primary"
+              htmlType="submit"
+              block
+              size="large"
+            >
               Login
             </Button>
           </Form.Item>

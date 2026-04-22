@@ -24,13 +24,13 @@ const ProductSchema = new Schema<Product>(
       trim: true,
     },
 
-    cost_price: {
+    costPrice: {
       type: Number,
       required: true,
       min: 0,
     },
 
-    sell_price: {
+    sellPrice: {
       type: Number,
       required: true,
       min: 0,
@@ -49,11 +49,11 @@ const ProductSchema = new Schema<Product>(
       trim: true,
     },
 
-    expired_date: {
+    expiredDate: {
       type: Date,
     },
 
-    is_active: {
+    isActive: {
       type: Boolean,
       default: true,
     },

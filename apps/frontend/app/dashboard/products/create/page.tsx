@@ -19,11 +19,10 @@ export default function CreateProductPage() {
   const [form] = Form.useForm();
   const router = useRouter();
 
-  const onFinish = (values: any) => {
-    console.log("Product:", values);
-    message.success("Produk berhasil ditambahkan");
+  
 
-    // TODO: kirim ke API
+  const onFinish = (values: any) => {
+    message.success("Produk berhasil ditambahkan");
     router.push("/dashboard/products");
   };
 

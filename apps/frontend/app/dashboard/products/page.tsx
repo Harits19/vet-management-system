@@ -1,12 +1,13 @@
 "use client";
 
-import useGetProducts from "@/api/product.api";
+import { useGetProducts } from "@/api/product.api";
 import useQueryParams from "@/hooks/useQueryParam";
 import { Button, Table, Input, Select, Row, Col } from "antd";
 import { GeneralFilter } from "../../../../shared/types/pagination";
+import { ProductFilter } from "../../../../shared/types/product";
 
 export default function ProductsPage() {
-  const [query, setQuery] = useQueryParams<GeneralFilter>({
+  const [query, setQuery] = useQueryParams<ProductFilter>({
     page: 1,
     limit: 10,
     search: "",
@@ -30,10 +31,11 @@ export default function ProductsPage() {
             allowClear
             defaultValue={query.search}
             onChange={(e) => {
-              setQuery({
+              setQuery((prev) => ({
+                ...prev,
                 search: e.target.value,
                 page: 1,
-              });
+              }));
             }}
           />
         </Col>
@@ -45,10 +47,11 @@ export default function ProductsPage() {
             style={{ width: "100%" }}
             value={query.category || undefined}
             onChange={(value) =>
-              setQuery({
+              setQuery((prev) => ({
+                ...prev,
                 category: value,
                 page: 1,
-              })
+              }))
             }
             options={[
               { label: "Makanan", value: "makanan" },
@@ -77,12 +80,12 @@ export default function ProductsPage() {
           showSizeChanger: true,
         }}
         onChange={(pag, _, sorter: any) => {
-          setQuery({
-            page: pag.current,
-            limit: pag.pageSize,
+          setQuery((prev) => ({
+            page: pag.current ?? prev.page,
+            limit: pag.pageSize ?? prev.limit,
             sortBy: sorter.field,
             order: sorter.order === "ascend" ? "asc" : "desc",
-          });
+          }));
         }}
         columns={[
           {

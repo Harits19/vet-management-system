@@ -1,9 +1,8 @@
 import { ApiResponse } from "../../shared/types/api";
-import { GeneralFilter } from "../../shared/types/pagination";
-import { IProduct } from "../../shared/types/product";
+import { IProduct, ProductFilter } from "../../shared/types/product";
 import useFetch from "../hooks/useFetch";
 
-export default function useGetProducts(pagination: GeneralFilter) {
+export function useGetProducts(pagination: ProductFilter) {
   return useFetch<ApiResponse<IProduct[]>>({
     method: "GET",
     path: "/api/products",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import useDebounce from "./useDebounce";
 
 export default function useQueryParams<T>(defaultValue: T) {
@@ -26,8 +26,10 @@ export default function useQueryParams<T>(defaultValue: T) {
     router.push(`?${newParams.toString()}`);
   }, [JSON.stringify(debounceState)]);
 
-  const setState = (value: T) => {
-    setStateBase(value);
+  const setState: Dispatch<SetStateAction<T>> = (value) => {
+    setStateBase((prev) =>
+      typeof value === "function" ? (value as (prev: T) => T)(prev) : value,
+    );
   };
 
   return [debounceState, setState] as const;

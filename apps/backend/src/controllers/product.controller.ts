@@ -1,7 +1,10 @@
 import { ProductModel } from "src/models/product.model";
 import { Request, Response } from "express";
 import { sendResponse } from "src/services/response.service";
-import { productsFilterSchema } from "../../../shared/types/product";
+import {
+  productCreateRequestSchema,
+  productsFilterSchema,
+} from "../../../shared/types/product";
 
 export const getProducts = async (req: Request, res: Response) => {
   const parsed = productsFilterSchema.parse(req.query);
@@ -50,5 +53,15 @@ export const getProducts = async (req: Request, res: Response) => {
       total,
       totalPages: Math.ceil(total / limit),
     },
+  });
+};
+
+export const postProduct = async (req: Request, res: Response) => {
+  const body = productCreateRequestSchema.parse(req.body);
+  const product = await ProductModel.create(body);
+
+  return sendResponse(res, {
+    success: true,
+    data: product,
   });
 };

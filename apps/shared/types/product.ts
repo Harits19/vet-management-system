@@ -1,25 +1,22 @@
 import { z } from "zod";
 import { paginationQuerySchema } from "./pagination";
 
-export interface IProduct {
-  name: string;
-  barcode?: string;
-  category: string;
-  costPrice: number;
-  sellPrice: number;
-  stock: number;
-  unit: string;
-  expiredDate?: Date;
-  isActive: boolean;
+export const productCreateRequestSchema = z.object({
+  name: z.string(),
+  barcode: z.string().optional(),
+  category: z.string(),
+  costPrice: z.number(),
+  sellPrice: z.number(),
+  stock: z.number(),
+  unit: z.string(),
+  expiredDate: z.date().optional(),
+  isActive: z.boolean(),
+});
+
+export type IProduct = z.infer<typeof productCreateRequestSchema> & {
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface IProductsFilter {
-  category: "";
-  sortBy: "createdAt";
-  order: "desc" | "asc";
-}
+};
 
 export const productsFilterSchema = paginationQuerySchema.extend({
   category: z.string().optional(),
@@ -31,3 +28,5 @@ export const productsFilterSchema = paginationQuerySchema.extend({
 
   order: z.enum(["asc", "desc"]).default("desc"),
 });
+
+export interface ProductFilter extends z.infer<typeof productsFilterSchema> {}

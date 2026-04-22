@@ -6,18 +6,27 @@ interface FetchProps {
   path?: "/api/auth/login" | "" | "/api/products" | "/api/auth/logout";
   method?: "POST" | "GET" | "PUT" | "DELETE";
   runOnMount?: boolean;
+  params?: Record<string, string>;
 }
 
 export async function fetcher<T = any>({
   body,
   path = "",
   method = "GET",
+  params,
 }: FetchProps): Promise<T> {
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  let url = `${BASE_URL}${path}`;
 
-  const res = await fetch(`${BASE_URL}${path}`, {
+  if (params) {
+    const queryParams = new URLSearchParams(params);
+    url += `?${queryParams.toString()}`;
+  }
+
+  const res = await fetch(url, {
     method,
     credentials: "include",
+
     headers: {
       "Content-Type": "application/json",
     },
@@ -36,10 +45,8 @@ export async function fetcher<T = any>({
 }
 
 export default function useFetch<TResponse = any>({
-  method,
-  path,
-  body,
   runOnInit = false,
+  ...fetchProps
 }: FetchProps & {
   runOnInit?: boolean;
 }) {
@@ -59,9 +66,8 @@ export default function useFetch<TResponse = any>({
 
     try {
       const data = await fetcher<TResponse>({
-        body: { ...body, ...mutateBody },
-        method,
-        path,
+        body: { ...fetchProps.body, ...mutateBody },
+        ...fetchProps,
       });
       setData(data);
     } catch (error: any) {

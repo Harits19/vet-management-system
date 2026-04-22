@@ -2,7 +2,7 @@ import { Dropdown, Button, Layout } from "antd";
 import { DownOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import useFetch from "@/hooks/useFetch";
-import { usePostLogout } from "@/api/auth";
+import { usePostLogout } from "@/api/auth.api";
 const { Header } = Layout;
 
 export default function DashboardHeader() {

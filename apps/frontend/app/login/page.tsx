@@ -3,7 +3,7 @@
 import { Button, Card, Form, Input, Typography } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { usePostLogin } from "@/api/auth";
+import { usePostLogin } from "@/api/auth.api";
 const { Title, Text } = Typography;
 
 export default function LoginPage() {

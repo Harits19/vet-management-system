@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.route.js";
 import productRouter from "./routes/products.routes.js";
 import { seedSuperAdmin } from "./services/auth.service.js";
 import cookieParser from "cookie-parser";
+import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 const port = Number(4000);
@@ -32,6 +33,7 @@ app.get("/api/health", (_request, response) => {
 
 app.use("/api/products", productRouter);
 app.use("/api/auth", authRouter);
+app.use(errorHandler);
 
 async function bootstrap() {
   await mongoose.connect(mongoUri);

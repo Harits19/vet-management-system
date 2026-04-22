@@ -7,5 +7,9 @@ export default function useGetProducts() {
     method: "GET",
     path: "/api/products",
     runOnInit: true,
+    params: {
+      page: "1",
+      limit: "10",
+    },
   });
 }

@@ -6,10 +6,10 @@ interface FetchProps {
   path?: "/api/auth/login" | "" | "/api/products" | "/api/auth/logout";
   method?: "POST" | "GET" | "PUT" | "DELETE";
   runOnMount?: boolean;
-  params?: Record<string, string>;
+  params?: any;
 }
 
-export async function fetcher<T = any>({
+export async function fetcher<T>({
   body,
   path = "",
   method = "GET",
@@ -19,7 +19,10 @@ export async function fetcher<T = any>({
   let url = `${BASE_URL}${path}`;
 
   if (params) {
-    const queryParams = new URLSearchParams(params);
+    const stringParam = Object.fromEntries(
+      Object.entries(params).map(([key, value]) => [key, String(value)]),
+    );
+    const queryParams = new URLSearchParams(stringParam);
     url += `?${queryParams.toString()}`;
   }
 
@@ -44,7 +47,7 @@ export async function fetcher<T = any>({
   return res.json();
 }
 
-export default function useFetch<TResponse = any>({
+export default function useFetch<TResponse>({
   runOnInit = false,
   ...fetchProps
 }: FetchProps & {
@@ -57,7 +60,7 @@ export default function useFetch<TResponse = any>({
   useEffect(() => {
     if (!runOnInit) return;
     mutate({});
-  }, []);
+  }, [JSON.stringify(fetchProps.params)]);
 
   const mutate = async ({ body: mutateBody }: Pick<FetchProps, "body">) => {
     setLoading(true);

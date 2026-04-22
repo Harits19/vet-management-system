@@ -1,12 +1,21 @@
 "use client";
 
 import useGetProducts from "@/api/product.api";
+import useQueryParams from "@/hooks/useQueryParam";
 import { Button, Table } from "antd";
+import { useState } from "react";
+import { Pagination } from "../../../../shared/types/pagination";
 
 export default function ProductsPage() {
-  const { data, loading } = useGetProducts();
+  const [pagination, setPagination] = useQueryParams<Pagination>({
+    page: 1,
+    limit: 10,
+  });
+
+  const { data, loading } = useGetProducts(pagination);
+
   const products = data?.data ?? [];
-  const pagination = data?.meta;
+  const meta = data?.meta;
   return (
     <div>
       <Button
@@ -18,11 +27,15 @@ export default function ProductsPage() {
       </Button>
 
       <Table
+        loading={loading}
         pagination={{
-          current: pagination?.page,
-          pageSize: pagination?.limit,
-          total: pagination?.totalPages,
+          current: pagination.page,
+          pageSize: pagination.limit,
+          total: meta?.total,
           showSizeChanger: true,
+          onChange: (page, limit) => {
+            setPagination({ page, limit });
+          },
         }}
         columns={[
           { title: "Nama Produk", dataIndex: "name", key: "name" },

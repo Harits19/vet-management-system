@@ -1,17 +1,26 @@
 import { z } from "zod";
 import { paginationQuerySchema } from "./pagination";
 
-export const productCreateRequestSchema = z.object({
-  name: z.string(),
-  barcode: z.string().optional(),
+const numberField = z.coerce.number();
+
+export const productSchema = z.object({
   category: z.string(),
-  costPrice: z.number(),
-  sellPrice: z.number(),
-  stock: z.number(),
-  unit: z.string(),
-  expiredDate: z.coerce.date().optional(),
-  isActive: z.boolean(),
+  product: z.object({
+    code: z.string().optional().nullable(),
+    name: z.string(),
+    weight: numberField.optional(), // Berat
+  }),
+  pricing: z.object({
+    cost: numberField, // Harga Pokok
+    selling: numberField, // Harga Jual
+  }),
+  inventory: z.object({
+    quantity: numberField, // Stok Jumlah
+  }),
+  unit: z.string().optional().nullable(),
 });
+
+export const productCreateRequestSchema = productSchema;
 
 export interface ProductCreateRequest extends z.infer<
   typeof productCreateRequestSchema

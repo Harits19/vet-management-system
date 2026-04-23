@@ -1,5 +1,6 @@
 "use client";
 
+import { usePostProduct } from "@/api/product.api";
 import {
   Button,
   Card,
@@ -8,127 +9,162 @@ import {
   Input,
   InputNumber,
   Select,
+  Space,
   Switch,
   message,
 } from "antd";
 import { useRouter } from "next/navigation";
+import { ProductCreateRequest } from "../../../../../shared/types/product";
+import { Controller, useForm } from "react-hook-form";
+import VetForm from "@/components/VetForm";
 
 const { Option } = Select;
 
 export default function CreateProductPage() {
-  const [form] = Form.useForm();
+  // const [form] = Form.useForm();
+  const { watch, handleSubmit, control } = useForm<ProductCreateRequest>();
   const router = useRouter();
 
-  
+  const { loading, mutate } = usePostProduct();
 
-  const onFinish = (values: any) => {
-    message.success("Produk berhasil ditambahkan");
-    router.push("/dashboard/products");
+  const onFinish = async (values: ProductCreateRequest) => {
+    await mutate({
+      body: values,
+      onSuccess: () => {
+        message.success("Produk berhasil ditambahkan");
+        router.push("/dashboard/products");
+      },
+    });
   };
 
   return (
     <Card title="Tambah Produk">
+      {JSON.stringify(watch(), null, 2)}
       <Form
-        form={form}
+        onFinish={handleSubmit(onFinish)}
         layout="vertical"
-        onFinish={onFinish}
         autoComplete="off"
       >
         {/* Nama Produk */}
-        <Form.Item
+        <VetForm
+          control={control}
           label="Nama Produk"
           name="name"
-          rules={[{ required: true, message: "Nama produk wajib diisi" }]}
+          rules={{ required: "Nama produk wajib diisi" }}
         >
-          <Input placeholder="Contoh: Whiskas 500g" />
-        </Form.Item>
+          {(field) => {
+            field.value;
+            return <Input placeholder="Contoh: Whiskas 500g" {...field} />;
+          }}
+        </VetForm>
 
         {/* Barcode */}
-        <Form.Item label="Barcode" name="barcode">
-          <Input placeholder="Scan / input barcode" />
-        </Form.Item>
+        <VetForm control={control} label="Barcode" name="barcode">
+          {(field) => <Input placeholder="Scan / input barcode" {...field} />}
+        </VetForm>
 
         {/* Kategori */}
-        <Form.Item
+        <VetForm
+          control={control}
           label="Kategori"
           name="category"
-          rules={[{ required: true, message: "Kategori wajib dipilih" }]}
+          rules={{ required: "Kategori wajib dipilih" }}
         >
-          <Select placeholder="Pilih kategori">
-            <Option value="makanan">Makanan</Option>
-            <Option value="obat">Obat</Option>
-            <Option value="aksesoris">Aksesoris</Option>
-          </Select>
-        </Form.Item>
+          {(field) => (
+            <Select placeholder="Pilih kategori" {...field}>
+              <Option value="makanan">Makanan</Option>
+              <Option value="obat">Obat</Option>
+              <Option value="aksesoris">Aksesoris</Option>
+            </Select>
+          )}
+        </VetForm>
 
         {/* Harga */}
         <Form.Item label="Harga">
-          <Input.Group compact>
-            <Form.Item
-              name="cost_price"
+          <Space.Compact>
+            <VetForm
+              control={control}
+              name="costPrice"
               noStyle
-              rules={[{ required: true, message: "Harga beli wajib diisi" }]}
+              rules={{ required: "Harga beli wajib diisi" }}
             >
-              <InputNumber
-                style={{ width: "50%" }}
-                placeholder="Harga Beli"
-                min={0}
-              />
-            </Form.Item>
-            <Form.Item
-              name="sell_price"
+              {(field) => (
+                <InputNumber
+                  style={{ width: "50%" }}
+                  placeholder="Harga Beli"
+                  min={0}
+                  {...field}
+                />
+              )}
+            </VetForm>
+            <VetForm
+              control={control}
+              name="sellPrice"
               noStyle
-              rules={[{ required: true, message: "Harga jual wajib diisi" }]}
+              rules={{ required: "Harga jual wajib diisi" }}
             >
-              <InputNumber
-                style={{ width: "50%" }}
-                placeholder="Harga Jual"
-                min={0}
-              />
-            </Form.Item>
-          </Input.Group>
+              {(field) => (
+                <InputNumber
+                  style={{ width: "50%" }}
+                  placeholder="Harga Jual"
+                  min={0}
+                  {...field}
+                />
+              )}
+            </VetForm>
+          </Space.Compact>
         </Form.Item>
 
         {/* Stok */}
-        <Form.Item
+        <VetForm
+          control={control}
           label="Stok Awal"
           name="stock"
-          rules={[{ required: true, message: "Stok wajib diisi" }]}
+          rules={{ required: "Stok wajib diisi" }}
         >
-          <InputNumber style={{ width: "100%" }} min={0} />
-        </Form.Item>
+          {(field) => (
+            <InputNumber style={{ width: "100%" }} min={0} {...field} />
+          )}
+        </VetForm>
 
         {/* Satuan */}
-        <Form.Item
+        <VetForm
+          control={control}
           label="Satuan"
           name="unit"
-          rules={[{ required: true, message: "Satuan wajib diisi" }]}
+          rules={{ required: "Satuan wajib diisi" }}
         >
-          <Select placeholder="Pilih satuan">
-            <Option value="pcs">PCS</Option>
-            <Option value="box">BOX</Option>
-            <Option value="pack">PACK</Option>
-          </Select>
-        </Form.Item>
+          {(field) => (
+            <Select placeholder="Pilih satuan" {...field}>
+              <Option value="pcs">PCS</Option>
+              <Option value="box">BOX</Option>
+              <Option value="pack">PACK</Option>
+            </Select>
+          )}
+        </VetForm>
 
         {/* Expired Date */}
-        <Form.Item label="Tanggal Kadaluarsa" name="expired_date">
-          <DatePicker style={{ width: "100%" }} />
-        </Form.Item>
+        <VetForm
+          control={control}
+          label="Tanggal Kadaluarsa"
+          name="expiredDate"
+        >
+          {(field) => <DatePicker style={{ width: "100%" }} {...field} />}
+        </VetForm>
 
         {/* Status */}
-        <Form.Item
+        <VetForm
+          control={control}
           label="Status Aktif"
-          name="is_active"
-          valuePropName="checked"
-          initialValue={true}
+          name="isActive"
+          defaultValue={true}
         >
-          <Switch />
-        </Form.Item>
+          {(field) => <Switch {...field} />}
+        </VetForm>
 
         {/* Submit */}
         <Form.Item>
-          <Button type="primary" htmlType="submit" block>
+          <Button loading={loading} type="primary" htmlType="submit" block>
             Simpan Produk
           </Button>
         </Form.Item>

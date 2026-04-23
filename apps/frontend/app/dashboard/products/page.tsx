@@ -96,8 +96,8 @@ export default function ProductsPage() {
           },
           {
             title: "Harga",
-            dataIndex: "sell_price",
-            key: "sell_price",
+            dataIndex: "sellPrice",
+            key: "sellPrice",
             sorter: true,
           },
           {

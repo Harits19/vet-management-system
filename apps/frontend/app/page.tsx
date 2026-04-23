@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default async function HomePage() {
-  return <main></main>;
+  return redirect("/dashboard");
 }

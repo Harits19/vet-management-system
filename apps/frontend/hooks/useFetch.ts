@@ -1,20 +1,20 @@
 import { useToast } from "@/components/Toast";
 import { useEffect, useState } from "react";
 
-interface FetchProps {
-  body?: Record<string, any>;
+interface FetchProps<TBody = any> {
+  body?: TBody;
   path?: "/api/auth/login" | "" | "/api/products" | "/api/auth/logout";
   method?: "POST" | "GET" | "PUT" | "DELETE";
   runOnMount?: boolean;
   params?: any;
 }
 
-export async function fetcher<T>({
+export async function fetcher<T, TBody>({
   body,
   path = "",
   method = "GET",
   params,
-}: FetchProps): Promise<T> {
+}: FetchProps<TBody>): Promise<T> {
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
   let url = `${BASE_URL}${path}`;
 
@@ -47,10 +47,10 @@ export async function fetcher<T>({
   return res.json();
 }
 
-export default function useFetch<TResponse>({
+export default function useFetch<TResponse, TBody = any>({
   runOnInit = false,
   ...fetchProps
-}: FetchProps & {
+}: FetchProps<TBody> & {
   runOnInit?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
@@ -62,16 +62,22 @@ export default function useFetch<TResponse>({
     mutate({});
   }, [JSON.stringify(fetchProps.params)]);
 
-  const mutate = async ({ body: mutateBody }: Pick<FetchProps, "body">) => {
+  const mutate = async ({
+    body: mutateBody,
+    onSuccess,
+  }: Pick<FetchProps, "body"> & {
+    onSuccess?: () => void;
+  }) => {
     setLoading(true);
     setError(undefined);
     setData(undefined);
 
     try {
-      const data = await fetcher<TResponse>({
+      const data = await fetcher<TResponse, TBody>({
         body: { ...fetchProps.body, ...mutateBody },
         ...fetchProps,
       });
+      onSuccess?.();
       setData(data);
     } catch (error: any) {
       setData(undefined);

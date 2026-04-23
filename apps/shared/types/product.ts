@@ -9,9 +9,13 @@ export const productCreateRequestSchema = z.object({
   sellPrice: z.number(),
   stock: z.number(),
   unit: z.string(),
-  expiredDate: z.date().optional(),
+  expiredDate: z.coerce.date().optional(),
   isActive: z.boolean(),
 });
+
+export interface ProductCreateRequest extends z.infer<
+  typeof productCreateRequestSchema
+> {}
 
 export type IProduct = z.infer<typeof productCreateRequestSchema> & {
   createdAt: Date;

@@ -54,6 +54,26 @@ export default function DashboardLayout({
       ],
     },
     {
+      key: "sale",
+      icon: <ShoppingCartOutlined />,
+      label: "Sales",
+      children: [
+        {
+          key: "/dashboard/sales",
+          label: "List Sale",
+        },
+        {
+          key: "/dashboard/sales/create",
+          label: "Create Sale",
+        },
+        {
+          key: "/dashboard/sales/import",
+          label: "Import Sale",
+        },
+      ],
+    },
+
+    {
       key: "/dashboard/pos",
       icon: <ShoppingCartOutlined />,
       label: "POS",

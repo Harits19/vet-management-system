@@ -9,6 +9,7 @@ import { seedSuperAdmin } from "./services/auth.service.js";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { isAllowedOrigin } from "./config/auth.config.js";
+import saleRouter from "./routes/sale.route.js";
 
 const app = express();
 const port = Number(4000);
@@ -40,6 +41,7 @@ app.get("/api/health", (_request, response) => {
 
 app.use("/api/products", productRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/sales", saleRouter);
 app.use(errorHandler);
 
 async function bootstrap() {

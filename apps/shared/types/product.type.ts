@@ -1,27 +1,7 @@
 import { z } from "zod";
 import { paginationQuerySchema } from "./pagination";
+import { numberOptional, numberRequired, stringRequired } from "./zod";
 
-export const stringRequired = z.string().trim().min(1, "Required");
-const numberRequired = z.preprocess(
-  (val) => {
-    if (val === "" || val === null || val === undefined) {
-      return undefined;
-    }
-    return Number(val);
-  },
-  z.number().min(0, "Minimal 0"),
-);
-
-const numberOptional = z.preprocess(
-  (val) => {
-    if (val === "" || val === null || val === undefined) {
-      return undefined;
-    }
-    const num = Number(val);
-    return isNaN(num) ? undefined : num;
-  },
-  z.number().min(0).optional(), // 🔥 optional di sini
-);
 export const productSchema = z.object({
   category: stringRequired,
   product: z.object({

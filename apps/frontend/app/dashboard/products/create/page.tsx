@@ -8,7 +8,7 @@ import {
   productSchema,
 } from "../../../../../shared/types/product.type";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { usePostProduct } from "@/api/product.api";
+import { useCreateProduct } from "@/api/product.api";
 import { useRouter } from "next/navigation";
 
 export default function CreateProductPage() {
@@ -16,7 +16,7 @@ export default function CreateProductPage() {
     resolver: zodResolver(productSchema) as any,
   });
 
-  const { loading, mutate } = usePostProduct();
+  const { loading, mutate } = useCreateProduct();
 
   const router = useRouter();
 

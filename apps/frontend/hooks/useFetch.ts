@@ -2,15 +2,16 @@
 import { message } from "antd";
 import { useEffect, useState } from "react";
 
-interface FetchProps {
-  body?: any;
+interface FetchProps<TBody = any> {
+  body?: TBody;
   path?:
     | "/api/auth/login"
     | "/api/auth/me"
     | ""
     | "/api/products"
     | "/api/auth/logout"
-    | "/api/products/import";
+    | "/api/products/import"
+    | "/api/sales/sync";
   method?: "POST" | "GET" | "PUT" | "DELETE";
   runOnMount?: boolean;
   params?: any;
@@ -42,7 +43,7 @@ export async function fetcher<T, TBody = any>({
   path = "",
   method = "GET",
   params,
-}: FetchProps): Promise<T> {
+}: FetchProps<TBody>): Promise<T> {
   const BASE_URL = getBaseUrl();
   let url = `${BASE_URL}${path}`;
 
@@ -84,13 +85,13 @@ export async function fetcher<T, TBody = any>({
   return res.json();
 }
 
-export default function useFetch<TResponse, TBody = any>({
+export default function useFetch<TResponse, TBody = undefined>({
   runOnInit = false,
-  showResponse = false,
+  showSuccessResponse: showResponse = false,
   ...fetchProps
 }: FetchProps & {
   runOnInit?: boolean;
-  showResponse?: boolean;
+  showSuccessResponse?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -103,7 +104,7 @@ export default function useFetch<TResponse, TBody = any>({
   const mutate = async ({
     body: mutateBody,
     onSuccess,
-  }: Pick<FetchProps, "body"> & {
+  }: Pick<FetchProps<TBody>, "body"> & {
     onSuccess?: () => void;
   }) => {
     setLoading(true);

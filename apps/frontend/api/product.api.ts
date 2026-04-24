@@ -15,7 +15,7 @@ export function useGetProducts(pagination: ProductFilter) {
   });
 }
 
-export function usePostProduct() {
+export function useCreateProduct() {
   return useFetch<unknown, ProductCreateRequest>({
     method: "POST",
     path: "/api/products",
@@ -26,7 +26,7 @@ export function useImportProducts() {
   const { mutate: mutateBase, loading } = useFetch<unknown, FormData>({
     method: "POST",
     path: "/api/products/import",
-    showResponse: true,
+    showSuccessResponse: true,
   });
 
   const mutate = ({

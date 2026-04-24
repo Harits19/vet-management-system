@@ -32,3 +32,8 @@ export const me = async (req: Request, res: Response) => {
     data: user,
   });
 };
+
+
+export const authController = {
+  login, logout, me,
+}

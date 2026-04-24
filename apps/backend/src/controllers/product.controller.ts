@@ -2,14 +2,14 @@ import { ProductModel } from "src/models/product.model";
 import { Request, Response } from "express";
 import { sendResponse } from "src/services/response.service";
 import {
-  productCreateRequestSchema,
+  productSchema,
   productsFilterSchema,
-} from "../../../shared/types/product";
+} from "../../../shared/types/product.type";
 
 export const getProducts = async (req: Request, res: Response) => {
   const parsed = productsFilterSchema.parse(req.query);
 
-  const { page, limit, search, category, is_active, sortBy, order } = parsed;
+  const { page, limit, search, category, sortBy, order } = parsed;
 
   const skip = (page - 1) * limit;
 
@@ -27,11 +27,6 @@ export const getProducts = async (req: Request, res: Response) => {
   // 🏷️ FILTER category
   if (category) {
     query.category = category;
-  }
-
-  // 🔘 FILTER active
-  if (is_active !== undefined) {
-    query.is_active = is_active;
   }
 
   // 🔃 SORT
@@ -57,7 +52,7 @@ export const getProducts = async (req: Request, res: Response) => {
 };
 
 export const postProduct = async (req: Request, res: Response) => {
-  const body = productCreateRequestSchema.parse(req.body);
+  const body = productSchema.parse(req.body);
   const product = await ProductModel.create(body);
 
   return sendResponse(res, {

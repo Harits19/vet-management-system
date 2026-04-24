@@ -1,5 +1,5 @@
 import { ApiResponse } from "../../shared/types/api";
-import { IProduct, ProductCreateRequest, ProductFilter } from "../../shared/types/product";
+import { IProduct, ProductCreateRequest, ProductFilter } from "../../shared/types/product.type";
 import useFetch from "../hooks/useFetch";
 
 export function useGetProducts(pagination: ProductFilter) {

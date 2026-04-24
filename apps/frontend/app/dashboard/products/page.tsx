@@ -4,7 +4,7 @@ import { useGetProducts } from "@/api/product.api";
 import useQueryParams from "@/hooks/useQueryParam";
 import { Button, Table, Input, Select, Row, Col } from "antd";
 import { GeneralFilter } from "../../../../shared/types/pagination";
-import { ProductFilter } from "../../../../shared/types/product";
+import { ProductFilter } from "../../../../shared/types/product.type";
 
 export default function ProductsPage() {
   const [query, setQuery] = useQueryParams<ProductFilter>({
@@ -24,6 +24,7 @@ export default function ProductsPage() {
   return (
     <div>
       {/* 🔍 SEARCH + FILTER */}
+      {JSON.stringify(query, null, 2)}
       <Row gutter={12} style={{ marginBottom: 16 }}>
         <Col span={8}>
           <Input.Search
@@ -83,27 +84,44 @@ export default function ProductsPage() {
           setQuery((prev) => ({
             page: pag.current ?? prev.page,
             limit: pag.pageSize ?? prev.limit,
-            sortBy: sorter.field,
+            sortBy: sorter.field ?? "createdAt",
             order: sorter.order === "ascend" ? "asc" : "desc",
           }));
         }}
         columns={[
           {
             title: "Nama Produk",
-            dataIndex: "name",
-            key: "name",
+            key: "product.name",
+            dataIndex: "product.name",
+            render: (_val, product) => product.product.name,
             sorter: true,
+          },
+          {
+            title: "Kategori",
+            render: (_val, product) => product.category,
           },
           {
             title: "Harga",
-            dataIndex: "sellPrice",
-            key: "sellPrice",
+            render: (_val, product) => product.pricing.selling,
             sorter: true,
+            key: "pricing.selling",
+            dataIndex: "pricing.selling",
           },
+
           {
             title: "Stok",
-            dataIndex: "stock",
-            key: "stock",
+            render: (_val, product) => product.inventory.quantity,
+            sorter: true,
+            key: "inventory.quantity",
+            dataIndex: "inventory.quantity",
+          },
+          {
+            title: "Satuan",
+            render: (_val, product) => product.unit,
+          },
+          {
+            title: "Created At",
+            render: (_val, product) => product.createdAt.toString(),
             sorter: true,
           },
         ]}

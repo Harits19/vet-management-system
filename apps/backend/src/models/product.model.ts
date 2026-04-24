@@ -67,5 +67,15 @@ const ProductSchema = new Schema<IProduct>(
     versionKey: false,
   },
 );
+ProductSchema.index(
+  {
+    category: 1,
+    "product.name": 1,
+  },
+  {
+    unique: true,
+    sparse: true, // penting kalau code optional
+  },
+);
 
 export const ProductModel = mongoose.model("Product", ProductSchema);

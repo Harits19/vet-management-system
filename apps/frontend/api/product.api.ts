@@ -26,6 +26,7 @@ export function useImportProducts() {
   const { mutate: mutateBase, loading } = useFetch<unknown, FormData>({
     method: "POST",
     path: "/api/products/import",
+    showResponse: true,
   });
 
   const mutate = ({

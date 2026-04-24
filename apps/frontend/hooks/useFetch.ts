@@ -70,9 +70,11 @@ export async function fetcher<T, TBody = any>({
 
 export default function useFetch<TResponse, TBody = any>({
   runOnInit = false,
+  showResponse = false,
   ...fetchProps
 }: FetchProps & {
   runOnInit?: boolean;
+  showResponse?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -104,6 +106,9 @@ export default function useFetch<TResponse, TBody = any>({
         ...fetchProps,
         body: finalBody,
       });
+      if (showResponse) {
+        message.success(JSON.stringify(data, null, 2));
+      }
       onSuccess?.();
       setData(data);
     } catch (error: any) {

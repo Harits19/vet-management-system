@@ -20,8 +20,9 @@ export const getProducts = async (req: Request, res: Response) => {
   // 🔍 SEARCH (name + barcode)
   if (search) {
     query.$or = [
-      { name: { $regex: search, $options: "i" } },
-      { barcode: { $regex: search, $options: "i" } },
+      { "product.name": { $regex: search, $options: "i" } },
+      { "product.code.": { $regex: search, $options: "i" } },
+      { category: { $regex: search, $options: "i" } },
     ];
   }
 
@@ -72,14 +73,22 @@ export const importProducts = async (req: Request, res: Response) => {
     }
 
     const csvString = req.file.buffer.toString("utf-8");
-
+    const lines = csvString.split("\n");
+    console.log("Total lines:", lines.length);
+    console.log("Line 14:", lines[13]); // 🔥 cek baris problem
+    const cleanCsv = csvString.replace(/^\uFEFF/, "");
     // 🧾 parse CSV
-    const rows: any[] = parse(csvString, {
+    const rows: any[] = parse(cleanCsv, {
       columns: true,
       skip_empty_lines: true,
       trim: true,
       delimiter: ";",
+      relax_quotes: true, // 🔥 handle quote rusak
+      relax_column_count: true,
     });
+    console.log(rows.length);
+    console.log(rows[0]);
+    console.log(rows[12]); // terakhir yang kebaca
 
     const successData: any[] = [];
     const errors: any[] = [];
@@ -124,7 +133,13 @@ export const importProducts = async (req: Request, res: Response) => {
         });
       }
     }
-
+    console.log("TOTAL ROW:", rows.length);
+    console.log("SUCCESS:", successData.length);
+    console.log("ERROR:", errors.length);
+    console.log(
+      "ERROR Messages:",
+      errors.map((item) => item?.message),
+    );
     // 🚫 kalau semua gagal
     if (successData.length === 0) {
       return res.status(400).json({
@@ -134,16 +149,30 @@ export const importProducts = async (req: Request, res: Response) => {
       });
     }
 
+    const operations = successData.map((item) => ({
+      updateOne: {
+        filter: {
+          category: item.category,
+          "product.name": item.product.name, // 🔥 sesuai index
+        },
+        update: {
+          $set: item,
+        },
+        upsert: true,
+      },
+    }));
+
+    const result = await ProductModel.bulkWrite(operations);
+
     // 💾 insert ke MongoDB
     const inserted = await ProductModel.insertMany(successData);
 
-    return res.json({
+    return sendResponse(res, {
       success: true,
-      message: "Import selesai",
       data: {
-        inserted: inserted.length,
+        inserted: result.upsertedCount,
+        updated: result.modifiedCount,
         failed: errors.length,
-        errors,
       },
     });
   } catch (error: any) {

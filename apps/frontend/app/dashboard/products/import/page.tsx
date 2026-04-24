@@ -38,7 +38,6 @@ export default function ImportProductPage() {
       onSuccess: () => {
         setFile(undefined);
         setPreview([]);
-        message.success("Berhasil mengimpor produk");
       },
     });
   };

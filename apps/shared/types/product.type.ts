@@ -11,17 +11,28 @@ const numberRequired = z.preprocess(
   },
   z.number().min(0, "Minimal 0"),
 );
+
+const numberOptional = z.preprocess(
+  (val) => {
+    if (val === "" || val === null || val === undefined) {
+      return undefined;
+    }
+    const num = Number(val);
+    return isNaN(num) ? undefined : num;
+  },
+  z.number().min(0).optional(), // 🔥 optional di sini
+);
 export const productSchema = z.object({
   category: stringRequired,
   product: z.object({
     code: z.string().optional(),
     name: stringRequired,
-    weight: numberRequired.optional(),
+    weight: numberOptional,
   }),
   pricing: z.object({
     cost: numberRequired,
     selling: numberRequired,
-    online: numberRequired.optional(),
+    online: numberOptional,
   }),
   inventory: z.object({
     quantity: numberRequired,

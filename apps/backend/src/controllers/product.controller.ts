@@ -6,50 +6,38 @@ import {
   productsFilterSchema,
 } from "../../../shared/types/product.type";
 import { parse } from "csv-parse/sync";
+import { buildSearchQuery, paginate } from "src/services/pagination.service";
 
 export const getProducts = async (req: Request, res: Response) => {
   const parsed = productsFilterSchema.parse(req.query);
 
   const { page, limit, search, category, sortBy, order } = parsed;
 
-  const skip = (page - 1) * limit;
+  // 🔍 base query
+  let query: any = {};
 
-  // 🧠 build query dinamis
-  const query: any = {};
+  // 🔍 search
+  Object.assign(
+    query,
+    buildSearchQuery(search, ["product.name", "product.code", "category"]),
+  );
 
-  // 🔍 SEARCH (name + barcode)
-  if (search) {
-    query.$or = [
-      { "product.name": { $regex: search, $options: "i" } },
-      { "product.code.": { $regex: search, $options: "i" } },
-      { category: { $regex: search, $options: "i" } },
-    ];
-  }
-
-  // 🏷️ FILTER category
+  // 🏷️ filter
   if (category) {
     query.category = category;
   }
 
-  // 🔃 SORT
-  const sort: any = {
-    [sortBy]: order === "asc" ? 1 : -1,
-  };
-
-  const [data, total] = await Promise.all([
-    ProductModel.find(query).skip(skip).limit(limit).sort(sort).lean(),
-    ProductModel.countDocuments(query),
-  ]);
+  const result = await paginate(ProductModel, query, {
+    page,
+    limit,
+    sortBy,
+    order,
+  });
 
   return sendResponse(res, {
     success: true,
-    data,
-    meta: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
+    data: result.data,
+    meta: result.meta,
   });
 };
 

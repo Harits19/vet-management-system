@@ -32,9 +32,23 @@ export default function DashboardLayout({
       label: "Dashboard",
     },
     {
-      key: "/dashboard/products",
+      key: "products",
       icon: <AppstoreOutlined />,
       label: "Products",
+      children: [
+        {
+          key: "/dashboard/products",
+          label: "List Product",
+        },
+        {
+          key: "/dashboard/products/create",
+          label: "Create Product",
+        },
+        {
+          key: "/dashboard/products/import",
+          label: "Import Product",
+        },
+      ],
     },
     {
       key: "/dashboard/pos",

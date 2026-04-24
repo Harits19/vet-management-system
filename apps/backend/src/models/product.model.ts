@@ -18,7 +18,6 @@ const ProductSchema = new Schema<IProduct>(
       code: {
         type: String,
         trim: true,
-        unique: true,
         sparse: true, // ✅ allow multiple null/undefined
       },
       name: {

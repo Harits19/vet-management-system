@@ -164,9 +164,6 @@ export const importProducts = async (req: Request, res: Response) => {
 
     const result = await ProductModel.bulkWrite(operations);
 
-    // 💾 insert ke MongoDB
-    const inserted = await ProductModel.insertMany(successData);
-
     return sendResponse(res, {
       success: true,
       data: {

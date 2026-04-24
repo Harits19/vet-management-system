@@ -1,133 +1,120 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Table, Card, Typography, Tag, message } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import useQueryParams from "@/hooks/useQueryParam";
+import { Table, Tag } from "antd";
+import TableFilter from "@/components/TableFilter";
+import { SalesFilter } from "../../../../shared/types/sale.type";
+import { useGetSales } from "@/api/sale.api";
 import { ISale } from "../../../../shared/types/sale.type";
 
-const { Title, Text } = Typography;
+const formatCurrency = (val: number) => `Rp ${val.toLocaleString("id-ID")}`;
 
-const formatCurrency = (value: number) => `Rp ${value.toLocaleString("id-ID")}`;
-
-const formatDate = (date: Date | string) =>
-  new Date(date).toLocaleString("id-ID");
+const formatDate = (val: Date | string) =>
+  new Date(val).toLocaleString("id-ID");
 
 export default function SalesPage() {
-  const [data, setData] = useState<ISale[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { debounceQuery, query, setQuery } = useQueryParams<SalesFilter>({
+    page: 1,
+    limit: 10,
+    search: "",
+    sortBy: "timestamp",
+    order: "desc",
+  });
 
-  const fetchSales = async () => {
-    try {
-      setLoading(true);
+  const { data, loading } = useGetSales(debounceQuery);
 
-      const res = await fetch("/api/sales"); // 🔥 endpoint kamu
-      const json = await res.json();
-
-      if (!json.success) {
-        throw new Error(json.message);
-      }
-
-      setData(json.data);
-    } catch (err: any) {
-      message.error(err.message || "Gagal load data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    // fetchSales();
-  }, []);
-
-  const columns: ColumnsType<ISale> = [
-    {
-      title: "No Struk",
-      dataIndex: "receiptNumber",
-      sorter: (a, b) => a.receiptNumber.localeCompare(b.receiptNumber),
-    },
-    {
-      title: "Tanggal",
-      dataIndex: "timestamp",
-      render: (val) => formatDate(val),
-      sorter: (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-    },
-    {
-      title: "Kasir",
-      dataIndex: "cashier",
-    },
-    {
-      title: "Customer",
-      dataIndex: "customer",
-      render: (val) => val || "-",
-    },
-    {
-      title: "Payment",
-      dataIndex: "paymentMethod",
-      render: (val) => (
-        <Tag color={val === "Cash" ? "green" : "blue"}>{val}</Tag>
-      ),
-    },
-    {
-      title: "Status",
-      dataIndex: "paymentStatus",
-      render: (val) => (
-        <Tag color={val === "Lunas" ? "green" : "orange"}>{val}</Tag>
-      ),
-    },
-
-    // 💰 Pricing
-    {
-      title: "Modal",
-      render: (_, r) => formatCurrency(r.pricing.cost),
-      sorter: (a, b) => a.pricing.cost - b.pricing.cost,
-    },
-    {
-      title: "Profit",
-      render: (_, r) => formatCurrency(r.pricing.profit),
-      sorter: (a, b) => a.pricing.profit - b.pricing.profit,
-    },
-    {
-      title: "Harga Jual",
-      render: (_, r) => formatCurrency(r.pricing.selling),
-      sorter: (a, b) => a.pricing.selling - b.pricing.selling,
-    },
-
-    // 📊 Summary
-    {
-      title: "Total",
-      render: (_, r) => formatCurrency(r.summary.total),
-      sorter: (a, b) => a.summary.total - b.summary.total,
-    },
-    {
-      title: "DP",
-      render: (_, r) => formatCurrency(r.summary.downPayment),
-    },
-    {
-      title: "Hutang",
-      render: (_, r) => formatCurrency(r.summary.debt),
-    },
-  ];
+  const sales = data?.data ?? [];
+  const meta = data?.meta;
 
   return (
-    <div style={{ padding: 24 }}>
-      <Card>
-        <Title level={4}>Sales Transactions</Title>
-        <Text type="secondary">Data transaksi penjualan</Text>
+    <div>
+      {/* 🔍 FILTER */}
+      <TableFilter
+        query={query}
+        setQuery={setQuery}
+        searchKey="search"
+        searchPlaceholder="Search receipt / cashier..."
+      />
 
-        <Table
-          style={{ marginTop: 16 }}
-          rowKey="externalId"
-          columns={columns}
-          dataSource={data}
-          loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-          }}
-          scroll={{ x: "max-content" }}
-        />
-      </Card>
+      {/* 📊 TABLE */}
+      <Table<ISale>
+        loading={loading}
+        dataSource={sales}
+        rowKey="externalId"
+        pagination={{
+          current: query.page,
+          pageSize: query.limit,
+          total: meta?.total,
+          showSizeChanger: true,
+        }}
+        onChange={(pag, _, sorter: any) => {
+          setQuery((prev) => ({
+            ...prev,
+            page: pag.current ?? prev.page,
+            limit: pag.pageSize ?? prev.limit,
+            sortBy: sorter.field ?? prev.sortBy,
+            order: sorter.order === "ascend" ? "asc" : "desc",
+          }));
+        }}
+        columns={[
+          {
+            title: "No Struk",
+            dataIndex: "receiptNumber",
+            sorter: true,
+          },
+          {
+            title: "Tanggal",
+            dataIndex: "timestamp",
+            render: (val) => formatDate(val),
+            sorter: true,
+          },
+          {
+            title: "Kasir",
+            dataIndex: "cashier",
+          },
+          {
+            title: "Customer",
+            dataIndex: "customer",
+            render: (val) => val || "-",
+          },
+          {
+            title: "Payment",
+            dataIndex: "paymentMethod",
+            render: (val) => (
+              <Tag color={val === "Cash" ? "green" : "blue"}>{val}</Tag>
+            ),
+          },
+          {
+            title: "Status",
+            dataIndex: "paymentStatus",
+            render: (val) => (
+              <Tag color={val === "Lunas" ? "green" : "orange"}>{val}</Tag>
+            ),
+          },
+
+          // 💰 PRICING
+          {
+            title: "Modal",
+            dataIndex: "pricing.cost",
+            render: (_, r) => formatCurrency(r.pricing.cost),
+            sorter: true,
+          },
+
+          {
+            title: "Harga Jual",
+            dataIndex: "pricing.selling",
+            render: (_, r) => formatCurrency(r.pricing.selling),
+            sorter: true,
+          },
+          {
+            title: "Profit",
+            dataIndex: "pricing.profit",
+            render: (_, r) => formatCurrency(r.pricing.profit),
+            sorter: true,
+          },
+        ]}
+        scroll={{ x: "max-content" }}
+      />
     </div>
   );
 }

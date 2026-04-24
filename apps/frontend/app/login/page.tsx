@@ -5,12 +5,27 @@ import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { usePostLogin } from "@/api/auth.api";
 import { setFrontendAuthCookie } from "@/lib/auth";
+import { useForm } from "react-hook-form";
+import {
+  AuthLoginRequest,
+  authLoginSchema,
+} from "../../../shared/types/auth.type";
+import { zodResolver } from "@hookform/resolvers/zod";
+import VetForm from "@/components/VetForm";
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const { data, mutate, loading } = usePostLogin();
+  const { control, handleSubmit } = useForm<AuthLoginRequest>({
+    resolver: zodResolver(authLoginSchema),
+    defaultValues: {
+      email: "admin@vet.com",
+      password: "admin123",
+    },
+  });
   const router = useRouter();
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: AuthLoginRequest) => {
+    console.log(values);
     const response = await mutate({
       body: values,
       onSuccess: () => {
@@ -35,35 +50,30 @@ export default function LoginPage() {
         <Form
           name="login"
           layout="vertical"
-          onFinish={onFinish}
+          onFinish={handleSubmit(onFinish)}
           autoComplete="off"
         >
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[
-              { required: true, message: "Email wajib diisi" },
-              { type: "email", message: "Format email tidak valid" },
-            ]}
-          >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder="email@example.com"
-              size="large"
-            />
-          </Form.Item>
+          <VetForm label="Email" name="email" control={control}>
+            {(field) => (
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="email@example.com"
+                size="large"
+                {...field}
+              />
+            )}
+          </VetForm>
 
-          <Form.Item
-            label="Password"
-            name="password"
-            rules={[{ required: true, message: "Password wajib diisi" }]}
-          >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Masukkan password"
-              size="large"
-            />
-          </Form.Item>
+          <VetForm control={control} label="Password" name="password">
+            {(field) => (
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Masukkan password"
+                size="large"
+                {...field}
+              />
+            )}
+          </VetForm>
 
           <Form.Item>
             <Button

@@ -1,3 +1,4 @@
+import { AuthLoginRequest } from "../../shared/types/auth.type";
 import useFetch from "../hooks/useFetch";
 
 export function usePostLogout() {
@@ -5,7 +6,7 @@ export function usePostLogout() {
 }
 
 export function usePostLogin() {
-  return useFetch({
+  return useFetch<undefined, AuthLoginRequest>({
     method: "POST",
     path: "/api/auth/login",
   });

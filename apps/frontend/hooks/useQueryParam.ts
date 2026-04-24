@@ -32,5 +32,9 @@ export default function useQueryParams<T>(defaultValue: T) {
     );
   };
 
-  return [debounceState, setState] as const;
+  return {
+    debounceQuery: debounceState,
+    setQuery: setState,
+    query: state,
+  } as const;
 }

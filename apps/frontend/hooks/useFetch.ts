@@ -11,7 +11,8 @@ interface FetchProps<TBody = any> {
     | "/api/products"
     | "/api/auth/logout"
     | "/api/products/import"
-    | "/api/sales/sync";
+    | "/api/sales/sync"
+    | "/api/sales";
   method?: "POST" | "GET" | "PUT" | "DELETE";
   runOnMount?: boolean;
   params?: any;
@@ -24,16 +25,15 @@ const isPlainObject = (v: any): v is Record<string, any> =>
   typeof v === "object" && v !== null && !Array.isArray(v) && !isFormData(v);
 
 const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-
   if (
     typeof window !== "undefined" &&
     window.location.hostname.endsWith(".asse.devtunnels.ms")
   ) {
     return "https://sf641vt8-4000.asse.devtunnels.ms";
   }
+
+  console.log("hostname", window.location.hostname);
+  console.log("called");
 
   return "http://localhost:4000";
 };
@@ -46,6 +46,7 @@ export async function fetcher<T, TBody = any>({
 }: FetchProps<TBody>): Promise<T> {
   const BASE_URL = getBaseUrl();
   let url = `${BASE_URL}${path}`;
+  console.log("url:", url);
 
   if (params) {
     const stringParam = Object.fromEntries(

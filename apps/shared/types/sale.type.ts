@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { paginationQuerySchema } from "./pagination";
 
 const numberFromString = z.preprocess((val) => {
   if (val === "" || val === null || val === undefined) return 0;
@@ -37,7 +38,6 @@ export const saleSchema = z.object({
   paymentMethod: z.string(), // payment
   customer: z.string().optional().nullable(), // konsumen
   cashier: z.string(),
-
 });
 
 export const mapSales = (row: any) => {
@@ -71,9 +71,28 @@ export const mapSales = (row: any) => {
     paymentMethod: row.payment,
     customer: row.konsumen || null,
     cashier: row.kasir,
-
   });
 };
+
+export const salesSortByList = [
+  "receiptNumber",
+  "timestamp",
+  "pricing.cost",
+  "pricing.profit",
+  "pricing.selling",
+  "pricing.total",
+] as const;
+
+export type SalesSortBy = (typeof salesSortByList)[number];
+
+export const salesFilterSchema = paginationQuerySchema.extend({
+  search: z.string().optional(),
+  sortBy: z.enum(salesSortByList).default("timestamp"),
+
+  order: z.enum(["asc", "desc"]).default("desc"),
+});
+
+export interface SalesFilter extends z.infer<typeof salesFilterSchema> {}
 
 
 export type ISale = z.infer<typeof saleSchema>;

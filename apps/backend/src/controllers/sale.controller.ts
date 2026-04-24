@@ -2,7 +2,9 @@ import { Request, Response } from "express";
 import { scrapeSchema } from "../../../shared/types/scrape.type";
 import { sendResponse } from "src/services/response.service";
 import { SaleModel } from "src/models/sale.model";
-import { mapSales } from "../../../shared/types/sale.type";
+import { mapSales, salesFilterSchema } from "../../../shared/types/sale.type";
+import { buildSearchQuery, paginate } from "src/services/pagination.service";
+import { productsFilterSchema } from "../../../shared/types/product.type";
 
 const BASE_URL = "https://app.aplikasir.com/a/app/sales_data?278311db8";
 const PAGE_SIZE = 50;
@@ -101,6 +103,35 @@ export const sync = async (req: Request, res: Response) => {
   }
 };
 
+const get = async (req: Request, res: Response) => {
+  const parsed = salesFilterSchema.parse(req.query);
+
+  const { page, limit, search, sortBy, order } = parsed;
+
+  // 🔍 base query
+  let query: any = {};
+
+  // 🔍 search
+  Object.assign(
+    query,
+    buildSearchQuery(search, ["receiptNumber", "cashier", "customer"]),
+  );
+
+  const result = await paginate(SaleModel, query, {
+    page,
+    limit,
+    sortBy,
+    order,
+  });
+
+  return sendResponse(res, {
+    success: true,
+    data: result.data,
+    meta: result.meta,
+  });
+};
+
 export const saleController = {
   sync,
+  get,
 };

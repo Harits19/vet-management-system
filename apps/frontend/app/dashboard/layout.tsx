@@ -7,8 +7,10 @@ import {
   AppstoreOutlined,
 } from "@ant-design/icons";
 import { useRouter, usePathname } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DashboardHeader from "./components/DashboardHeader";
+import { useGetMe } from "@/api/auth.api";
+import { clearFrontendAuthCookie } from "@/lib/auth";
 
 const { Header, Sider, Content } = Layout;
 
@@ -20,6 +22,7 @@ export default function DashboardLayout({
   const [collapsed, setCollapsed] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { mutate: validateSession } = useGetMe();
 
   const {
     token: { colorBgContainer },
@@ -56,6 +59,19 @@ export default function DashboardLayout({
       label: "POS",
     },
   ];
+
+  useEffect(() => {
+    const verifySession = async () => {
+      const response = await validateSession({});
+
+      if (!response) {
+        clearFrontendAuthCookie();
+        router.replace("/login");
+      }
+    };
+
+    verifySession();
+  }, [router]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>

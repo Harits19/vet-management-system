@@ -57,3 +57,28 @@ export const login = async (email: string, password: string) => {
     },
   };
 };
+
+type AuthPayload = {
+  userId: string;
+  role: UserRole;
+};
+
+export const getCurrentUser = async (token?: string) => {
+  if (!token) {
+    throw new Error("Unauthorized");
+  }
+
+  const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
+  const user = await UserModel.findById(decoded.userId);
+
+  if (!user || !user.is_active) {
+    throw new Error("Unauthorized");
+  }
+
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  };
+};

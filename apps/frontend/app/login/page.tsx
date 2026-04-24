@@ -4,14 +4,23 @@ import { Button, Card, Form, Input, Typography } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { usePostLogin } from "@/api/auth.api";
+import { setFrontendAuthCookie } from "@/lib/auth";
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const { data, mutate, loading } = usePostLogin();
   const router = useRouter();
   const onFinish = async (values: any) => {
-    await mutate({ body: values });
-    router.push("/dashboard");
+    const response = await mutate({
+      body: values,
+      onSuccess: () => {
+        setFrontendAuthCookie();
+      },
+    });
+
+    if (response) {
+      router.push("/dashboard");
+    }
   };
 
   return (

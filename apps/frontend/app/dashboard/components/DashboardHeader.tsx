@@ -1,8 +1,8 @@
 import { Dropdown, Button, Layout } from "antd";
 import { DownOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import useFetch from "@/hooks/useFetch";
 import { usePostLogout } from "@/api/auth.api";
+import { clearFrontendAuthCookie } from "@/lib/auth";
 const { Header } = Layout;
 
 export default function DashboardHeader() {
@@ -10,7 +10,11 @@ export default function DashboardHeader() {
   const { mutate } = usePostLogout();
 
   const handleLogout = async () => {
-    await mutate({});
+    await mutate({
+      onSuccess: () => {
+        clearFrontendAuthCookie();
+      },
+    });
 
     router.push("/login");
   };

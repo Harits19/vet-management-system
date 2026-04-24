@@ -10,3 +10,10 @@ export function usePostLogin() {
     path: "/api/auth/login",
   });
 }
+
+export function useGetMe() {
+  return useFetch({
+    method: "GET",
+    path: "/api/auth/me",
+  });
+}

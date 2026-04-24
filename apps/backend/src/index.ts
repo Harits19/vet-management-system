@@ -8,6 +8,7 @@ import productRouter from "./routes/products.routes.js";
 import { seedSuperAdmin } from "./services/auth.service.js";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/error.middleware.js";
+import { isAllowedOrigin } from "./config/auth.config.js";
 
 const app = express();
 const port = Number(4000);
@@ -16,8 +17,14 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:3002",
-    credentials: true, // 🔥 WAJIB untuk cookie
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
+    credentials: true,
   }),
 );
 app.use(express.json());

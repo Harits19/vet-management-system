@@ -6,6 +6,7 @@ interface FetchProps {
   body?: any;
   path?:
     | "/api/auth/login"
+    | "/api/auth/me"
     | ""
     | "/api/products"
     | "/api/auth/logout"
@@ -21,13 +22,28 @@ const isFormData = (v: any): v is FormData =>
 const isPlainObject = (v: any): v is Record<string, any> =>
   typeof v === "object" && v !== null && !Array.isArray(v) && !isFormData(v);
 
+const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  if (
+    typeof window !== "undefined" &&
+    window.location.hostname.endsWith(".asse.devtunnels.ms")
+  ) {
+    return "https://sf641vt8-4000.asse.devtunnels.ms";
+  }
+
+  return "http://localhost:4000";
+};
+
 export async function fetcher<T, TBody = any>({
   body,
   path = "",
   method = "GET",
   params,
 }: FetchProps): Promise<T> {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const BASE_URL = getBaseUrl();
   let url = `${BASE_URL}${path}`;
 
   if (params) {
@@ -111,10 +127,12 @@ export default function useFetch<TResponse, TBody = any>({
       }
       onSuccess?.();
       setData(data);
+      return data;
     } catch (error: any) {
       setData(undefined);
       message.error(error?.message);
       setError(error);
+      return undefined;
     } finally {
       setLoading(false);
     }

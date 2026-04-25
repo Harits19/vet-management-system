@@ -6,6 +6,29 @@ export interface Sale extends ISale, Document {
   updatedAt: Date;
 }
 
+const SaleItemSchema = new mongoose.Schema(
+  {
+    product: {
+      id: { type: String },
+      name: { type: String, required: true },
+      code: { type: String },
+    },
+
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
+    pricing: {
+      cost: { type: Number, default: 0 },
+      selling: { type: Number, required: true },
+      total: { type: Number, required: true },
+    },
+  },
+  { _id: false }, // 🔥 penting
+);
+
 const SaleSchema = new mongoose.Schema<Sale>(
   {
     receiptNumber: { type: String, required: true, index: true },
@@ -38,7 +61,13 @@ const SaleSchema = new mongoose.Schema<Sale>(
     customer: { type: String },
     cashier: { type: String },
 
-    externalId: { type: String, unique: true }, // id dari sistem luar
+    externalId: { type: String, unique: true },
+
+    items: {
+      type: [SaleItemSchema],
+      required: true,
+      validate: [(val: any[]) => val.length > 0, "Items wajib ada"],
+    },
   },
   {
     timestamps: true,

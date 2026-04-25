@@ -1,10 +1,32 @@
 import { z } from "zod";
 import { paginationQuerySchema } from "./pagination";
+import { numberRequired, stringRequired } from "./zod";
 
 const numberFromString = z.preprocess((val) => {
   if (val === "" || val === null || val === undefined) return 0;
   return Number(val);
 }, z.number());
+
+const salesPricingSchema = z.object({
+  cost: numberRequired.optional(),
+  selling: numberRequired,
+  total: numberRequired,
+});
+
+const saleItemSchema = z.object({
+  product: z.object({
+    id: z.string().optional(),
+    name: z.string().min(1, "Nama produk wajib"),
+    code: z.string().optional(),
+  }),
+
+  quantity: z.preprocess(
+    (val) => Number(val),
+    z.number().min(1, "Qty minimal 1"),
+  ),
+
+  pricing: salesPricingSchema,
+});
 
 export const saleSchema = z.object({
   externalId: z.string(),
@@ -38,7 +60,26 @@ export const saleSchema = z.object({
   paymentMethod: z.string(), // payment
   customer: z.string().optional().nullable(), // konsumen
   cashier: z.string(),
+  // 🔥 CORE
+  items: z.array(saleItemSchema).min(1, "Minimal 1 item"),
 });
+
+export const salesCreateSchema = saleSchema
+  .pick({
+    paymentMethod: true,
+    customer: true,
+  })
+  .extend({
+    paidAmount: numberRequired,
+    customer: stringRequired.optional(),
+    items: z.array(
+      saleItemSchema.omit({ pricing: true }).extend({
+        pricing: salesPricingSchema.omit({ total: true }),
+      }),
+    ),
+  });
+
+export interface SaleCreateRequest extends z.infer<typeof salesCreateSchema> {}
 
 export const mapSales = (row: any) => {
   return saleSchema.parse({
@@ -93,6 +134,5 @@ export const salesFilterSchema = paginationQuerySchema.extend({
 });
 
 export interface SalesFilter extends z.infer<typeof salesFilterSchema> {}
-
 
 export type ISale = z.infer<typeof saleSchema>;

@@ -18,7 +18,7 @@ export const sync = async ({ syncLatestOnly = false }: { syncLatestOnly?: boolea
     let start = 0;
     let total = 0;
     let allData: any[] = [];
-    let currentData = 0;
+    let currentData = start;
 
     const meta = {
         inserted: 0,
@@ -88,7 +88,7 @@ export const sync = async ({ syncLatestOnly = false }: { syncLatestOnly?: boolea
         meta.updated += result.modifiedCount;
 
         await new Promise((r) => setTimeout(r, 200));
-    } while (!syncLatestOnly && allData.length < total);
+    } while (!syncLatestOnly || allData.length < total);
 
     return {
         total: allData.length,
@@ -117,7 +117,6 @@ export const syncDetail = async ({ id, cookie }: { id: string, cookie: string })
     }
 
     const detail = await detailResponse.json();
-    await delay(500)
 
     return detail as AplikasirSaleDetailItem[];
 }

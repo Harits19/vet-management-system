@@ -84,3 +84,5 @@ SaleSchema.index(
 );
 
 export const SaleModel = mongoose.model("Sale", SaleSchema);
+
+

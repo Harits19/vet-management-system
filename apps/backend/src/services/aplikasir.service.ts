@@ -1,8 +1,11 @@
 import { SaleModel } from "src/models/sale.model";
-import { mapSales } from "../../../shared/types/sale.type";
+import { mapSales, SaleTableItem } from "../../../shared/types/sale.type";
+import { delay } from "../../../shared/utils/promise.util";
 import authService from "./auth.service";
+import { AplikasirSaleDetailItem } from "src/models/aplikasir.model";
 
 const BASE_URL = "https://app.aplikasir.com/a/app/sales_data?278311db8";
+
 const PAGE_SIZE = 50;
 export const sync = async ({ syncLatestOnly = false }: { syncLatestOnly?: boolean }) => {
     const currentCookie = await authService.getCookie();
@@ -56,7 +59,13 @@ export const sync = async ({ syncLatestOnly = false }: { syncLatestOnly?: boolea
         allData.push(...rows);
         start += PAGE_SIZE;
 
-        const cleanedRows = rows.map(mapSales);
+        const cleanedRows: SaleTableItem[] = [];
+
+        for (const row of rows) {
+            const detail = await syncDetail({ id: row.id, cookie });
+            const mapped = mapSales(row, detail);
+            cleanedRows.push(mapped)
+        }
 
         const operations = cleanedRows.map((item: any) => ({
             updateOne: {
@@ -83,8 +92,33 @@ export const sync = async ({ syncLatestOnly = false }: { syncLatestOnly?: boolea
         ...meta,
     }
 };
+const DETAIL_URL = "https://app.aplikasir.com/a/app/history_detailajax";
 
 
+export const syncDetail = async ({ id, cookie }: { id: string, cookie: string }) => {
+
+    const detailResponse = await fetch(
+        `${DETAIL_URL}/${id}?278311db8`,
+        {
+            method: "GET",
+            headers: {
+                accept: "application/json, text/javascript, */*; q=0.01",
+                "x-requested-with": "XMLHttpRequest",
+                cookie,
+            },
+        }
+    );
+
+    if (!detailResponse.ok) {
+        throw new Error(`Detail HTTP ${detailResponse.status}`);
+    }
+
+    const detail = await detailResponse.json();
+    console.log('detail', detail)
+    await delay
+
+    return detail as AplikasirSaleDetailItem[];
+}
 
 
 export default {

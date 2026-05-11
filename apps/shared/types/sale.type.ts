@@ -28,6 +28,22 @@ const saleItemSchema = z.object({
   pricing: salesPricingSchema,
 });
 
+export const mapSaleItem = (item: any) =>
+  saleItemSchema.parse({
+    product: {
+      id: item.id_kproduk,
+      name: item.nama,
+      code: item.kode || undefined,
+    },
+
+    quantity: item.jumlah,
+
+    pricing: {
+      selling: item.hargajual,
+      total: item.totalhargajual,
+    },
+  });
+
 export const saleSchema = z.object({
   externalId: z.string(),
 
@@ -64,9 +80,7 @@ export const saleSchema = z.object({
   items: z.array(saleItemSchema).min(1, "Minimal 1 item"),
 });
 
-export const saleSchemaTableItem = saleSchema.omit({ items: true })
 
-export interface SaleTableItem extends z.infer<typeof saleSchemaTableItem> { }
 
 
 export const salesCreateSchema = saleSchema
@@ -86,8 +100,8 @@ export const salesCreateSchema = saleSchema
 
 export interface SaleCreateRequest extends z.infer<typeof salesCreateSchema> { }
 
-export const mapSales = (row: any) => {
-  const result = saleSchemaTableItem.parse({
+export const mapSales = (row: any, items: any[]) => {
+  const result = saleSchema.parse({
     externalId: row.id,
     receiptNumber: row.nostruk,
     timestamp: row.timestamp,
@@ -98,7 +112,7 @@ export const mapSales = (row: any) => {
       total: row.hargatotal,
       selling: row.hargajual,
     },
-
+    items: items.map(mapSaleItem),
     additional: {
       serviceCharge: row.sc,
       discount: row.diskon,

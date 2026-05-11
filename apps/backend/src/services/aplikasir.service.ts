@@ -8,12 +8,7 @@ const BASE_URL = "https://app.aplikasir.com/a/app/sales_data?278311db8";
 
 const PAGE_SIZE = 50;
 export const sync = async ({ syncLatestOnly = false }: { syncLatestOnly?: boolean }) => {
-    const currentCookie = await authService.getCookie();
-    const cookie = currentCookie?.cookie;
-
-    if (!cookie) {
-        throw new Error("Cookie tidak ditemukan")
-    }
+    const cookie = await authService.getCookie();
 
     let start = 0;
     let total = 0;
@@ -125,4 +120,5 @@ export const syncDetail = async ({ id, cookie }: { id: string, cookie: string })
 export default {
     sync,
 
+    syncDetail,
 }

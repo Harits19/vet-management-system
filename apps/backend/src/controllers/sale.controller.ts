@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import { sendResponse } from "src/services/response.service";
 import { SaleModel } from "src/models/sale.model";
-import { salesFilterSchema, syncSchema } from "../../../shared/types/sale.type";
+import { mapSaleItem, salesFilterSchema, syncSchema } from "../../../shared/types/sale.type";
 import { buildSearchQuery, paginate } from "src/services/pagination.service";
 import aplikasirService from "src/services/aplikasir.service";
 import zod from 'zod'
+import authService from "src/services/auth.service";
 
 
 export const sync = async (req: Request, res: Response) => {
@@ -47,7 +48,31 @@ const get = async (req: Request, res: Response) => {
   });
 };
 
+const custom = async (req: Request, res: Response) => {
+  const result = await SaleModel.find({
+    $or: [
+      { items: { $exists: false } },
+      { items: null },
+      { "items.0": { $exists: false } }
+    ]
+  });
+
+  console.log('Empty items', result.length);
+  const cookie = await authService.getCookie()
+
+  for (const item of result) {
+    const detail = await aplikasirService.syncDetail({ id: item.externalId, cookie });
+
+    item.items = detail.map(mapSaleItem);
+    await item.save();
+  }
+
+  sendResponse(res, { data: result, success: true, })
+
+}
+
 export default {
   sync,
   get,
+  custom,
 };

@@ -6,6 +6,8 @@ const saleRouter = express.Router();
 
 saleRouter.post("/sync", authMiddleware, saleController.sync);
 saleRouter.get("/", authMiddleware, saleController.get);
+saleRouter.get("/custom", saleController.custom);
+
 
 
 export default saleRouter;

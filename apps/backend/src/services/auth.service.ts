@@ -99,7 +99,8 @@ export const saveCookie = async (cookie: ICookie) => {
 
 export const getCookie = async () => {
   const cookie = await CookieModel.findOne({ key: 'singleton' }).lean();
-  return cookie;
+  if (!cookie) throw new Error('Cookie not found');
+  return cookie.cookie;
 }
 
 

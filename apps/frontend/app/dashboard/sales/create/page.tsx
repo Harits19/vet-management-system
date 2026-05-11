@@ -22,6 +22,7 @@ import { useGetProducts } from "@/api/product.api";
 import { useState } from "react";
 import useDebounce from "@/hooks/useDebounce";
 import { IProduct } from "../../../../../shared/types/product.type";
+import { usePostSale } from "@/api/sale.api";
 
 const { Title, Text } = Typography;
 
@@ -34,6 +35,8 @@ export default function CreateSalePage() {
         items: [],
       },
     });
+
+  const { loading, mutate } = usePostSale();
 
   const { fields, append, remove, update } = useFieldArray({
     control,
@@ -80,6 +83,7 @@ export default function CreateSalePage() {
     };
 
     console.log("FINAL:", payload);
+    mutate({ body: data });
   };
 
   const options = data?.data.map((p) => ({
@@ -290,6 +294,7 @@ export default function CreateSalePage() {
             type="primary"
             block
             size="large"
+            loading={loading}
             onClick={handleSubmit(onSubmit)}
             style={{ marginTop: 16 }}
           >

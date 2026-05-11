@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { sendResponse } from "src/services/response.service";
 import { SaleModel } from "src/models/sale.model";
-import { mapSaleItem, salesFilterSchema, syncSchema } from "../../../shared/types/sale.type";
+import { mapSaleItem, SaleCreateRequest, salesCreateSchema, salesFilterSchema, syncSchema } from "../../../shared/types/sale.type";
 import { buildSearchQuery, paginate } from "src/services/pagination.service";
 import aplikasirService from "src/services/aplikasir.service";
 import zod from 'zod'
@@ -71,8 +71,20 @@ const custom = async (req: Request, res: Response) => {
 
 }
 
+const create = async (req: Request, res: Response) => {
+  const body: SaleCreateRequest = salesCreateSchema.parse(req.body ?? {})
+
+  const newSale = new SaleModel({ ...body })
+
+  const result = await newSale.save();
+
+  sendResponse(res, { success: true, data: result })
+
+}
+
 export default {
   sync,
   get,
   custom,
+  create
 };

@@ -1,6 +1,6 @@
 import useFetch from "@/hooks/useFetch";
 import { IScrape } from "../../shared/types/scrape.type";
-import { ISale, SalesFilter, SyncRequest } from "../../shared/types/sale.type";
+import { ISale, SaleCreateRequest, SalesFilter, SyncRequest } from "../../shared/types/sale.type";
 import { ApiResponse } from "../../shared/types/api";
 
 export function useSyncSales({ syncLatestOnly }: SyncRequest) {
@@ -19,4 +19,14 @@ export function useGetSales(pagination: SalesFilter) {
     runOnInit: true,
     params: pagination,
   });
+}
+
+
+export function usePostSale() {
+
+  return useFetch<void, SaleCreateRequest>({
+    method: 'POST',
+    path: '/api/sales',
+
+  })
 }

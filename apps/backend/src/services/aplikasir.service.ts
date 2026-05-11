@@ -18,6 +18,7 @@ export const sync = async ({ syncLatestOnly = false }: { syncLatestOnly?: boolea
     let start = 0;
     let total = 0;
     let allData: any[] = [];
+    let currentData = 0;
 
     const meta = {
         inserted: 0,
@@ -62,6 +63,8 @@ export const sync = async ({ syncLatestOnly = false }: { syncLatestOnly?: boolea
         const cleanedRows: SaleSyncItem[] = [];
 
         for (const row of rows) {
+            currentData++;
+            console.log('currentData', currentData)
             const detail = await syncDetail({ id: row.id, cookie });
             const mapped = mapSales(row, detail);
             cleanedRows.push(mapped)
@@ -114,8 +117,7 @@ export const syncDetail = async ({ id, cookie }: { id: string, cookie: string })
     }
 
     const detail = await detailResponse.json();
-    console.log('detail', detail)
-    await delay
+    await delay(500)
 
     return detail as AplikasirSaleDetailItem[];
 }

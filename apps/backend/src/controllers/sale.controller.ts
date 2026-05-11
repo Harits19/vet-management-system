@@ -8,9 +8,8 @@ import zod from 'zod'
 
 
 export const sync = async (req: Request, res: Response) => {
-  console.log('sync body', JSON.stringify(req.body))
 
-  const body = syncSchema.parse(req.body);
+  const body = syncSchema.parse(req.body ?? {});
   await aplikasirService.sync(body)
 
   sendResponse(res, {

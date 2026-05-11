@@ -1,15 +1,20 @@
 "use client";
 
 import { useSyncSales } from "@/api/sale.api";
-import { Button, Card } from "antd";
+import { Button, Card, Flex } from "antd";
 
 export default function ScrapeSalesPage() {
   const syncAll = useSyncSales({});
   const syncLatest = useSyncSales({ syncLatestOnly: true });
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto" }}>
-      <Card title="Sync / Scrape Sales Data" style={{ marginBottom: 24 }}>
+    <Card
+      title="Sync / Scrape Sales Data"
+      style={{
+        marginBottom: 24,
+      }}
+    >
+      <Flex vertical gap={12}>
         <Button
           type="primary"
           onClick={() => syncAll.mutate({})}
@@ -18,6 +23,7 @@ export default function ScrapeSalesPage() {
         >
           🚀 Sync Data
         </Button>
+
         <Button
           type="primary"
           onClick={() =>
@@ -32,7 +38,7 @@ export default function ScrapeSalesPage() {
         >
           🚀 Sync Latest Data Only
         </Button>
-      </Card>
-    </div>
+      </Flex>
+    </Card>
   );
 }

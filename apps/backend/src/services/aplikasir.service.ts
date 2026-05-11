@@ -1,5 +1,5 @@
 import { SaleModel } from "src/models/sale.model";
-import { mapSales, SaleTableItem } from "../../../shared/types/sale.type";
+import { mapSales, SaleSyncItem } from "../../../shared/types/sale.type";
 import { delay } from "../../../shared/utils/promise.util";
 import authService from "./auth.service";
 import { AplikasirSaleDetailItem } from "src/models/aplikasir.model";
@@ -59,7 +59,7 @@ export const sync = async ({ syncLatestOnly = false }: { syncLatestOnly?: boolea
         allData.push(...rows);
         start += PAGE_SIZE;
 
-        const cleanedRows: SaleTableItem[] = [];
+        const cleanedRows: SaleSyncItem[] = [];
 
         for (const row of rows) {
             const detail = await syncDetail({ id: row.id, cookie });

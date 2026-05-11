@@ -100,7 +100,7 @@ export const salesCreateSchema = saleSchema
 
 export interface SaleCreateRequest extends z.infer<typeof salesCreateSchema> { }
 
-export const mapSales = (row: any, items: any[]) => {
+export const mapSales = (row: any, items: any[]): SaleSyncItem => {
   const result = saleSchema.parse({
     externalId: row.id,
     receiptNumber: row.nostruk,
@@ -156,6 +156,8 @@ export const salesFilterSchema = paginationQuerySchema.extend({
 export interface SalesFilter extends z.infer<typeof salesFilterSchema> { }
 
 export type ISale = z.infer<typeof saleSchema>;
+
+export interface SaleSyncItem extends ISale {}
 
 
 export const syncSchema = z.object({

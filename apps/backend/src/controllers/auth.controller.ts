@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import * as authService from "../services/auth.service";
 import { sendResponse } from "src/services/response.service";
-import { userLoginSchema } from "src/models/user.model";
 import { getCookieOptions } from "../config/auth.config.js";
+import { authLoginSchema, cookieSchema } from "../../../shared/types/auth.type";
 
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = userLoginSchema.parse(req.body);
+  const { email, password } = authLoginSchema.parse(req.body);
 
   const data = await authService.login(email, password);
 
@@ -33,7 +33,24 @@ export const me = async (req: Request, res: Response) => {
   });
 };
 
+export const saveCookie = async (req: Request, res: Response) => {
+  const cookie = cookieSchema.parse(req.body);
+  await authService.saveCookie(cookie);
+  sendResponse(res, {
+    success: true,
+    data: undefined,
+  })
+}
+
+export const getCookie = async (req: Request, res: Response) => {
+  const cookie = await authService.getCookie();
+  sendResponse(res, {
+    success: true,
+    data: cookie,
+  })
+}
+
 
 export const authController = {
-  login, logout, me,
+  login, logout, me, saveCookie, getCookie,
 }

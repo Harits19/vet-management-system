@@ -1,4 +1,5 @@
-import { AuthLoginRequest } from "../../shared/types/auth.type";
+import { ApiResponse } from "../../shared/types/api";
+import { AuthLoginRequest, CookieRequest, CookieResponse } from "../../shared/types/auth.type";
 import useFetch from "../hooks/useFetch";
 
 export function usePostLogout() {
@@ -17,4 +18,25 @@ export function useGetMe() {
     method: "GET",
     path: "/api/auth/me",
   });
+}
+
+
+export function usePostCookie() {
+
+  return useFetch<undefined, CookieRequest>({
+    method: "POST",
+    path: "/api/auth/cookie",
+
+  })
+}
+
+export function useGetCookie() {
+
+  return useFetch<ApiResponse<CookieResponse>>({
+    method: "GET",
+    path: "/api/auth/cookie",
+    runOnMount: true,
+    runOnInit: true,
+  })
+
 }

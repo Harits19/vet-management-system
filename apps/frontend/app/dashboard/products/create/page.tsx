@@ -30,7 +30,6 @@ export default function CreateProductPage() {
   return (
     <Card title="Tambah Produk">
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-        {JSON.stringify(watch(), null, 2)}
         {/* CATEGORY */}
         <VetForm control={control} name="category" label="Kategori">
           {(field) => <Input {...field} />}

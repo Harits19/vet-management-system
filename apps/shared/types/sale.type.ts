@@ -64,6 +64,11 @@ export const saleSchema = z.object({
   items: z.array(saleItemSchema).min(1, "Minimal 1 item"),
 });
 
+export const saleSchemaTableItem = saleSchema.omit({ items: true })
+
+export interface SaleTableItem extends z.infer<typeof saleSchemaTableItem> { }
+
+
 export const salesCreateSchema = saleSchema
   .pick({
     paymentMethod: true,
@@ -79,15 +84,14 @@ export const salesCreateSchema = saleSchema
     ),
   });
 
-export interface SaleCreateRequest extends z.infer<typeof salesCreateSchema> {}
+export interface SaleCreateRequest extends z.infer<typeof salesCreateSchema> { }
 
 export const mapSales = (row: any) => {
-  return saleSchema.parse({
+  const result = saleSchemaTableItem.parse({
     externalId: row.id,
     receiptNumber: row.nostruk,
     timestamp: row.timestamp,
     paymentStatus: row.bayar,
-
     pricing: {
       cost: row.hargapokok,
       profit: row.laba,
@@ -113,6 +117,8 @@ export const mapSales = (row: any) => {
     customer: row.konsumen || null,
     cashier: row.kasir,
   });
+
+  return result;
 };
 
 export const salesSortByList = [
@@ -133,6 +139,16 @@ export const salesFilterSchema = paginationQuerySchema.extend({
   order: z.enum(["asc", "desc"]).default("desc"),
 });
 
-export interface SalesFilter extends z.infer<typeof salesFilterSchema> {}
+export interface SalesFilter extends z.infer<typeof salesFilterSchema> { }
 
 export type ISale = z.infer<typeof saleSchema>;
+
+
+export const syncSchema = z.object({
+  syncLatestOnly: z.boolean().optional(),
+})
+
+export interface ISync extends z.infer<typeof syncSchema> { }
+
+export interface SyncRequest extends ISync { }
+

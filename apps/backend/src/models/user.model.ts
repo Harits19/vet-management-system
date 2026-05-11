@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { z } from "zod";
 export enum UserRole {
   SUPERADMIN = "superadmin",
   ADMIN = "admin",
@@ -7,10 +6,7 @@ export enum UserRole {
   CASHIER = "cashier",
 }
 
-export const userLoginSchema = z.object({
-  email: z.email(),
-  password: z.string().min(6),
-});
+
 
 export interface IUser extends Document {
   name: string;

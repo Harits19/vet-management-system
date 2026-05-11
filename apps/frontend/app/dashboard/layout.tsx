@@ -5,6 +5,7 @@ import {
   DashboardOutlined,
   ShoppingCartOutlined,
   AppstoreOutlined,
+  KeyOutlined,
 } from "@ant-design/icons";
 import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -72,11 +73,16 @@ export default function DashboardLayout({
         },
       ],
     },
-
     {
-      key: "/dashboard/pos",
-      icon: <ShoppingCartOutlined />,
-      label: "POS",
+      key: "auth",
+      icon: <KeyOutlined />,
+      label: "Auth",
+      children: [
+        {
+          key: "/dashboard/auth",
+          label: "Config",
+        },
+      ],
     },
   ];
 

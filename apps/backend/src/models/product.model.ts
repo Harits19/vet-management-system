@@ -6,7 +6,7 @@ export interface Product extends IProduct, Document {
   updatedAt: Date;
 }
 
-const ProductSchema = new Schema<IProduct>(
+const ProductSchema = new Schema<Product>(
   {
     category: {
       type: String,

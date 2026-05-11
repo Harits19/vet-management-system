@@ -5,14 +5,15 @@ import { useEffect, useState } from "react";
 interface FetchProps<TBody = any> {
   body?: TBody;
   path?:
-    | "/api/auth/login"
-    | "/api/auth/me"
-    | ""
-    | "/api/products"
-    | "/api/auth/logout"
-    | "/api/products/import"
-    | "/api/sales/sync"
-    | "/api/sales";
+  | "/api/auth/login"
+  | "/api/auth/me"
+  | ""
+  | "/api/products"
+  | "/api/auth/logout"
+  | "/api/products/import"
+  | "/api/sales/sync"
+  | "/api/sales"
+  | "/api/auth/cookie";
   method?: "POST" | "GET" | "PUT" | "DELETE";
   runOnMount?: boolean;
   params?: any;
@@ -68,6 +69,7 @@ export async function fetcher<T, TBody = any>({
 
     headers["Content-Type"] = "application/json";
   }
+
   const res = await fetch(url, {
     method,
     credentials: "include",

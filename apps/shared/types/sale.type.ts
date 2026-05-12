@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { paginationQuerySchema } from "./pagination";
+import { generateSortFilterSchema, paginationQuerySchema } from "./pagination";
 import { numberRequired, stringRequired } from "./zod";
+import { NestedKeys } from "./common.type";
 
 const numberFromString = z.preprocess((val) => {
   if (val === "" || val === null || val === undefined) return 0;
@@ -77,14 +78,15 @@ export const saleSchema = z.object({
   customer: z.string().optional().nullable(), // konsumen
   cashier: z.object({
     userId: z.any(),
-    name: z.string()
+    name: z.string(),
   }),
   // 🔥 CORE
   items: z.array(saleItemSchema).min(1, "Minimal 1 item"),
 });
 
+export interface ISale extends z.infer<typeof saleSchema> {}
 
-
+type SaleKey = NestedKeys<ISale>;
 
 export const salesCreateSchema = saleSchema
   .pick({
@@ -101,7 +103,7 @@ export const salesCreateSchema = saleSchema
     ),
   });
 
-export interface SaleCreateRequest extends z.infer<typeof salesCreateSchema> { }
+export interface SaleCreateRequest extends z.infer<typeof salesCreateSchema> {}
 
 export const mapSales = (row: any, items: any[]): SaleSyncItem => {
   const result = saleSchema.parse({
@@ -138,9 +140,9 @@ export const mapSales = (row: any, items: any[]): SaleSyncItem => {
   return result;
 };
 
-export const salesSortByList = [
-  "receiptNumber",
+export const salesSortByList: SaleKey[] = [
   "timestamp",
+  "receiptNumber",
   "pricing.cost",
   "pricing.profit",
   "pricing.selling",
@@ -149,25 +151,19 @@ export const salesSortByList = [
 
 export type SalesSortBy = (typeof salesSortByList)[number];
 
-export const salesFilterSchema = paginationQuerySchema.extend({
-  search: z.string().optional(),
-  sortBy: z.enum(salesSortByList).default("timestamp"),
-
-  order: z.enum(["asc", "desc"]).default("desc"),
+export const salesFilterSchema = generateSortFilterSchema({
+  sortList: salesSortByList,
+  defaultSort: "timestamp",
 });
 
-export interface SalesFilter extends z.infer<typeof salesFilterSchema> { }
-
-export type ISale = z.infer<typeof saleSchema>;
+export interface SalesFilter extends z.infer<typeof salesFilterSchema> {}
 
 export interface SaleSyncItem extends ISale {}
 
-
 export const syncSchema = z.object({
   syncLatestOnly: z.boolean().optional(),
-})
+});
 
-export interface ISync extends z.infer<typeof syncSchema> { }
+export interface ISync extends z.infer<typeof syncSchema> {}
 
-export interface SyncRequest extends ISync { }
-
+export interface SyncRequest extends ISync {}

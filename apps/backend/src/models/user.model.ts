@@ -8,7 +8,7 @@ export enum UserRole {
 
 
 
-export interface IUser extends Document {
+export interface User extends Document {
   name: string;
   email: string;
   password: string;
@@ -19,7 +19,7 @@ export interface IUser extends Document {
   username: string;
 }
 
-const UserSchema = new Schema<IUser>(
+const UserSchema = new Schema<User>(
   {
     name: {
       type: String,
@@ -63,4 +63,4 @@ const UserSchema = new Schema<IUser>(
   },
 );
 
-export const UserModel = mongoose.model<IUser>("User", UserSchema);
+export const UserModel = mongoose.model<User>("User", UserSchema);

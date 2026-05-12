@@ -1,4 +1,7 @@
 import { Model, FilterQuery } from "mongoose";
+import { ZodObject } from "zod";
+import { Request } from "express";
+import { LeafNestedKeys, NestedKeys } from "../../../shared/types/common.type";
 
 interface PaginationParams {
   page: number;
@@ -46,12 +49,19 @@ export async function paginate<T>(
   };
 }
 
-export function buildSearchQuery(search: string | undefined, fields: string[]) {
+export function buildSearchQuery<T>(
+  search: string | undefined,
+  fields: readonly LeafNestedKeys<T>[],
+) {
+  
   if (!search) return {};
 
   return {
     $or: fields.map((field) => ({
-      [field]: { $regex: search, $options: "i" },
+      [field]: {
+        $regex: search,
+        $options: "i",
+      },
     })),
   };
 }

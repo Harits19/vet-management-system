@@ -13,6 +13,7 @@ import migrationService from "./services/migration.service.js";
 import authService from "./services/auth.service.js";
 import mongodbService from "./services/mongodb.service.js";
 import saleService from "./services/sale.service.js";
+import customerRouter from "./routes/customer.route.js";
 
 const app = express();
 const port = Number(4000);
@@ -44,12 +45,13 @@ app.get("/api/health", (_request, response) => {
 app.use("/api/products", productRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/sales", saleRouter);
+app.use("/api/customer", customerRouter);
 app.use(errorHandler);
 
 async function bootstrap() {
-  await mongodbService.connect()
+  await mongodbService.connect();
   await authService.seedSuperAdmin();
-  await migrationService.changeAllUserToDefaultConfig()
+  await migrationService.changeAllUserToDefaultConfig();
   app.listen(port, () => {
     console.log(`Backend running on http://localhost:${port}`);
   });

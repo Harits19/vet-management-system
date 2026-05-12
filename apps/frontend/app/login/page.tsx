@@ -19,7 +19,7 @@ export default function LoginPage() {
   const { control, handleSubmit } = useForm<AuthLoginRequest>({
     resolver: zodResolver(authLoginSchema),
     defaultValues: {
-      email: "admin@vet.com",
+      username: "super.admin",
       password: "admin123",
     },
   });
@@ -53,11 +53,11 @@ export default function LoginPage() {
           onFinish={handleSubmit(onFinish)}
           autoComplete="off"
         >
-          <VetForm label="Email" name="email" control={control}>
+          <VetForm label="Username" name="username" control={control}>
             {(field) => (
               <Input
                 prefix={<UserOutlined />}
-                placeholder="email@example.com"
+                placeholder="Username"
                 size="large"
                 {...field}
               />

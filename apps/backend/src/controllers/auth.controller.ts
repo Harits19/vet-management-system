@@ -5,9 +5,9 @@ import { authLoginSchema, cookieSchema } from "../../../shared/types/auth.type";
 import authService from "src/services/auth.service.js";
 
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = authLoginSchema.parse(req.body);
+  const { username, password } = authLoginSchema.parse(req.body);
 
-  const data = await authService.login(email, password);
+  const data = await authService.login(username, password);
 
   res.cookie("token", data.token, getCookieOptions());
 

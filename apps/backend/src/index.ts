@@ -49,7 +49,7 @@ app.use(errorHandler);
 async function bootstrap() {
   await mongodbService.connect()
   await authService.seedSuperAdmin();
-  await saleService.populateEmailCashier();
+  await migrationService.changeAllUserToDefaultConfig()
   app.listen(port, () => {
     console.log(`Backend running on http://localhost:${port}`);
   });

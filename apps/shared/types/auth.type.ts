@@ -2,7 +2,7 @@ import z from "zod";
 import { stringRequired } from "./zod";
 
 export const authLoginSchema = z.object({
-  email: stringRequired,
+  username: stringRequired,
   password: stringRequired,
 });
 

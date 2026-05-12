@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { SaleModel } from "src/models/sale.model";
 import { UserModel, UserRole } from "src/models/user.model";
 import mongodbService from "./mongodb.service";
+import authService from "./auth.service";
 
 async function cashierToUser() {
     await mongodbService.connect();
@@ -105,6 +106,38 @@ async function distinctSaleCashier() {
     console.log('Check distinct sale cashier');
     const result = await SaleModel.distinct('cashier').lean();
     console.log('Result', JSON.stringify(result, null, 2))
+}
+
+async function implementUsernametoAllUser() {
+    const allUser = await UserModel.find();
+
+    for (const user of allUser) {
+
+    }
+}
+
+async function changeAllUserToDefaultConfig() {
+    await UserModel.syncIndexes();
+    console.log('start change all user to default config')
+
+    const allUser = await UserModel.find();
+
+    console.log('found all user', allUser.length);
+
+    for (const user of allUser) {
+
+        console.log('starting change user', user.name);
+        const defaultConfig = await authService.getDefaultUserConfig();
+
+        const username = await authService.generateUniqueUsername(user.name);
+        user.username = username;
+        user.email = defaultConfig.email;
+        user.password = defaultConfig.password;
+        await user.save();
+        console.log('Updated user', user.name);
+    }
+
+    console.log('done change all user to default config');
 
 }
 
@@ -112,4 +145,5 @@ export default {
     cashierToUser,
     updateSaleCashier,
     distinctSaleCashier,
+    changeAllUserToDefaultConfig,
 }

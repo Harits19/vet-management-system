@@ -76,7 +76,7 @@ const create = async (req: Request, res: Response) => {
   const body: SaleCreateRequest = salesCreateSchema.parse(req.body ?? {})
   const user = await getCurrentUser(req);
 
-  const newSale = new SaleModel({ ...body })
+  const newSale = new SaleModel({ ...body, cashier: { userId: user.id, name: user.name, } })
 
   const result = await newSale.save();
 

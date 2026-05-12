@@ -120,7 +120,7 @@ async function changeAllUserToDefaultConfig() {
     await UserModel.syncIndexes();
     console.log('start change all user to default config')
 
-    const allUser = await UserModel.find();
+    const allUser = await UserModel.find({});
 
     console.log('found all user', allUser.length);
 
@@ -129,8 +129,12 @@ async function changeAllUserToDefaultConfig() {
         console.log('starting change user', user.name);
         const defaultConfig = await authService.getDefaultUserConfig();
 
-        const username = await authService.generateUniqueUsername(user.name);
-        user.username = username;
+
+
+        if (!user.username) {
+            const username = await authService.generateUniqueUsername(user.name);
+            user.username = username;
+        }
         user.email = defaultConfig.email;
         user.password = defaultConfig.password;
         await user.save();

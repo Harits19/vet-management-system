@@ -6,7 +6,7 @@ import { ICookie } from "../../../shared/types/auth.type";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
-export const seedSuperAdmin = async () => {
+const seedSuperAdmin = async () => {
   const count = await UserModel.countDocuments();
 
   if (count === 0) {
@@ -23,7 +23,7 @@ export const seedSuperAdmin = async () => {
   }
 };
 
-export const login = async (email: string, password: string) => {
+const login = async (email: string, password: string) => {
   const user = await UserModel.findOne({ email });
 
   if (!user) {
@@ -65,7 +65,7 @@ type AuthPayload = {
   role: UserRole;
 };
 
-export const getCurrentUser = async (token?: string) => {
+const getCurrentUser = async (token?: string) => {
   if (!token) {
     throw new Error("Unauthorized");
   }
@@ -85,7 +85,7 @@ export const getCurrentUser = async (token?: string) => {
   };
 };
 
-export const saveCookie = async (cookie: ICookie) => {
+const saveCookie = async (cookie: ICookie) => {
   await CookieModel.updateOne(
     { key: 'singleton' },
     {
@@ -97,10 +97,15 @@ export const saveCookie = async (cookie: ICookie) => {
   );
 }
 
-export const getCookie = async () => {
+const getCookie = async () => {
   const cookie = await CookieModel.findOne({ key: 'singleton' }).lean();
   if (!cookie) throw new Error('Cookie not found');
   return cookie.cookie;
+}
+
+
+const migration = async () => {
+  
 }
 
 
@@ -108,3 +113,5 @@ export default {
   getCookie, saveCookie, getCurrentUser, login, seedSuperAdmin,
 
 }
+
+

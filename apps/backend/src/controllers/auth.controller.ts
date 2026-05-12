@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import * as authService from "../services/auth.service";
 import { sendResponse } from "src/services/response.service";
 import { getCookieOptions } from "../config/auth.config.js";
 import { authLoginSchema, cookieSchema } from "../../../shared/types/auth.type";
+import authService from "src/services/auth.service.js";
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = authLoginSchema.parse(req.body);
@@ -23,9 +23,21 @@ export const logout = (_req: Request, res: Response) => {
   sendResponse(res, { success: true, data: undefined });
 };
 
-export const me = async (req: Request, res: Response) => {
-  const token = req.cookies?.token;
+export const getToken = (req: Request) => {
+
+  return req.cookies?.token;
+}
+
+export const getCurrentUser = async (req: Request) => {
+  const token = getToken(req);
   const user = await authService.getCurrentUser(token);
+
+  return user;
+}
+
+
+export const me = async (req: Request, res: Response) => {
+  const user = await getCurrentUser(req)
 
   sendResponse(res, {
     success: true,
@@ -33,7 +45,7 @@ export const me = async (req: Request, res: Response) => {
   });
 };
 
-export const saveCookie = async (req: Request, res: Response) => {
+export const saveAplikasirCookie = async (req: Request, res: Response) => {
   const cookie = cookieSchema.parse(req.body);
   await authService.saveCookie(cookie);
   sendResponse(res, {
@@ -42,7 +54,7 @@ export const saveCookie = async (req: Request, res: Response) => {
   })
 }
 
-export const getCookie = async (req: Request, res: Response) => {
+export const getAplikasirCookie = async (req: Request, res: Response) => {
   const cookie = await authService.getCookie();
   sendResponse(res, {
     success: true,
@@ -50,7 +62,11 @@ export const getCookie = async (req: Request, res: Response) => {
   })
 }
 
+export const createUser = async (req: Request, res: Response) => {
+
+}
+
 
 export const authController = {
-  login, logout, me, saveCookie, getCookie,
+  login, logout, me, saveAplikasirCookie, getAplikasirCookie,
 }

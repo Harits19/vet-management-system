@@ -19,3 +19,4 @@ export interface ICookie extends z.infer<typeof cookieSchema> { }
 
 export interface CookieRequest extends ICookie { }
 export interface CookieResponse extends ICookie { }
+

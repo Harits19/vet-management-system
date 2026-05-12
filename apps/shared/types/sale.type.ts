@@ -75,7 +75,10 @@ export const saleSchema = z.object({
 
   paymentMethod: z.string(), // payment
   customer: z.string().optional().nullable(), // konsumen
-  cashier: z.string(),
+  cashier: z.object({
+    userId: z.any(),
+    name: z.string()
+  }),
   // 🔥 CORE
   items: z.array(saleItemSchema).min(1, "Minimal 1 item"),
 });

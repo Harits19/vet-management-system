@@ -5,15 +5,17 @@ import express from "express";
 import mongoose from "mongoose";
 import authRouter from "./routes/auth.route.js";
 import productRouter from "./routes/products.routes.js";
-import { seedSuperAdmin } from "./services/auth.service.js";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { isAllowedOrigin } from "./config/auth.config.js";
 import saleRouter from "./routes/sale.route.js";
+import migrationService from "./services/migration.service.js";
+import authService from "./services/auth.service.js";
+import mongodbService from "./services/mongodb.service.js";
+import saleService from "./services/sale.service.js";
 
 const app = express();
 const port = Number(4000);
-const mongoUri = "mongodb://root:root@localhost:27017/";
 app.use(cookieParser());
 
 app.use(
@@ -45,9 +47,9 @@ app.use("/api/sales", saleRouter);
 app.use(errorHandler);
 
 async function bootstrap() {
-  await mongoose.connect(mongoUri);
-  await seedSuperAdmin();
-
+  await mongodbService.connect()
+  await authService.seedSuperAdmin();
+  await saleService.populateEmailCashier();
   app.listen(port, () => {
     console.log(`Backend running on http://localhost:${port}`);
   });

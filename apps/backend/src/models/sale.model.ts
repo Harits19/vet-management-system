@@ -59,7 +59,17 @@ const SaleSchema = new mongoose.Schema<Sale>(
 
     paymentMethod: { type: String },
     customer: { type: String },
-    cashier: { type: String },
+    cashier: {
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+    },
 
     externalId: { type: String, unique: true },
 

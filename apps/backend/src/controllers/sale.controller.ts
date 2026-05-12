@@ -6,6 +6,7 @@ import { buildSearchQuery, paginate } from "src/services/pagination.service";
 import aplikasirService from "src/services/aplikasir.service";
 import zod from 'zod'
 import authService from "src/services/auth.service";
+import { getCurrentUser } from "./auth.controller";
 
 
 export const sync = async (req: Request, res: Response) => {
@@ -73,6 +74,7 @@ const custom = async (req: Request, res: Response) => {
 
 const create = async (req: Request, res: Response) => {
   const body: SaleCreateRequest = salesCreateSchema.parse(req.body ?? {})
+  const user = await getCurrentUser(req);
 
   const newSale = new SaleModel({ ...body })
 

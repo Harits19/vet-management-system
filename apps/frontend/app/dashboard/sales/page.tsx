@@ -3,21 +3,24 @@
 import useQueryParams from "@/hooks/useQueryParam";
 import { Table, Tag } from "antd";
 import TableFilter from "@/components/TableFilter";
-import { SalesFilter } from "../../../../shared/types/sale.type";
 import { useGetSales } from "@/api/sale.api";
-import { ISale } from "../../../../shared/types/sale.type";
+import {
+  IVetSale,
+  VetSaleFilter,
+} from "../../../../shared/types/vet.sale.type";
 
-const formatCurrency = (val: number) => `Rp ${val.toLocaleString("id-ID")}`;
+const formatCurrency = (val?: number) =>
+  `Rp ${val?.toLocaleString("id-ID") ?? ""}`;
 
 const formatDate = (val: Date | string) =>
   new Date(val).toLocaleString("id-ID");
 
 export default function SalesPage() {
-  const { debounceQuery, query, setQuery } = useQueryParams<SalesFilter>({
+  const { debounceQuery, query, setQuery } = useQueryParams<VetSaleFilter>({
     page: 1,
     limit: 10,
     search: "",
-    sortBy: "timestamp",
+    sortBy: "createdAt",
     order: "desc",
   });
 
@@ -37,10 +40,10 @@ export default function SalesPage() {
       />
 
       {/* 📊 TABLE */}
-      <Table<ISale>
+      <Table<IVetSale>
         loading={loading}
         dataSource={sales}
-        rowKey="externalId"
+        rowKey="_id"
         pagination={{
           current: query.page,
           pageSize: query.limit,
@@ -59,57 +62,44 @@ export default function SalesPage() {
         columns={[
           {
             title: "No Struk",
-            dataIndex: "receiptNumber",
+            dataIndex: "_id",
             sorter: true,
           },
           {
             title: "Tanggal",
-            dataIndex: "timestamp",
+            dataIndex: "createdAt",
             render: (val) => formatDate(val),
             sorter: true,
           },
           {
             title: "Kasir",
-            dataIndex: "cashier",
+            dataIndex: "cashier.name",
+            render: (_, row) => row.cashier.name,
           },
           {
             title: "Customer",
-            dataIndex: "customer",
-            render: (val) => val || "-",
-          },
-          {
-            title: "Payment",
-            dataIndex: "paymentMethod",
-            render: (val) => (
-              <Tag color={val === "Cash" ? "green" : "blue"}>{val}</Tag>
-            ),
-          },
-          {
-            title: "Status",
-            dataIndex: "paymentStatus",
-            render: (val) => (
-              <Tag color={val === "Lunas" ? "green" : "orange"}>{val}</Tag>
-            ),
+            dataIndex: "customer.name",
+            render: (_, row) => row.customer.name,
           },
 
           // 💰 PRICING
           {
             title: "Modal",
-            dataIndex: "pricing.cost",
-            render: (_, r) => formatCurrency(r.pricing.cost),
+            dataIndex: "summary.cost",
+            render: (_, row) => formatCurrency(row.summary.cost),
             sorter: true,
           },
 
           {
             title: "Harga Jual",
-            dataIndex: "pricing.selling",
-            render: (_, r) => formatCurrency(r.pricing.selling),
+            dataIndex: "summary.selling",
+            render: (_, row) => formatCurrency(row.summary.total),
             sorter: true,
           },
           {
             title: "Profit",
-            dataIndex: "pricing.profit",
-            render: (_, r) => formatCurrency(r.pricing.profit),
+            dataIndex: "summary.profit",
+            render: (_, row) => formatCurrency(row.summary.profit),
             sorter: true,
           },
         ]}

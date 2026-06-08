@@ -14,14 +14,15 @@ class VetSaleService {
             name: string
         }
     }) {
-        const productDetails = await getAllProductDetail(sale.items.map(item => item.id));
+        const productDetails = await getAllProductDetail(sale.items.map(item => item._id));
         const productDetailMap = new Map(productDetails.map(item => [item._id.toString(), item]));
+        console.log('productDetailMap', productDetailMap)
 
         const items = sale.items.map((item) => {
 
-            const detail = productDetailMap.get(item.id.toString());
+            const detail = productDetailMap.get(item._id.toString());
             if (!detail) {
-                throw new Error(`Product detail not found for id ${item.id}`)
+                throw new Error(`Product detail not found for id ${item._id}`)
             }
             const selling = detail.pricing.selling || 0;
 
@@ -33,7 +34,7 @@ class VetSaleService {
                 },
                 quantity: item.quantity,
                 product: {
-                    id: item.id,
+                    _id: item._id,
                     name: detail.product.name ?? '',
                 }
 
@@ -54,14 +55,17 @@ class VetSaleService {
 
         });
 
+        console.log('items', items);
+        console.log('summary', summary)
+
         const newSale: VetSale = {
             _id: new mongoose.Types.ObjectId(),
             customer: {
-                id: sale.customer.id,
+                _id: sale.customer._id,
                 name: sale.customer.name,
             },
             cashier: {
-                id: cashier.id,
+                _id: cashier.id,
                 name: cashier.name,
             },
             createdAt: new Date(),
@@ -72,6 +76,9 @@ class VetSaleService {
             },
             items,
         }
+
+        console.log('newSale', newSale)
+
 
         const result = await VetSaleDB.create(newSale);
 

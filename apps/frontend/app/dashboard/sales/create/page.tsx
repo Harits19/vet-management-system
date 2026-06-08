@@ -24,7 +24,7 @@ import { VetSaleCreateFormRequest } from "../../../../../shared/types/vet.sale.t
 const { Title, Text } = Typography;
 
 export default function CreateSalePage() {
-  const { control, handleSubmit, watch, setValue, getValues } =
+  const { control, handleSubmit, watch, formState } =
     useForm<VetSaleCreateFormRequest>({
       defaultValues: {
         items: [],
@@ -33,7 +33,7 @@ export default function CreateSalePage() {
 
   const { loading, mutate } = usePostSale();
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
   });
@@ -66,7 +66,7 @@ export default function CreateSalePage() {
     if (!product) return;
 
     append({
-      id: product._id,
+      _id: product._id,
       product: {
         name: product.product.name,
       },
@@ -78,18 +78,15 @@ export default function CreateSalePage() {
   };
 
   const onSubmit = async (data: VetSaleCreateFormRequest) => {
-    const payload = {
-      ...data,
-      summary: {
-        total,
-        downPayment: paid,
-        debt: change < 0 ? Math.abs(change) : 0,
+    await mutate({
+      body: {
+        ...data,
+        customer: { _id: "6a018bf5c9a9c4d2347689a5", name: "Dummy" },
       },
-    };
-
-    console.log("FINAL:", payload);
-    await mutate({ body: data });
-    router.push("/dashboard/sales");
+      onSuccess: () => {
+        router.push("/dashboard/sales");
+      },
+    });
   };
 
   const options = data?.data.map((p) => ({
@@ -278,6 +275,7 @@ export default function CreateSalePage() {
           <Button
             type="primary"
             block
+            disabled={!formState.isValid}
             size="large"
             loading={loading}
             onClick={handleSubmit(onSubmit)}

@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { IProduct } from "../../../shared/types/product.type";
 
-export interface Product extends IProduct, Document {
+export interface Product extends Omit<IProduct, '_id'> {
   createdAt: Date;
   updatedAt: Date;
 }

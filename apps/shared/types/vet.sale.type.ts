@@ -1,69 +1,9 @@
 import { custom, z } from 'zod';
 import { Types } from "mongoose";
+import { generateSortFilterSchema } from './pagination';
+import { NestedKeys } from './common.type';
+import { objectId } from './zod';
 
-
-// {
-//   "_id": {
-//     "$oid": "6a018bf5c9a9c4d2347689a5"
-//   },
-//   "externalId": "12248893",
-//   "__v": 0,
-//   "additional": {
-//     "serviceCharge": 0,
-//     "discount": 0,
-//     "tax": 0,
-//     "shipping": 0,
-//     "rounding": 0
-//   },
-//   "cashier": {
-//     "userId": {
-//       "$oid": "6a02b6341f15b52a866a37a8"
-//     },
-//     "name": "Vivi Nurmala"
-//   },
-//   "createdAt": {
-//     "$date": "2026-05-11T07:57:41.619Z"
-//   },
-//   "customer": null,
-//   "items": [
-//     {
-//       "product": {
-//         "id": "806799",
-//         "name": "Cat Choize Kitten "
-//       },
-//       "quantity": 1,
-//       "pricing": {
-//         "selling": 26000,
-//         "total": 26000,
-//         "cost": 0
-//       }
-//     }
-//   ],
-//   "paymentMethod": "Cash",
-//   "paymentStatus": "Lunas",
-//   "pricing": {
-//     "cost": 25000,
-//     "profit": 1000,
-//     "total": 26000,
-//     "selling": 26000
-//   },
-//   "receiptNumber": "SR1260",
-//   "summary": {
-//     "total": 26000,
-//     "downPayment": 0,
-//     "debt": 0
-//   },
-//   "timestamp": {
-//     "$date": "2026-05-11T06:49:00.000Z"
-//   },
-//   "updatedAt": {
-//     "$date": "2026-05-12T05:36:18.835Z"
-//   }
-// }
-const objectId = z
-    .string().min(1)
-    .refine(Types.ObjectId.isValid)
-    .transform((id) => new Types.ObjectId(id));
 export const vetSaleSchema = z.object({
     _id: objectId,
     cashier: z.object({
@@ -94,6 +34,8 @@ export const vetSaleSchema = z.object({
     summary: z.object({
         total: z.number().min(0),
         profit: z.number().min(0),
+        cost: z.number().min(0),
+        paid: z.number().min(0),
     })
 })
 
@@ -105,11 +47,52 @@ export const vetSaleCreateSchema = z.object({
         id: objectId,
         name: z.string().min(1),
     }),
+    paid: z.number().min(0),
     items: z.array(z.object({
         id: objectId,
         quantity: z.number().min(1),
     })).min(1),
 
-})
+});
+
 
 export interface IVetSaleCreate extends z.infer<typeof vetSaleCreateSchema> { }
+
+type VetSaleKey = NestedKeys<IVetSale>;
+
+export const vetSaleSortByList: VetSaleKey[] = [
+    '_id',
+    'createdAt',
+    'updatedAt',
+    'summary.profit',
+    'summary.total',
+    'summary.cost',
+    'cashier.name',
+
+] as const;
+
+export const vetSaleFilterSchema = generateSortFilterSchema({
+    sortList: vetSaleSortByList,
+    defaultSort: "createdAt",
+});
+
+export interface VetSaleFilter extends z.infer<typeof vetSaleFilterSchema> { }
+
+export interface VetSaleCreateFormRequest extends Omit<IVetSaleCreate, "items" | 'customer'> {
+    customer: {
+        id: string;
+        name: string;
+    },
+    items: {
+        id: string
+        pricing: {
+            selling: number;
+        };
+        quantity: number;
+        product: {
+            name: string;
+        };
+    }[];
+}
+
+

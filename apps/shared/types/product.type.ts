@@ -3,6 +3,7 @@ import { paginationQuerySchema } from "./pagination";
 import { numberOptional, numberRequired, stringRequired } from "./zod";
 
 export const productSchema = z.object({
+
   category: stringRequired,
   product: z.object({
     code: z.string().optional(),
@@ -23,6 +24,7 @@ export const productSchema = z.object({
 export type ProductCreateRequest = z.infer<typeof productSchema>;
 
 export type IProduct = z.infer<typeof productSchema> & {
+  _id: string;
   createdAt: Date;
   updatedAt: Date;
 };

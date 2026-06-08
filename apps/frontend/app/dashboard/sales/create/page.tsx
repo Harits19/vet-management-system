@@ -13,27 +13,20 @@ import {
 } from "antd";
 import { useForm, useFieldArray } from "react-hook-form";
 import VetForm from "@/components/VetForm";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  SaleCreateRequest,
-  salesCreateSchema,
-} from "../../../../../shared/types/sale.type";
 import { useGetProducts } from "@/api/product.api";
 import { useState } from "react";
 import useDebounce from "@/hooks/useDebounce";
 import { IProduct } from "../../../../../shared/types/product.type";
 import { usePostSale } from "@/api/sale.api";
-import { useRouter } from "next/navigation";
 import useVetRouter from "@/hooks/useVetRouter";
+import { VetSaleCreateFormRequest } from "../../../../../shared/types/vet.sale.type";
 
 const { Title, Text } = Typography;
 
 export default function CreateSalePage() {
   const { control, handleSubmit, watch, setValue, getValues } =
-    useForm<SaleCreateRequest>({
-      resolver: zodResolver(salesCreateSchema) as any,
+    useForm<VetSaleCreateFormRequest>({
       defaultValues: {
-        paymentMethod: "Cash",
         items: [],
       },
     });
@@ -58,7 +51,7 @@ export default function CreateSalePage() {
   });
 
   const items = watch("items") ?? [];
-  const paid = watch("paidAmount") ?? 0;
+  const paid = watch("paid") ?? 0;
 
   // 🧮 TOTAL
   const total = items.reduce(
@@ -72,10 +65,19 @@ export default function CreateSalePage() {
   const handleScan = (product: IProduct) => {
     if (!product) return;
 
-    append({ product: product.product, pricing: product.pricing, quantity: 1 });
+    append({
+      id: product._id,
+      product: {
+        name: product.product.name,
+      },
+      pricing: {
+        selling: product.pricing.selling,
+      },
+      quantity: 1,
+    });
   };
 
-  const onSubmit = async (data: SaleCreateRequest) => {
+  const onSubmit = async (data: VetSaleCreateFormRequest) => {
     const payload = {
       ...data,
       summary: {
@@ -238,7 +240,7 @@ export default function CreateSalePage() {
               <Text>Bayar</Text>
             </Col>
             <Col span={14}>
-              <VetForm control={control} name="paidAmount" noStyle>
+              <VetForm control={control} name="paid" noStyle>
                 {(f) => <Input type="number" {...f} />}
               </VetForm>
             </Col>
@@ -260,29 +262,8 @@ export default function CreateSalePage() {
 
           <Divider />
 
-          {/* 💳 METODE */}
-          <Row align="middle" style={{ marginBottom: 12 }}>
-            <Col span={10}>
-              <Text>Metode</Text>
-            </Col>
-            <Col span={14}>
-              <VetForm control={control} name="paymentMethod" noStyle>
-                {(f) => (
-                  <Select
-                    {...f}
-                    style={{ width: "100%" }}
-                    options={[
-                      { label: "Cash", value: "Cash" },
-                      { label: "Transfer", value: "Transfer" },
-                    ]}
-                  />
-                )}
-              </VetForm>
-            </Col>
-          </Row>
-
           {/* 👤 CUSTOMER */}
-          <Row align="middle">
+          {/* <Row align="middle">
             <Col span={10}>
               <Text>Customer</Text>
             </Col>
@@ -291,7 +272,7 @@ export default function CreateSalePage() {
                 {(f) => <Input {...f} />}
               </VetForm>
             </Col>
-          </Row>
+          </Row> */}
 
           {/* 🚀 BUTTON */}
           <Button

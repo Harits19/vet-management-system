@@ -1,5 +1,5 @@
 import z from "zod";
-
+import { Types } from "mongoose"
 
 
 export const stringRequired = z.string().trim().min(1, "Required");
@@ -23,3 +23,9 @@ export const numberOptional = z.preprocess(
   },
   z.number().min(0).optional(), // 🔥 optional di sini
 );
+
+
+export const objectId = z
+  .string().min(1)
+  .refine(Types.ObjectId.isValid)
+  .transform((id) => new Types.ObjectId(id));

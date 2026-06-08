@@ -1,7 +1,7 @@
 import useFetch from "@/hooks/useFetch";
-import { IScrape } from "../../shared/types/scrape.type";
-import { ISale, SaleCreateRequest, SalesFilter, SyncRequest } from "../../shared/types/sale.type";
+import { IVetSale, IVetSaleCreate, VetSaleCreateFormRequest, VetSaleFilter } from "../../shared/types/vet.sale.type";
 import { ApiResponse } from "../../shared/types/api";
+import { SyncRequest } from "../../shared/types/sale.type";
 
 export function useSyncSales({ syncLatestOnly }: SyncRequest) {
   return useFetch<undefined, SyncRequest>({
@@ -12,8 +12,8 @@ export function useSyncSales({ syncLatestOnly }: SyncRequest) {
   });
 }
 
-export function useGetSales(pagination: SalesFilter) {
-  return useFetch<ApiResponse<ISale[]>>({
+export function useGetSales(pagination: VetSaleFilter) {
+  return useFetch<ApiResponse<IVetSale[]>>({
     method: "GET",
     path: "/api/sales",
     runOnInit: true,
@@ -24,7 +24,7 @@ export function useGetSales(pagination: SalesFilter) {
 
 export function usePostSale() {
 
-  return useFetch<void, SaleCreateRequest>({
+  return useFetch<void, VetSaleCreateFormRequest>({
     method: 'POST',
     path: '/api/sales',
 

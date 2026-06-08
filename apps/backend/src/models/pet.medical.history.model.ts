@@ -1,5 +1,5 @@
 import mongoose, { Document } from "mongoose";
-import { IPetMedicalHistory } from "../../../shared/types/pet_medical_history.type";
+import { IPetMedicalHistory } from "../../../shared/types/pet.medical.history.type";
 
 export interface PetMedicalHistory extends Document, IPetMedicalHistory {
   createdAt: Date;

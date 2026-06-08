@@ -78,4 +78,4 @@ ProductSchema.index(
   },
 );
 
-export const ProductModel = mongoose.model("Product", ProductSchema);
+export const ProductDB = mongoose.model("Product", ProductSchema);

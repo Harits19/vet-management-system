@@ -1,7 +1,7 @@
 import mongoose, { Document } from "mongoose";
 import { ISale } from "../../../shared/types/sale.type";
 
-export interface Sale extends ISale, Document {
+export interface Sale extends ISale {
   createdAt: Date;
   updatedAt: Date;
 }
@@ -71,7 +71,7 @@ const SaleSchema = new mongoose.Schema<Sale>(
       },
     },
 
-    externalId: { type: String, unique: true },
+    externalId: { type: String },
 
     items: {
       type: [SaleItemSchema],
@@ -93,6 +93,6 @@ SaleSchema.index(
   },
 );
 
-export const SaleModel = mongoose.model("Sale", SaleSchema);
+export const SaleDB = mongoose.model("Sale", SaleSchema);
 
 

@@ -46,7 +46,7 @@ export const mapSaleItem = (item: any) =>
   });
 
 export const saleSchema = z.object({
-  externalId: z.string(),
+  externalId: z.string().optional(),
 
   receiptNumber: z.string(), // nostruk
   timestamp: z.coerce.date(),
@@ -66,7 +66,7 @@ export const saleSchema = z.object({
     tax: numberFromString,
     shipping: numberFromString, // ongkir
     rounding: numberFromString, // round
-  }),
+  }).optional(),
 
   summary: z.object({
     total: numberFromString, // totalharga
@@ -84,7 +84,7 @@ export const saleSchema = z.object({
   items: z.array(saleItemSchema).min(1, "Minimal 1 item"),
 });
 
-export interface ISale extends z.infer<typeof saleSchema> {}
+export interface ISale extends z.infer<typeof saleSchema> { }
 
 type SaleKey = NestedKeys<ISale>;
 
@@ -103,7 +103,7 @@ export const salesCreateSchema = saleSchema
     ),
   });
 
-export interface SaleCreateRequest extends z.infer<typeof salesCreateSchema> {}
+export interface SaleCreateRequest extends z.infer<typeof salesCreateSchema> { }
 
 export const mapSales = (row: any, items: any[]): SaleSyncItem => {
   const result = saleSchema.parse({
@@ -156,14 +156,14 @@ export const salesFilterSchema = generateSortFilterSchema({
   defaultSort: "timestamp",
 });
 
-export interface SalesFilter extends z.infer<typeof salesFilterSchema> {}
+export interface SalesFilter extends z.infer<typeof salesFilterSchema> { }
 
-export interface SaleSyncItem extends ISale {}
+export interface SaleSyncItem extends ISale { }
 
 export const syncSchema = z.object({
   syncLatestOnly: z.boolean().optional(),
 });
 
-export interface ISync extends z.infer<typeof syncSchema> {}
+export interface ISync extends z.infer<typeof syncSchema> { }
 
-export interface SyncRequest extends ISync {}
+export interface SyncRequest extends ISync { }

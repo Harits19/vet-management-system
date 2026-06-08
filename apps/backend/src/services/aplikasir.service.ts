@@ -1,4 +1,4 @@
-import { SaleModel } from "src/models/sale.model";
+import { SaleDB } from "src/models/sale.model";
 import { mapSales, SaleSyncItem } from "../../../shared/types/sale.type";
 import { delay } from "../../../shared/utils/promise.util";
 import authService from "./auth.service";
@@ -77,7 +77,7 @@ export const sync = async ({ syncLatestOnly = false }: { syncLatestOnly?: boolea
             },
         }));
 
-        const result = await SaleModel.bulkWrite(operations);
+        const result = await SaleDB.bulkWrite(operations);
 
         meta.inserted += result.upsertedCount;
         meta.updated += result.modifiedCount;

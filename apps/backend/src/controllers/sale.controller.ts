@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { sendResponse } from "src/services/response.service";
-import { SaleModel } from "src/models/sale.model";
+import { SaleDB } from "src/models/sale.model";
 import { mapSaleItem, SaleCreateRequest, salesCreateSchema, salesFilterSchema, syncSchema } from "../../../shared/types/sale.type";
 import { buildSearchQuery, paginate } from "src/services/pagination.service";
 import aplikasirService from "src/services/aplikasir.service";
@@ -35,7 +35,7 @@ const get = async (req: Request, res: Response) => {
     buildSearchQuery(search, ["receiptNumber", "cashier", "customer"]),
   );
 
-  const result = await paginate(SaleModel, query, {
+  const result = await paginate(SaleDB, query, {
     page,
     limit,
     sortBy,
@@ -50,7 +50,7 @@ const get = async (req: Request, res: Response) => {
 };
 
 const custom = async (req: Request, res: Response) => {
-  const result = await SaleModel.find({
+  const result = await SaleDB.find({
     $or: [
       { items: { $exists: false } },
       { items: null },
@@ -62,7 +62,12 @@ const custom = async (req: Request, res: Response) => {
   const cookie = await authService.getCookie()
 
   for (const item of result) {
-    const detail = await aplikasirService.syncDetail({ id: item.externalId, cookie });
+    const id = item.externalId;
+    if (!id) {
+      console.log(`id undefined`);
+      continue;
+    }
+    const detail = await aplikasirService.syncDetail({ id, cookie });
 
     item.items = detail.map(mapSaleItem);
     await item.save();
@@ -75,12 +80,7 @@ const custom = async (req: Request, res: Response) => {
 const create = async (req: Request, res: Response) => {
   const body: SaleCreateRequest = salesCreateSchema.parse(req.body ?? {})
   const user = await getCurrentUser(req);
-
-  const newSale = new SaleModel({ ...body, cashier: { userId: user.id, name: user.name, } })
-
-  const result = await newSale.save();
-
-  sendResponse(res, { success: true, data: result })
+  sendResponse(res, { success: true, data: {} })
 
 }
 

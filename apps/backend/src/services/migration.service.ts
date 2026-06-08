@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { SaleModel } from "src/models/sale.model";
+import { SaleDB } from "src/models/sale.model";
 import { UserModel, UserRole } from "src/models/user.model";
 import mongodbService from "./mongodb.service";
 import authService from "./auth.service";
@@ -12,7 +12,7 @@ async function cashierToUser() {
     /**
      * 1. Ambil semua cashier unik (string)
      */
-    const uniqueCashiers: any[] = await SaleModel.distinct("cashier");
+    const uniqueCashiers: any[] = await SaleDB.distinct("cashier");
 
     console.log("Unique cashiers found:", uniqueCashiers.length);
 
@@ -55,7 +55,7 @@ async function cashierToUser() {
 async function updateSaleCashier() {
     console.log('start update sale cashier');
 
-    const oldSales = await SaleModel.collection.find({}).toArray();
+    const oldSales = await SaleDB.collection.find({}).toArray();
 
     const allUser = await UserModel.find().lean();
 
@@ -83,7 +83,7 @@ async function updateSaleCashier() {
         console.log('found user', user.name);
 
 
-        await SaleModel.updateOne(
+        await SaleDB.updateOne(
             { _id: sale._id },
             {
                 $set: {
@@ -104,7 +104,7 @@ async function updateSaleCashier() {
 async function distinctSaleCashier() {
 
     console.log('Check distinct sale cashier');
-    const result = await SaleModel.distinct('cashier').lean();
+    const result = await SaleDB.distinct('cashier').lean();
     console.log('Result', JSON.stringify(result, null, 2))
 }
 

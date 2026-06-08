@@ -1,4 +1,4 @@
-import { ProductModel } from "src/models/product.model";
+import { ProductDB } from "src/models/product.model";
 import { Request, Response } from "express";
 import { sendResponse } from "src/services/response.service";
 import {
@@ -27,7 +27,7 @@ export const getProducts = async (req: Request, res: Response) => {
     query.category = category;
   }
 
-  const result = await paginate(ProductModel, query, {
+  const result = await paginate(ProductDB, query, {
     page,
     limit,
     sortBy,
@@ -43,7 +43,7 @@ export const getProducts = async (req: Request, res: Response) => {
 
 export const postProduct = async (req: Request, res: Response) => {
   const body = productSchema.parse(req.body);
-  const product = await ProductModel.create(body);
+  const product = await ProductDB.create(body);
 
   return sendResponse(res, {
     success: true,
@@ -150,7 +150,7 @@ export const importProducts = async (req: Request, res: Response) => {
       },
     }));
 
-    const result = await ProductModel.bulkWrite(operations);
+    const result = await ProductDB.bulkWrite(operations);
 
     return sendResponse(res, {
       success: true,

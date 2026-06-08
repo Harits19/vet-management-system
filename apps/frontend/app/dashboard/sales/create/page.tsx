@@ -23,6 +23,8 @@ import { useState } from "react";
 import useDebounce from "@/hooks/useDebounce";
 import { IProduct } from "../../../../../shared/types/product.type";
 import { usePostSale } from "@/api/sale.api";
+import { useRouter } from "next/navigation";
+import useVetRouter from "@/hooks/useVetRouter";
 
 const { Title, Text } = Typography;
 
@@ -45,6 +47,7 @@ export default function CreateSalePage() {
 
   const [search, setSearch] = useState("");
   const debounceSearch = useDebounce(search);
+  const router = useVetRouter();
 
   const { data } = useGetProducts({
     limit: 10,
@@ -72,7 +75,7 @@ export default function CreateSalePage() {
     append({ product: product.product, pricing: product.pricing, quantity: 1 });
   };
 
-  const onSubmit = (data: SaleCreateRequest) => {
+  const onSubmit = async (data: SaleCreateRequest) => {
     const payload = {
       ...data,
       summary: {
@@ -83,7 +86,8 @@ export default function CreateSalePage() {
     };
 
     console.log("FINAL:", payload);
-    mutate({ body: data });
+    await mutate({ body: data });
+    router.push("/dashboard/sales");
   };
 
   const options = data?.data.map((p) => ({

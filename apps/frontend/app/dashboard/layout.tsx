@@ -26,7 +26,7 @@ export default function DashboardLayout({
   const { mutate: validateSession } = useGetMe();
 
   const {
-    token: { colorBgContainer },
+    token: { colorBgContainer, colorPrimary },
   } = theme.useToken();
 
   const menuItems = [
@@ -42,15 +42,15 @@ export default function DashboardLayout({
       children: [
         {
           key: "/dashboard/products",
-          label: "List Product",
+          label: "List",
         },
         {
           key: "/dashboard/products/create",
-          label: "Create Product",
+          label: "Create",
         },
         {
           key: "/dashboard/products/import",
-          label: "Import Product",
+          label: "Import",
         },
       ],
     },
@@ -61,15 +61,30 @@ export default function DashboardLayout({
       children: [
         {
           key: "/dashboard/sales",
-          label: "List Sale",
+          label: "List",
         },
         {
           key: "/dashboard/sales/create",
-          label: "Create Sale",
+          label: "Create",
         },
         {
           key: "/dashboard/sales/import",
-          label: "Import Sale",
+          label: "Import",
+        },
+      ],
+    },
+    {
+      key: "customer",
+      icon: <AppstoreOutlined />,
+      label: "Customer",
+      children: [
+        {
+          key: "/dashboard/customer",
+          label: "List",
+        },
+        {
+          key: "/dashboard/customer/create",
+          label: "Create",
         },
       ],
     },
@@ -102,15 +117,20 @@ export default function DashboardLayout({
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider
+        theme="light"
         collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
+        style={{ borderRight: "1px solid #f0f0f0" }}
       >
-        <div style={styles.logo}>{collapsed ? "PC" : "Pet Clinic"}</div>
+        <div style={{ ...styles.logo, color: colorPrimary }}>
+          {collapsed ? "PC" : "Pet Clinic"}
+        </div>
 
         <Menu
-          theme="dark"
+          theme="light"
           mode="inline"
+          style={{ borderInlineEnd: "none" }}
           selectedKeys={[pathname]}
           items={menuItems}
           onClick={(e) => router.push(e.key)}
@@ -120,13 +140,13 @@ export default function DashboardLayout({
       <Layout>
         <DashboardHeader />
 
-        <Content style={{ margin: "16px" }}>
+        <Content style={{ margin: "24px 16px" }}>
           <div
             style={{
-              padding: 16,
+              padding: 24,
               minHeight: 360,
               background: colorBgContainer,
-              borderRadius: 8,
+              borderRadius: 12,
             }}
           >
             {children}
@@ -140,7 +160,6 @@ export default function DashboardLayout({
 const styles: { [key: string]: React.CSSProperties } = {
   logo: {
     height: 64,
-    color: "white",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",

@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import { IPet } from "../../../shared/types/pet.type";
-import { CustomerKey } from "./customer.model";
 
 
 export const PetKey = 'Pet';
@@ -36,7 +35,7 @@ const PetSchema = new mongoose.Schema<Pet>(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       trim: true,
-      ref: CustomerKey,
+      ref: 'Customer',
     },
   },
   {

@@ -1,16 +1,5 @@
-import zod from 'zod'
-import { stringRequired } from './zod'
-
-
-export const petSchema = zod.object({
-    name: stringRequired,
-    kind: stringRequired,
-    gender: zod.enum(["male", "female"]),
-    notes: stringRequired.optional(),
-    ownerId: stringRequired,
-
-})
-
+import { stringRequired } from "./zod";
+import { z } from 'zod'
 export interface IPet {
     _id: string;
     name: string;
@@ -19,3 +8,13 @@ export interface IPet {
     notes?: string;
     ownerId: string;
 }
+
+
+export const petCreateSchema = z.object({
+    name: stringRequired,
+    kind: stringRequired,
+    gender: z.enum(["male", "female"]),
+    notes: z.string().optional(),
+});
+
+export interface IPetCreateRequest extends z.infer<typeof petCreateSchema> { }

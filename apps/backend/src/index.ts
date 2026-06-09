@@ -14,7 +14,7 @@ import authService from "./services/auth.service.js";
 import mongodbService from "./services/mongodb.service.js";
 import saleService from "./services/sale.service.js";
 import customerRouter from "./routes/customer.route.js";
-import { seedDummyCustomerData } from "./models/customer-dummy.seeder.js";
+import { seedDummyCustomerData } from "./models/customer.model.js";
 
 const app = express();
 const port = Number(4000);
@@ -51,9 +51,6 @@ app.use(errorHandler);
 
 async function bootstrap() {
   await mongodbService.connect();
-  const nodeEnv = process.env.NODE_ENV;
-  const isDev = process.env.NODE_ENV === 'dev';
-
   await seedDummyCustomerData();
   await authService.seedSuperAdmin();
 

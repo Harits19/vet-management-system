@@ -79,11 +79,11 @@ export default function DashboardLayout({
       label: "Customer",
       children: [
         {
-          key: "/dashboard/customer",
+          key: "/dashboard/customers",
           label: "List",
         },
         {
-          key: "/dashboard/customer/create",
+          key: "/dashboard/customers/create",
           label: "Create",
         },
       ],

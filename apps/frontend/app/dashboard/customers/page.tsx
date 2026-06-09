@@ -69,7 +69,7 @@ export default function CustomerPage() {
           </Title>
         </Col>
         <Col>
-          <Link href="/dashboard/customer/create">
+          <Link href="/dashboard/customers/create">
             <Button type="primary" icon={<PlusOutlined />} size="large">
               Tambah Customer
             </Button>

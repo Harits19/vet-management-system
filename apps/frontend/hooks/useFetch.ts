@@ -123,6 +123,7 @@ export default function useFetch<TResponse, TBody = undefined>({
     }
 
     try {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       const data = await fetcher<TResponse, TBody>({
         ...fetchProps,
         body: finalBody,

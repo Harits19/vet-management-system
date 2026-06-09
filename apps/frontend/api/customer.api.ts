@@ -1,7 +1,7 @@
 import useFetch from "@/hooks/useFetch";
 
 import { ApiResponse } from "../../shared/types/api";
-import { ICustomer, ICustomerListFilter } from "../../shared/types/customer.type";
+import { ICustomer, ICustomerCreateRequest, ICustomerListFilter } from "../../shared/types/customer.type";
 
 
 export function useGetCustomers(pagination: ICustomerListFilter) {
@@ -10,5 +10,14 @@ export function useGetCustomers(pagination: ICustomerListFilter) {
     path: "/api/customer",
     runOnInit: true,
     params: pagination,
+  });
+}
+
+
+
+export function useCreateCustomer() {
+  return useFetch<unknown, ICustomerCreateRequest>({
+    method: "POST",
+    path: "/api/customer",
   });
 }

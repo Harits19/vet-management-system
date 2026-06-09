@@ -1,7 +1,9 @@
 import { useRouter } from "next/navigation";
 
 
-export type VetRoutes = '/dashboard/sales';
+type Dashboard = 'dashboard'
+type LeafRoute = 'sales' | 'customers' | 'pets'
+export type VetRoutes = `/${Dashboard}/${LeafRoute}`;
 
 export default function useVetRouter() {
 

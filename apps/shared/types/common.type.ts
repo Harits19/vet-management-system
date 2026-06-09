@@ -23,3 +23,11 @@ export type LeafNestedKeys<T> = {
   ? K
   : `${K}.${LeafNestedKeys<T[K]>}`;
 }[keyof T & string];
+
+export interface BaseFilter<T, TSort extends NestedKeys<T> = NestedKeys<T>> {
+  page: number;
+  limit: number;
+  search: string;
+  sortBy: TSort;
+  order: "asc" | "desc";
+}

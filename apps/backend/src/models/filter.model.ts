@@ -2,13 +2,6 @@ import { NestedKeys } from "../../../shared/types/common.type";
 import { z } from 'zod'
 
 
-export interface BaseFilter<T, TSort extends NestedKeys<T> = NestedKeys<T>> {
-    page: number;
-    limit: number;
-    search: string;
-    sortBy: TSort;
-    order: "asc" | "desc";
-}
 
 export interface BuildFilterProps<T, TSort extends NestedKeys<T> = NestedKeys<T>> {
 

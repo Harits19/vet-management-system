@@ -13,7 +13,8 @@ interface FetchProps<TBody = any> {
   | "/api/products/import"
   | "/api/sales/sync"
   | "/api/sales"
-  | "/api/auth/cookie";
+  | "/api/auth/cookie"
+  | "/api/customer";
   method?: "POST" | "GET" | "PUT" | "DELETE";
   runOnMount?: boolean;
   params?: any;

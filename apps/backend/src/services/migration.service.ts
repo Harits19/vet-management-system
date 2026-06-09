@@ -3,6 +3,7 @@ import { SaleDB } from "src/models/sale.model";
 import { UserModel, UserRole } from "src/models/user.model";
 import mongodbService from "./mongodb.service";
 import authService from "./auth.service";
+import ENV from "src/config/env.config";
 
 async function cashierToUser() {
     await mongodbService.connect();
@@ -117,6 +118,7 @@ async function implementUsernametoAllUser() {
 }
 
 async function changeAllUserToDefaultConfig() {
+    if (!ENV.ENABLE_SEED) return;
     await UserModel.syncIndexes();
     console.log('start change all user to default config')
 

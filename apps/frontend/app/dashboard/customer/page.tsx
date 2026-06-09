@@ -1,170 +1,211 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Form, Input, Button, Card, Space, Select, Typography, Divider, message, Row, Col } from 'antd';
-import { PlusOutlined, DeleteOutlined, UserAddOutlined } from '@ant-design/icons';
+import React from "react";
+import {
+  Table,
+  Tag,
+  Button,
+  Space,
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Typography,
+  Tooltip,
+} from "antd";
+import {
+  UserOutlined,
+  PlusOutlined,
+  WhatsAppOutlined,
+  EnvironmentOutlined,
+  CalendarOutlined,
+  EditOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
+import Link from "next/link";
+import useQueryParams from "@/hooks/useQueryParam";
+import TableFilter from "@/components/TableFilter";
+import {
+  ICustomer,
+  ICustomerListFilter,
+} from "../../../../shared/types/customer.type";
+import { useGetCustomers } from "@/api/customer.api";
 
-/**
- * Referensi Interface yang digunakan:
- * ICustomer: name, whatsapp?, address?
- * IPet: name, kind, gender, notes?, ownerId
- */
+const { Title } = Typography;
 
-const { Title, Text } = Typography;
+const formatDate = (val: Date | string) =>
+  new Date(val).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
-export default function Page(){
-  const [form] = Form.useForm();
+export default function CustomerPage() {
+  const { debounceQuery, query, setQuery } =
+    useQueryParams<ICustomerListFilter>({
+      page: 1,
+      limit: 10,
+      search: "",
+      sortBy: "createdAt",
+      order: "desc",
+    });
 
-  const onFinish = (values: any) => {
-    // Values akan berisi data customer dan array pets
-    console.log('Payload data untuk dikirim ke API:', values);
-    
-    // Contoh simulasi sukses
-    message.success('Data Customer dan Pet berhasil disimpan!');
-    form.resetFields();
-  };
+  const { data, loading } = useGetCustomers(debounceQuery);
+
+  const customers = data?.data ?? [];
+  const meta = data?.meta;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px' }}>
-      <header style={{ marginBottom: 32 }}>
-        <Title level={2}>
-          <UserAddOutlined /> Registrasi Customer Baru
-        </Title>
-        <Text type="secondary">
-          Lengkapi formulir di bawah untuk mendaftarkan pemilik hewan beserta peliharaannya ke dalam sistem.
-        </Text>
-      </header>
-
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onFinish}
-        initialValues={{ pets: [{}] }} // Inisialisasi dengan 1 form pet kosong
-        scrollToFirstError
+    <div style={{ padding: "24px" }}>
+      <Row
+        gutter={[16, 16]}
+        justify="space-between"
+        align="middle"
+        style={{ marginBottom: 24 }}
       >
-        {/* SECTION: DATA CUSTOMER */}
-        <Card title="Informasi Pemilik (Customer)" style={{ marginBottom: 24 }} variant="outlined">
-          <Row gutter={16}>
-            <Col span={24} md={12}>
-              <Form.Item
-                name="name"
-                label="Nama Lengkap"
-                rules={[{ required: true, message: 'Nama customer wajib diisi' }]}
-              >
-                <Input placeholder="Nama lengkap pemilik" />
-              </Form.Item>
-            </Col>
-            <Col span={24} md={12}>
-              <Form.Item
-                name="whatsapp"
-                label="Nomor WhatsApp (Optional)"
-                rules={[{ pattern: /^\d+$/, message: 'Hanya masukkan karakter angka' }]}
-              >
-                <Input placeholder="Contoh: 08123456789" />
-              </Form.Item>
-            </Col>
-            <Col span={24}>
-              <Form.Item
-                name="address"
-                label="Alamat (Optional)"
-              >
-                <Input.TextArea rows={2} placeholder="Alamat lengkap customer" />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Card>
+        <Col>
+          <Title level={2} style={{ margin: 0 }}>
+            Data Customer
+          </Title>
+        </Col>
+        <Col>
+          <Link href="/dashboard/customer/create">
+            <Button type="primary" icon={<PlusOutlined />} size="large">
+              Tambah Customer
+            </Button>
+          </Link>
+        </Col>
+      </Row>
 
-        {/* SECTION: DATA PETS */}
-        <Card title="Daftar Hewan Peliharaan (Pets)" variant="outlined">
-          <Form.List name="pets">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }, index) => (
-                  <div key={key}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                      <Title level={5} style={{ margin: 0 }}>Hewan #{index + 1}</Title>
-                      {fields.length > 1 && (
-                        <Button 
-                          type="text" 
-                          danger 
-                          icon={<DeleteOutlined />} 
-                          onClick={() => remove(name)}
-                        >
-                          Hapus Hewan
-                        </Button>
-                      )}
-                    </div>
-                    
-                    <Row gutter={16}>
-                      <Col span={24} md={8}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'name']}
-                          label="Nama Pet"
-                          rules={[{ required: true, message: 'Nama pet wajib diisi' }]}
-                        >
-                          <Input placeholder="Nama hewan" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={24} md={8}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'kind']}
-                          label="Jenis / Spesies"
-                          rules={[{ required: true, message: 'Jenis hewan wajib diisi' }]}
-                        >
-                          <Input placeholder="Contoh: Kucing, Anjing" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={24} md={8}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'gender']}
-                          label="Jenis Kelamin"
-                          rules={[{ required: true, message: 'Pilih jenis kelamin' }]}
-                        >
-                          <Select placeholder="Pilih">
-                            <Select.Option value="male">Jantan</Select.Option>
-                            <Select.Option value="female">Betina</Select.Option>
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                      <Col span={24}>
-                        <Form.Item {...restField} name={[name, 'notes']} label="Catatan Tambahan (Optional)">
-                          <Input.TextArea placeholder="Keterangan tambahan atau riwayat singkat" />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                    {index < fields.length - 1 && <Divider />}
-                  </div>
-                ))}
-                <Form.Item>
-                  <Button 
-                    type="dashed" 
-                    onClick={() => add()} 
-                    block 
-                    icon={<PlusOutlined />}
-                    style={{ height: '45px' }}
+      {/* 📈 SUMMARY STATS */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card variant="borderless" className="stats-card">
+            <Statistic
+              title="Total Customer"
+              value={meta?.total ?? 0}
+              prefix={<UserOutlined style={{ color: "#1890ff" }} />}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 🔍 FILTER SECTION */}
+      <Card variant="borderless" style={{ marginBottom: 16 }}>
+        <TableFilter
+          query={query}
+          setQuery={setQuery}
+          searchKey="search"
+          searchPlaceholder="Cari nama customer atau nomor WhatsApp..."
+        />
+      </Card>
+
+      {/* 📊 TABLE SECTION */}
+      <Card variant="borderless" styles={{ body: { padding: 0 } }}>
+        <Table<ICustomer>
+          loading={loading}
+          dataSource={customers}
+          rowKey="_id"
+          pagination={{
+            current: query.page,
+            pageSize: query.limit,
+            total: meta?.total,
+            showSizeChanger: true,
+            pageSizeOptions: ["10", "20", "50"],
+            showTotal: (total) => `Total ${total} customer`,
+          }}
+          onChange={(pag, _, sorter: any) => {
+            setQuery((prev) => ({
+              ...prev,
+              page: pag.current ?? prev.page,
+              limit: pag.pageSize ?? prev.limit,
+              sortBy: sorter.field ?? prev.sortBy,
+              order: sorter.order === "ascend" ? "asc" : "desc",
+            }));
+          }}
+          columns={[
+            {
+              title: "Nama Lengkap",
+              dataIndex: "name",
+              key: "name",
+              sorter: true,
+              render: (text) => (
+                <Space>
+                  <UserOutlined style={{ color: "#8c8c8c" }} />
+                  <span style={{ fontWeight: 600 }}>{text}</span>
+                </Space>
+              ),
+            },
+            {
+              title: "WhatsApp",
+              dataIndex: "whatsapp",
+              key: "whatsapp",
+              render: (val) =>
+                val ? (
+                  <Link
+                    href={`https://wa.me/${val.replace(/\D/g, "")}`}
+                    target="_blank"
                   >
-                    Tambah Hewan Lainnya
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
-        </Card>
-
-        <Form.Item style={{ marginTop: 32, textAlign: 'right' }}>
-          <Space size="middle">
-            <Button size="large" onClick={() => form.resetFields()}>
-              Reset
-            </Button>
-            <Button type="primary" htmlType="submit" size="large">
-              Simpan Customer & Pet
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+                    <Tag
+                      icon={<WhatsAppOutlined />}
+                      color="success"
+                      style={{ cursor: "pointer" }}
+                    >
+                      {val}
+                    </Tag>
+                  </Link>
+                ) : (
+                  "-"
+                ),
+            },
+            {
+              title: "Alamat",
+              dataIndex: "address",
+              key: "address",
+              ellipsis: true,
+              render: (val) => (
+                <Tooltip title={val}>
+                  <Space>
+                    <EnvironmentOutlined style={{ color: "#bfbfbf" }} />
+                    {val || (
+                      <span style={{ color: "#d9d9d9" }}>Tidak ada alamat</span>
+                    )}
+                  </Space>
+                </Tooltip>
+              ),
+            },
+            {
+              title: "Terdaftar Pada",
+              dataIndex: "createdAt",
+              key: "createdAt",
+              sorter: true,
+              render: (val) => (
+                <Space>
+                  <CalendarOutlined style={{ color: "#8c8c8c" }} />
+                  {formatDate(val)}
+                </Space>
+              ),
+            },
+            {
+              title: "Aksi",
+              key: "action",
+              fixed: "right",
+              width: 100,
+              render: (_, record) => (
+                <Space size="middle">
+                  <Tooltip title="Lihat Detail">
+                    <Button type="text" icon={<EyeOutlined />} />
+                  </Tooltip>
+                  <Tooltip title="Edit">
+                    <Button type="text" icon={<EditOutlined />} />
+                  </Tooltip>
+                </Space>
+              ),
+            },
+          ]}
+          scroll={{ x: 1000 }}
+        />
+      </Card>
     </div>
   );
 }

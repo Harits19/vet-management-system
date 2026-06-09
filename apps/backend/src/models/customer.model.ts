@@ -1,7 +1,6 @@
 import mongoose, { Document, InferSchemaType } from "mongoose";
 import { ICustomer } from "../../../shared/types/customer.type";
-import { BaseFilter, buildFilterSchema } from "./filter.model";
-import { NestedKeys } from "../../../shared/types/common.type";
+import { buildFilterSchema } from "./filter.model";
 
 
 export const CustomerKey = 'Customer';

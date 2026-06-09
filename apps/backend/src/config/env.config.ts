@@ -3,7 +3,7 @@ import { configDotenv } from "dotenv"
 
 configDotenv({ path: process.env.NODE_ENV !== 'production' ? '.env.example' : '.env' })
 
-const envList = ['DEFAULT_USER_PASSWORD', 'DEFAULT_USER_EMAIL'] as const;
+const envList = ['DEFAULT_USER_PASSWORD', 'DEFAULT_USER_EMAIL',] as const;
 
 type ENKey = typeof envList[number];
 
@@ -12,6 +12,7 @@ type ENKey = typeof envList[number];
 
 function checkENV() {
     const env: Record<string, string> = {}
+
     for (const key of envList) {
         const value = process.env[key];
         console.log('check env', key, 'value', value);
@@ -19,12 +20,19 @@ function checkENV() {
         if (!value) throw new Error(`ENV ${key} is not defined`)
         env[key] = value;
     }
-    return env as Record<ENKey, string>;
+    const envString = env as Record<ENKey, string>;
+
+    const result = {
+        ...envString,
+        ENABLE_SEED: process.env.ENABLE_SEED === 'true',
+    }
+
+    return result;
 }
 
 
 
 
-const env = checkENV();
+const ENV = checkENV();
 
-export default env;
+export default ENV;

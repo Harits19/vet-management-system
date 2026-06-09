@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { UserModel, UserRole } from "../models/user.model";
 import { CookieModel } from "src/models/cookie.model";
 import { ICookie } from "../../../shared/types/auth.type";
-import env from "src/config/env.config";
+import ENV from "src/config/env.config";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
@@ -14,6 +14,7 @@ const getHashPassword = async (value: string) => {
 }
 
 const seedSuperAdmin = async () => {
+  if (!ENV.ENABLE_SEED) return;
   const count = await UserModel.countDocuments();
 
   if (count === 0) {
@@ -34,12 +35,12 @@ const getDefaultUserConfig = async () => {
 
   console.log('get default user config')
 
-  console.log('default user email', env.DEFAULT_USER_EMAIL);
-  console.log('default user password', env.DEFAULT_USER_PASSWORD);
+  console.log('default user email', ENV.DEFAULT_USER_EMAIL);
+  console.log('default user password', ENV.DEFAULT_USER_PASSWORD);
 
   const result = {
-    email: env.DEFAULT_USER_EMAIL,
-    password: await getHashPassword(env.DEFAULT_USER_PASSWORD),
+    email: ENV.DEFAULT_USER_EMAIL,
+    password: await getHashPassword(ENV.DEFAULT_USER_PASSWORD),
   }
 
   console.log('generate default config', JSON.stringify(result, null, 2));

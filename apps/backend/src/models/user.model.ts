@@ -7,6 +7,8 @@ export enum UserRole {
 }
 
 
+export const UserKey = 'User';
+
 
 export interface User extends Document {
   name: string;
@@ -63,4 +65,4 @@ const UserSchema = new Schema<User>(
   },
 );
 
-export const UserModel = mongoose.model<User>("User", UserSchema);
+export const UserModel = mongoose.model<User>(UserKey, UserSchema);

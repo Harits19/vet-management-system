@@ -1,10 +1,12 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { Document, InferSchemaType } from "mongoose";
 import { ICustomer } from "../../../shared/types/customer.type";
+import { BaseFilter, buildFilterSchema } from "./filter.model";
+import { NestedKeys } from "../../../shared/types/common.type";
 
-export interface Customer extends ICustomer, Document {
-  createdAt: Date;
-  updatedAt: Date;
-}
+
+export const CustomerKey = 'Customer';
+export interface Customer extends ICustomer {
+};
 
 const CustomerSchema = new mongoose.Schema<Customer>(
   {
@@ -27,4 +29,13 @@ const CustomerSchema = new mongoose.Schema<Customer>(
   },
 );
 
-export const CustomerModel = mongoose.model("Customer", CustomerSchema);
+
+export const CustomerModel = mongoose.model(CustomerKey, CustomerSchema);
+
+
+export const customerListFilterSchema = buildFilterSchema<Customer>({
+  sortList: ['name', 'createdAt', 'updatedAt'],
+  defaultSort: 'createdAt',
+})
+
+

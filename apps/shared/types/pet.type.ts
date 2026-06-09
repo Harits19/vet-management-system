@@ -11,4 +11,11 @@ export const petSchema = zod.object({
 
 })
 
-export interface IPet extends zod.infer<typeof petSchema> { }
+export interface IPet {
+    _id: string;
+    name: string;
+    kind: string;
+    gender: "male" | "female";
+    notes?: string;
+    ownerId: string;
+}

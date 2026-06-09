@@ -1,9 +1,14 @@
-import mongoose, { Document } from "mongoose";
+import mongoose from "mongoose";
 import { IPet } from "../../../shared/types/pet.type";
+import { CustomerKey } from "./customer.model";
 
-export interface Pet extends IPet, Document {
+
+export const PetKey = 'Pet';
+
+export interface Pet extends Omit<IPet, 'ownerId'> {
   createdAt: Date;
   updatedAt: Date;
+  ownerId: mongoose.Schema.Types.ObjectId;
 }
 
 const PetSchema = new mongoose.Schema<Pet>(
@@ -28,10 +33,10 @@ const PetSchema = new mongoose.Schema<Pet>(
       trim: true,
     },
     ownerId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
       trim: true,
-      ref: "Customer",
+      ref: CustomerKey,
     },
   },
   {
@@ -39,4 +44,4 @@ const PetSchema = new mongoose.Schema<Pet>(
   },
 );
 
-export const CustomerModel = mongoose.model("Pet", PetSchema);
+export const CustomerModel = mongoose.model(PetKey, PetSchema);

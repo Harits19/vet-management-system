@@ -22,25 +22,15 @@ export const sync = async (req: Request, res: Response) => {
 
 
 const get = async (req: Request, res: Response) => {
-  const parsed = salesFilterSchema.parse(req.query);
+  const query = salesFilterSchema.parse(req.query);
 
-  const { page, limit, search, sortBy, order } = parsed;
 
-  // 🔍 base query
-  let query: any = {};
-
-  // 🔍 search
-  Object.assign(
+  const result = await paginate({
+    model: SaleDB,
     query,
-    buildSearchQuery(search, ["receiptNumber", "cashier", "customer"]),
-  );
+    searchKeys: ['receiptNumber', 'cashier.name', 'customer'],
 
-  const result = await paginate(SaleDB, query, {
-    page,
-    limit,
-    sortBy,
-    order,
-  });
+  })
 
   return sendResponse(res, {
     success: true,

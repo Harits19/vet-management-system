@@ -2,13 +2,7 @@ import { Model, FilterQuery } from "mongoose";
 import { ZodObject } from "zod";
 import { Request } from "express";
 import { LeafNestedKeys, NestedKeys } from "../../../shared/types/common.type";
-
-interface PaginationParams {
-  page: number;
-  limit: number;
-  sortBy?: string;
-  order?: "asc" | "desc";
-}
+import { BaseFilter } from "src/models/filter.model";
 
 interface PaginationResult<T> {
   data: T[];
@@ -21,10 +15,18 @@ interface PaginationResult<T> {
 }
 
 export async function paginate<T>(
-  model: Model<T>,
-  query: FilterQuery<T>,
-  params: PaginationParams,
+  {
+    query: baseParams,
+    model,
+    searchKeys
+  }: {
+    model: Model<T>,
+    query: BaseFilter<T>,
+    searchKeys: readonly LeafNestedKeys<T>[],
+  }
 ): Promise<PaginationResult<T>> {
+  const { search, ...params } = baseParams;
+  const query = buildSearchQuery<T>(search, searchKeys);
   const { page, limit, sortBy = "createdAt", order = "desc" } = params;
 
   const skip = (page - 1) * limit;
@@ -53,7 +55,7 @@ export function buildSearchQuery<T>(
   search: string | undefined,
   fields: readonly LeafNestedKeys<T>[],
 ) {
-  
+
   if (!search) return {};
 
   return {

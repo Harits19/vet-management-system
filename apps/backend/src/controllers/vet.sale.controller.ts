@@ -20,23 +20,15 @@ export class VetSaleController {
 
 
     async get(req: Request, res: Response) {
-        const parsed = vetSaleFilterSchema.parse(req.query);
+        const query = vetSaleFilterSchema.parse(req.query);
 
-        const { page, limit, search, sortBy, order } = parsed;
 
-        let query: any = {};
 
-        Object.assign(
+        const result = await paginate({
+            model: VetSaleDB,
             query,
-            buildSearchQuery(search, ["customer.name", 'cashier.name']),
-        );
-
-        const result = await paginate(VetSaleDB, query, {
-            page,
-            limit,
-            sortBy,
-            order,
-        });
+            searchKeys: ['customer.name', 'cashier.name'],
+        })
 
         return sendResponse(res, {
             success: true,

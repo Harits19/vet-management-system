@@ -29,8 +29,11 @@ export type IProduct = z.infer<typeof productSchema> & {
   updatedAt: Date;
 };
 
+/**
+ * @deprecated 
+ */
 export const productsFilterSchema = paginationQuerySchema.extend({
-  search: z.string().optional(),
+  search: z.string(),
   category: z.string().optional(),
   sortBy: z
     .enum([

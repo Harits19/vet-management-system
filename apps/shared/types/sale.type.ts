@@ -151,6 +151,9 @@ export const salesSortByList: SaleKey[] = [
 
 export type SalesSortBy = (typeof salesSortByList)[number];
 
+/**
+ * @deprecated
+ */
 export const salesFilterSchema = generateSortFilterSchema({
   sortList: salesSortByList,
   defaultSort: "timestamp",

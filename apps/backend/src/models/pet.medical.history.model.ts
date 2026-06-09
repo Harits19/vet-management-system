@@ -1,117 +1,58 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { InferSchemaType, model, mongo, Schema } from "mongoose";
 import { IPetMedicalHistory } from "../../../shared/types/pet.medical.history.type";
+import { PetKey } from "./pet.model";
+import { UserKey } from "./user.model";
 
-export interface PetMedicalHistory extends Document, IPetMedicalHistory {
-  createdAt: Date;
-  updatedAt: Date;
+export interface PetMedicalHistory extends Omit<IPetMedicalHistory, 'petId' | 'doctorId'> {
+  petId: mongoose.Schema.Types.ObjectId;
+  doctorId: mongoose.Schema.Types.ObjectId;
 }
 
-const PetMedicalHistorySchema = new mongoose.Schema<PetMedicalHistory>({
-  petId: {
-    type: String,
-    required: true,
-    trim: true,
+
+const medicalHistorySchema = new Schema<PetMedicalHistory>(
+  {
+    petId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: PetKey,
+      required: true,
+      index: true,
+    },
+
+    visitDate: {
+      type: Date,
+      required: true,
+    },
+
+    diagnosis: {
+      type: String,
+      required: true,
+    },
+
+    treatment: String,
+
+    notes: String,
+
+    doctorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: UserKey,
+      required: true,
+    },
   },
-  visitDate: {
-    type: Date,
-    required: true,
-  },
-  complaints: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  diagnosis: {
-    type: String,
-    trim: true,
-  },
-  treatments: {
-    type: [String],
-    required: true,
-    default: [],
-  },
-  medications: {
-    type: [
-      {
-        name: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        dosage: {
-          type: String,
-          trim: true,
-        },
-        frequency: {
-          type: String,
-          trim: true,
-        },
-        duration: {
-          type: String,
-          trim: true,
-        },
-        notes: {
-          type: String,
-          trim: true,
-        },
-      },
-    ],
-    default: [],
-  },
-  vaccinations: {
-    type: [
-      {
-        name: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        date: {
-          type: Date,
-          required: true,
-        },
-        notes: {
-          type: String,
-          trim: true,
-        },
-      },
-    ],
-    default: [],
-  },
-  allergies: {
-    type: [String],
-    default: [],
-  },
-  weight: {
-    type: Number,
-    min: 0,
-  },
-  temperature: {
-    type: Number,
-    min: 0,
-  },
-  attachments: {
-    type: [
-      {
-        fileName: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        fileUrl: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-      },
-    ],
-    default: [],
-  },
-  notes: {
-    type: String,
-    trim: true,
-  },
-  nextVisitDate: {
-    type: Date,
-  },
+  {
+    timestamps: true,
+  }
+);
+
+medicalHistorySchema.index({
+  petId: 1,
+  visitDate: -1,
 });
+
+export type MedicalHistory = InferSchemaType<
+  typeof medicalHistorySchema
+>;
+
+export const MedicalHistoryModel = model(
+  'MedicalHistory',
+  medicalHistorySchema
+);

@@ -19,7 +19,7 @@ export type NestedKeys<T> = {
 
 export type LeafNestedKeys<T> = {
   [K in keyof T & string]:
-  T[K] extends object
-  ? `${K}.${LeafNestedKeys<T[K]>}`
-  : K;
+  T[K] extends Primitive
+  ? K
+  : `${K}.${LeafNestedKeys<T[K]>}`;
 }[keyof T & string];

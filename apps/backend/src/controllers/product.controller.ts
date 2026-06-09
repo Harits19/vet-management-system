@@ -9,30 +9,14 @@ import { parse } from "csv-parse/sync";
 import { buildSearchQuery, paginate } from "src/services/pagination.service";
 
 export const getProducts = async (req: Request, res: Response) => {
-  const parsed = productsFilterSchema.parse(req.query);
+  const query = productsFilterSchema.parse(req.query);
 
-  const { page, limit, search, category, sortBy, order } = parsed;
 
-  // 🔍 base query
-  let query: any = {};
-
-  // 🔍 search
-  Object.assign(
+  const result = await paginate({
     query,
-    buildSearchQuery(search, ["product.name", "product.code", "category"]),
-  );
-
-  // 🏷️ filter
-  if (category) {
-    query.category = category;
-  }
-
-  const result = await paginate(ProductDB, query, {
-    page,
-    limit,
-    sortBy,
-    order,
-  });
+    model: ProductDB,
+    searchKeys: ['product.name', 'product.code', 'category'],
+  })
 
   return sendResponse(res, {
     success: true,

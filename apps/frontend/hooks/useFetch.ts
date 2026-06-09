@@ -14,7 +14,8 @@ interface FetchProps<TBody = any> {
   | "/api/sales/sync"
   | "/api/sales"
   | "/api/auth/cookie"
-  | "/api/customer";
+  | "/api/customers"
+  | "/api/pets/kind";
   method?: "POST" | "GET" | "PUT" | "DELETE";
   runOnMount?: boolean;
   params?: any;

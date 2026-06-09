@@ -7,7 +7,7 @@ import { ICustomer, ICustomerCreateRequest, ICustomerListFilter } from "../../sh
 export function useGetCustomers(pagination: ICustomerListFilter) {
   return useFetch<ApiResponse<ICustomer[]>>({
     method: "GET",
-    path: "/api/customer",
+    path: "/api/customers",
     runOnInit: true,
     params: pagination,
   });
@@ -18,6 +18,6 @@ export function useGetCustomers(pagination: ICustomerListFilter) {
 export function useCreateCustomer() {
   return useFetch<unknown, ICustomerCreateRequest>({
     method: "POST",
-    path: "/api/customer",
+    path: "/api/customers",
   });
 }

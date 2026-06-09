@@ -13,6 +13,7 @@ import {
   message,
   Row,
   Col,
+  AutoComplete,
 } from "antd";
 import {
   PlusOutlined,
@@ -28,17 +29,13 @@ import { petCreateSchema } from "../../../../../shared/types/pet.type";
 import { customerCreateSchema } from "../../../../../shared/types/customer.type";
 import { useCreateCustomer } from "@/api/customer.api";
 import useVetRouter from "@/hooks/useVetRouter";
-
-const createFormSchema = customerCreateSchema.extend({
-  pets: z.array(petCreateSchema).optional(),
-});
-
-type CreateFormValues = z.infer<typeof createFormSchema>;
+import SpeciesInput from "./components/SpeciesInput";
+import { createFormSchema, CustomerCreateForm } from "./model/validation";
 
 const { Title, Text } = Typography;
 
 export default function Page() {
-  const { control, handleSubmit, reset } = useForm<CreateFormValues>({
+  const { control, handleSubmit, reset } = useForm<CustomerCreateForm>({
     resolver: zodResolver(createFormSchema),
     defaultValues: {
       name: "",
@@ -56,7 +53,7 @@ export default function Page() {
   const { mutate, loading } = useCreateCustomer();
   const router = useVetRouter();
 
-  const onFinish = (values: CreateFormValues) => {
+  const onFinish = (values: CustomerCreateForm) => {
     mutate({
       body: values,
       onSuccess: () => {
@@ -157,16 +154,9 @@ export default function Page() {
                     {(f) => <Input {...f} placeholder="Nama hewan" />}
                   </VetForm>
                 </Col>
+
                 <Col span={24} md={8}>
-                  <VetForm
-                    control={control}
-                    name={`pets.${index}.kind`}
-                    label="Jenis / Spesies"
-                  >
-                    {(f) => (
-                      <Input {...f} placeholder="Contoh: Kucing, Anjing" />
-                    )}
-                  </VetForm>
+                  <SpeciesInput control={control} index={index} />
                 </Col>
                 <Col span={24} md={8}>
                   <VetForm

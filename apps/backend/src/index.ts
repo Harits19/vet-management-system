@@ -15,6 +15,7 @@ import mongodbService from "./services/mongodb.service.js";
 import saleService from "./services/sale.service.js";
 import customerRouter from "./routes/customer.route.js";
 import { seedDummyCustomerData } from "./models/customer.model.js";
+import { petRoute } from "./routes/pet.route.js";
 
 const app = express();
 const port = Number(4000);
@@ -46,7 +47,8 @@ app.get("/api/health", (_request, response) => {
 app.use("/api/products", productRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/sales", saleRouter);
-app.use("/api/customer", customerRouter);
+app.use("/api/customers", customerRouter);
+app.use("/api/pets", petRoute.route)
 app.use(errorHandler);
 
 async function bootstrap() {

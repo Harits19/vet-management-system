@@ -27,7 +27,10 @@ import { z } from "zod";
 import VetForm from "@/components/VetForm";
 import { petCreateSchema } from "../../../../../shared/types/pet.type";
 import { customerCreateSchema } from "../../../../../shared/types/customer.type";
-import { useCreateCustomer } from "@/api/customer.api";
+import {
+  useCreateCustomer,
+  useCreateCustomerAndPets,
+} from "@/api/customer.api";
 import useVetRouter from "@/hooks/useVetRouter";
 import SpeciesInput from "./components/SpeciesInput";
 import { createFormSchema, CustomerCreateForm } from "./model/validation";
@@ -50,14 +53,14 @@ export default function Page() {
     name: "pets",
   });
 
-  const { mutate, loading } = useCreateCustomer();
+  const { mutate, loading } = useCreateCustomerAndPets();
   const router = useVetRouter();
 
   const onFinish = (values: CustomerCreateForm) => {
     mutate({
       body: values,
       onSuccess: () => {
-        router.push("/dashboard/customers");
+        // router.push("/dashboard/customers");
       },
     });
   };
@@ -193,7 +196,12 @@ export default function Page() {
           <Button
             type="dashed"
             onClick={() =>
-              append({ name: "", kind: "", gender: "male", notes: "" })
+              append({
+                name: "",
+                kind: "",
+                gender: "male",
+                notes: "",
+              })
             }
             block
             icon={<PlusOutlined />}

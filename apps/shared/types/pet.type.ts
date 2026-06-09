@@ -6,7 +6,7 @@ export interface IPet {
     kind: string;
     gender: "male" | "female";
     notes?: string;
-    ownerId: string;
+    customerId: string;
 }
 
 
@@ -16,5 +16,7 @@ export const petCreateSchema = z.object({
     gender: z.enum(["male", "female"]),
     notes: z.string().optional(),
 });
+
+
 
 export interface IPetCreateRequest extends z.infer<typeof petCreateSchema> { }

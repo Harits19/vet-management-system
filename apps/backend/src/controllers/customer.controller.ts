@@ -27,7 +27,7 @@ class CustomerController {
     const body = customerCreateSchema.parse(req.body);
 
     const data = await CustomerModel.create(body);
-
+    
     return sendResponse(res, {
       success: true,
       data,

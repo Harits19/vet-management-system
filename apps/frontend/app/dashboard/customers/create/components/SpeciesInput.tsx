@@ -27,7 +27,7 @@ export default function SpeciesInput({
     >
       {(f) => (
         <AutoComplete
-          value={search}
+          value={f.value}
           style={{ width: "100%" }}
           placeholder="Contoh: Kucing, Anjing"
           allowClear
@@ -35,10 +35,11 @@ export default function SpeciesInput({
             label: item,
             value: item,
           }))}
+          onChange={f.onChange}
           showSearch={{ searchValue: search, onSearch: setSearch }}
-          onSelect={(_, option) => {
+          onSelect={(value) => {
             setSearch("");
-            f.onChange(option);
+            f.onChange();
           }}
         />
       )}

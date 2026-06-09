@@ -15,7 +15,8 @@ interface FetchProps<TBody = any> {
   | "/api/sales"
   | "/api/auth/cookie"
   | "/api/customers"
-  | "/api/pets/kind";
+  | "/api/pets/kind"
+  | "/api/pets";
   method?: "POST" | "GET" | "PUT" | "DELETE";
   runOnMount?: boolean;
   params?: any;
@@ -123,6 +124,7 @@ export default function useFetch<TResponse, TBody = undefined>({
       finalBody = mutateBody;
     }
 
+    console.log('finalBody', finalBody)
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000))
       const data = await fetcher<TResponse, TBody>({

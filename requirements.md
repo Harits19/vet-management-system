@@ -155,7 +155,7 @@ vet-management-system/
   email: string
   password: string (hashed)
   role: "superadmin" | "admin" | "cashier" | "doctor"
-  is_active: boolean
+  isActive: boolean
   createdAt: datetime
   updatedAt: datetime
 }
@@ -211,7 +211,7 @@ vet-management-system/
     quantity: number?               (null/undefined untuk jasa — stok tidak terbatas)
   }
   unit: string?                     (pcs, kg, botol — untuk barang; "-" untuk jasa)
-  is_active: boolean                (soft delete / non-aktif)
+  isActive: boolean                (soft delete / non-aktif)
   createdAt: datetime
   updatedAt: datetime
 }
@@ -484,7 +484,7 @@ vet-management-system/
 | **Auto-complete** | Search customer/pet dengan debounce (300ms) |
 | **Stok barang fisik** | Berkurang otomatis saat transaksi, tidak boleh minus |
 | **Stok jasa dokter** | Tidak ada stok (inventory.quantity = null) — tidak terpengaruh transaksi |
-| **Soft delete produk** | Product di-non-aktifkan (is_active=false), bukan dihapus — agar data historis tetap utuh |
+|| **Soft delete produk** | Product di-non-aktifkan (isActive=false), bukan dihapus — agar data historis tetap utuh |
 | **Snapshot harga** | Harga jasa & obat di-snapshot ke rekam medis & transaksi saat checkout (antisipasi perubahan harga di masa depan) |
 
 ---

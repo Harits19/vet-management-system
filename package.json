@@ -10,7 +10,12 @@
     "build": "npm run build --workspace @vet/shared && npm run build --workspace @vet/backend && npm run build --workspace @vet/frontend",
     "dev:frontend": "npm run dev --workspace @vet/frontend",
     "dev:backend": "npm run dev --workspace @vet/backend",
-    "typecheck": "npm run typecheck --workspace @vet/shared && npm run typecheck --workspace @vet/backend"
+    "typecheck": "npm run typecheck --workspace @vet/shared && npm run typecheck --workspace @vet/backend",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d",
+    "docker:build": "docker compose build"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

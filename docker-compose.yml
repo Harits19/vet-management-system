@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: vet-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: vet-management
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: vet-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI: mongodb://mongodb:27017/vet-management
+      JWT_SECRET: change-me-to-a-secret-in-production
+      JWT_EXPIRES_IN: 1d
+      DEFAULT_USER_PASSWORD: password123
+      ENABLE_SEED: "true"
+      COOKIE_SECURE: "false"
+      FRONTEND_ORIGINS: "http://localhost:3002"
+    depends_on:
+      - backend-init
+
+  # One-shot init container to wait for MongoDB readiness
+  backend-init:
+    image: mongo:7
+    container_name: vet-mongo-init
+    restart: "no"
+    depends_on:
+      mongodb:
+        condition: service_started
+    entrypoint: >
+      sh -c "
+        echo '⏳ Waiting for MongoDB...' &&
+        until mongosh --host mongodb --eval 'db.runCommand({ ping: 1 })' > /dev/null 2>&1; do
+          sleep 2
+        done &&
+        echo '✅ MongoDB is ready'
+      "
+
+volumes:
+  mongodb_data:

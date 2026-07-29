@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      target: shared-builder
+    image: vet-backend-shared
+    container_name: vet-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      MONGODB_URI: mongodb://mongodb:27017/vet-management
+      JWT_SECRET: dev-secret-change-me
+      JWT_EXPIRES_IN: 1d
+      DEFAULT_USER_PASSWORD: password123
+      ENABLE_SEED: "true"
+      COOKIE_SECURE: "false"
+      FRONTEND_ORIGINS: "http://localhost:3002"
+    volumes:
+      # Mount source for hot-reload with tsx
+      - ./apps/backend/src:/app/apps/backend/src
+      - ./packages/shared/src:/app/packages/shared/src
+    command: >
+      sh -c "
+        cd /app &&
+        npm run build --workspace @vet/shared &&
+        npx tsx watch apps/backend/src/index.ts
+      "
+    depends_on:
+      - mongodb

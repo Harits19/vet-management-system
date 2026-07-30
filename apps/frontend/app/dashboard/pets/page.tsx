@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row, Col, Tag, Empty } from "antd";
-import { Plus, Search, Edit, Trash2, UserPlus } from "lucide-react";
+import { Plus, Search, Edit, Trash2, UserPlus, Eye } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useRouter } from "next/navigation";
@@ -94,6 +94,7 @@ export default function PetsPage() {
       title: "Aksi", key: "action",
       render: (_: any, r: Pet) => (
         <Space>
+          <Button size="small" icon={<Eye size={14} />} onClick={() => router.push(`/dashboard/pets/${r._id}`)} />
           <Button size="small" icon={<Edit size={14} />} onClick={() => openEdit(r)} />
           <Button size="small" danger icon={<Trash2 size={14} />} onClick={() => handleDelete(r._id)} />
         </Space>

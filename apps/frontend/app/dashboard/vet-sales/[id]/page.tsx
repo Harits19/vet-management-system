@@ -39,7 +39,7 @@ export default function VetSaleDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch<{ data: VetSaleDetail }>(`/api/vet-sales/${id}`)
+    apiFetch<{ data: any }>(`/api/transactions/${id}`)
       .then((res) => setSale(res.data))
       .catch(console.error)
       .finally(() => setLoading(false));

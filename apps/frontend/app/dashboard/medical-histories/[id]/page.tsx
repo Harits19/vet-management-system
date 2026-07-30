@@ -45,7 +45,7 @@ export default function MedicalHistoryDetailPage() {
   const handleGenerateSale = async () => {
     setGenerating(true);
     try {
-      const res = await apiFetch<{ data: any }>(`/api/vet-sales/from-medical-history/${id}`, {
+      const res = await apiFetch<{ data: any }>(`/api/transactions/vet/from-medical-history/${id}`, {
         method: "POST",
         body: JSON.stringify({ paidAmount: calcTotal(), paymentMethod: "Tunai" }),
       });

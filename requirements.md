@@ -467,7 +467,6 @@ vet-management-system/
 | 12 | Laporan penjualan & jasa | Harian/mingguan/bulanan, breakdown produk vs jasa |
 | 13 | Cetak struk / PDF | Struk terpadu untuk toko & dokter |
 | 14 | Notifikasi stok menipis | Khusus barang fisik |
-| 15 | Multi-store / cabang | — |
 
 ---
 

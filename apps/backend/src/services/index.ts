@@ -2,7 +2,6 @@ export { loginUser, seedDefaultUsers } from "./auth.service.js";
 export { listCustomers, getCustomer, createCustomer, updateCustomer, deleteCustomer } from "./customer.service.js";
 export { listPets, getPet, createPet, updatePet, deletePet, searchCustomerPets } from "./pet.service.js";
 export { listProducts, getProduct, createProduct, updateProduct, deleteProduct, searchProductsByCode } from "./product.service.js";
-export { createSale, listSales, getSale, deleteSale, getDashboardSummary } from "./sale.service.js";
 export {
   listMedicalHistories,
   getMedicalHistory,
@@ -12,10 +11,12 @@ export {
   getMedicalHistorySummary,
 } from "./medical-history.service.js";
 export {
-  createVetSale,
-  createVetSaleFromMedicalHistory,
-  listVetSales,
-  getVetSale,
-  deleteVetSale,
+  createShopTransaction,
+  createVetTransaction,
+  createVetTransactionFromMedicalHistory,
+  listTransactions,
+  getTransaction,
+  deleteTransaction,
+  getDashboardSummary,
   getDoctorDashboard,
-} from "./vet-sale.service.js";
+} from "./transaction.service.js";

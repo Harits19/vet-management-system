@@ -21,32 +21,32 @@ COPY --from=shared-builder /app/packages/shared ./packages/shared
 COPY --from=shared-builder /app/node_modules ./node_modules
 COPY apps/backend ./apps/backend
 
-# Build backend
 RUN npm run build --workspace @vet/backend || true
 
 # ──────────────────────────────────────────
-# Stage 3: Production image (small)
+# Stage 3: Production image
 # ──────────────────────────────────────────
 FROM node:22-alpine
 WORKDIR /app
 
-# Copy built artifacts
+# Root package.json (defines workspaces so @vet/shared resolves locally)
+COPY --from=backend-builder /app/package.json ./package.json
+
+# Shared package
 COPY --from=shared-builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=shared-builder /app/packages/shared/package.json ./packages/shared/package.json
+
+# Backend
 COPY --from=backend-builder /app/apps/backend/dist ./apps/backend/dist
 COPY --from=backend-builder /app/apps/backend/package.json ./apps/backend/package.json
 
-# Symlink shared package for runtime resolution
-RUN mkdir -p /app/node_modules/@vet && \
-    ln -sf /app/packages/shared/dist /app/node_modules/@vet/shared
+# Symlink @vet/shared so npm workspace resolution works
+RUN mkdir -p node_modules/@vet && \
+    ln -sf /app/packages/shared/dist node_modules/@vet/shared
 
-# Install ONLY production deps (small & fast)
-COPY --from=backend-builder /app/apps/backend/package.json ./apps/backend/package.json
-WORKDIR /app/apps/backend
-RUN npm install --omit=dev && \
+# Install production deps from root (resolves workspace deps locally)
+RUN npm install --omit=dev --workspace @vet/backend && \
     npm cache clean --force
-
-WORKDIR /app
 
 EXPOSE 3001
 

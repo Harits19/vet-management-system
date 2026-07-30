@@ -50,7 +50,7 @@ export default function MedicalHistoryDetailPage() {
         body: JSON.stringify({ paidAmount: calcTotal(), paymentMethod: "Tunai" }),
       });
       msg.success(`Transaksi dibuat: ${res.data.receiptNumber}`);
-      router.push(`/dashboard/vet-sales/${res.data._id}`);
+      router.push(`/dashboard/transactions`);
     } catch (err: any) {
       msg.error(err.message);
     } finally {

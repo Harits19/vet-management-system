@@ -251,8 +251,6 @@ modal.confirm({ title: "...", onOk: ... });
 
 
 
-## 🔜 Belum Dikerjakan
-
 
 ### 15. Hapus Tindakan (Jasa) & Resep Obat dari Form Tambah Rekam Medis
 
@@ -278,3 +276,7 @@ modal.confirm({ title: "...", onOk: ... });
 - `app/dashboard/vet-sales/create/page.tsx` — sederhanakan form rekam medis, pindah logika ke submit
 - `app/dashboard/pets/[id]/page.tsx` — sederhanakan modal rekam medis
 - `apps/backend/src/services/transaction.service.ts` — auto-create medical history saat transaksi vet
+
+
+## 🔜 Belum Dikerjakan
+

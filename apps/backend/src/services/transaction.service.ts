@@ -160,40 +160,6 @@ async function createTransaction(input: TransactionCreateRequest, cashierId: str
 }
 
 // ──────────────────────────────────────────
-// Generate from medical history
-// ──────────────────────────────────────────
-export async function createVetTransactionFromMedicalHistory(
-  medicalHistoryId: string, paidAmount: number, paymentMethod: string,
-  cashierId: string, cashierName: string
-) {
-  const mh = await MedicalHistoryModel.findById(medicalHistoryId).populate("petId", "name kind customerId").lean();
-  if (!mh) throw Object.assign(new Error("Medical history not found"), { status: 404 });
-
-  const pet = mh.petId as any;
-  const customerId = pet?.customerId?.toString();
-  if (!customerId) throw Object.assign(new Error("Pet has no owner"), { status: 400 });
-
-  const items: TransactionCreateRequest["items"] = [
-    ...(mh.treatments || []).map((t: any) => ({
-      product: { _id: t.productId.toString(), name: t.name, type: "service" as const },
-      quantity: 1,
-      pricing: { cost: 0, selling: t.price, total: t.price },
-    })),
-    ...(mh.prescriptions || []).map((p: any) => ({
-      product: { _id: p.productId.toString(), name: p.name, type: "physical" as const },
-      quantity: p.quantity,
-      pricing: { cost: 0, selling: p.price, total: p.price * p.quantity },
-      dosage: p.dosage,
-    })),
-  ];
-
-  return createVetTransaction(
-    { type: "vet", customerId, petId: pet?._id?.toString(), medicalHistoryId: mh._id.toString(), paymentMethod, paidAmount, items },
-    cashierId, cashierName
-  );
-}
-
-// ──────────────────────────────────────────
 // List / Get / Delete
 // ──────────────────────────────────────────
 export async function listTransactions(filter: TransactionFilter) {

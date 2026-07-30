@@ -13,7 +13,6 @@ export {
 export {
   createShopTransaction,
   createVetTransaction,
-  createVetTransactionFromMedicalHistory,
   listTransactions,
   getTransaction,
   deleteTransaction,

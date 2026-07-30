@@ -3,7 +3,6 @@ import type { AuthRequest } from "../config/auth.js";
 import {
   createShopTransaction,
   createVetTransaction,
-  createVetTransactionFromMedicalHistory,
   listTransactions,
   getTransaction,
   deleteTransaction,
@@ -30,21 +29,6 @@ export async function createVet(req: AuthRequest, res: Response, next: NextFunct
   try {
     const input = transactionCreateSchema.parse({ ...req.body, type: "vet" });
     const data = await createVetTransaction(input, req.user!.userId, req.user!.username);
-    res.status(201).json({ success: true, data });
-  } catch (err) { next(err); }
-}
-
-export async function createFromMedicalHistory(req: AuthRequest, res: Response, next: NextFunction) {
-  try {
-    const { paidAmount, paymentMethod } = req.body;
-    if (!paidAmount || !paymentMethod) {
-      res.status(400).json({ success: false, message: "paidAmount and paymentMethod required" });
-      return;
-    }
-    const data = await createVetTransactionFromMedicalHistory(
-      req.params.medicalHistoryId as string, paidAmount, paymentMethod,
-      req.user!.userId, req.user!.username
-    );
     res.status(201).json({ success: true, data });
   } catch (err) { next(err); }
 }

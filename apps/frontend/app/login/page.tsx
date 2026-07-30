@@ -1,22 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { Form, Input, Button, Card, Typography, message } from "antd";
+import { useState, useEffect } from "react";
+import { Form, Input, Button, Card, Typography } from "antd";
 import { Lock, User, PawPrint } from "lucide-react";
 import { useAuth } from "../context/auth";
+import { useAntdMessage } from "../hooks/useAntdMessage";
+import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+  const msg = useAntdMessage();
+  const router = useRouter();
+
+  // Jika sudah login, redirect ke dashboard
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, authLoading, router]);
+
+  // Jangan render form login jika masih loading atau sudah login
+  if (authLoading) return null;
+  if (user) return null;
 
   const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
       await login(values.username, values.password);
     } catch (err: any) {
-      message.error(err.message || "Login gagal");
+      msg.error(err.message || "Login gagal");
     } finally {
       setLoading(false);
     }

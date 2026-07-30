@@ -43,7 +43,7 @@ export default function CustomerDetailPage() {
 
   return (
     <div>
-      <Title level={4}>Detail Customer</Title>
+      <Title level={4}>Detail Pemilik</Title>
       <Card loading={loading}>
         <Descriptions column={2} bordered>
           <Descriptions.Item label="Nama">{customer.name}</Descriptions.Item>

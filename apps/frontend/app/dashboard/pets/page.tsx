@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Table, Button, Input, Space, Modal, Form, Select, message, Typography, Row, Col, Tag } from "antd";
-import { Plus, Search, Edit, Trash2, Cross } from "lucide-react";
+import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row, Col, Tag, Empty } from "antd";
+import { Plus, Search, Edit, Trash2, UserPlus } from "lucide-react";
 import { apiFetch } from "../../context/auth";
+import { useAntdMessage } from "../../hooks/useAntdMessage";
+import { useRouter } from "next/navigation";
 
 const { Title } = Typography;
 
@@ -27,6 +29,8 @@ export default function PetsPage() {
   const [editing, setEditing] = useState<Pet | null>(null);
   const [customers, setCustomers] = useState<{ _id: string; name: string }[]>([]);
   const [form] = Form.useForm();
+  const msg = useAntdMessage();
+  const router = useRouter();
 
   const fetchData = async (p = page, s = search) => {
     setLoading(true);
@@ -36,7 +40,7 @@ export default function PetsPage() {
       setData(res.data);
       setTotal(res.meta.total);
     } catch (err: any) {
-      message.error(err.message);
+      msg.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -55,10 +59,7 @@ export default function PetsPage() {
   const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
   const openEdit = (p: Pet) => {
     setEditing(p);
-    form.setFieldsValue({
-      ...p,
-      customerId: p.customerId._id,
-    });
+    form.setFieldsValue({ ...p, customerId: p.customerId._id });
     setModalOpen(true);
   };
 
@@ -67,20 +68,20 @@ export default function PetsPage() {
       const values = await form.validateFields();
       if (editing) {
         await apiFetch(`/api/pets/${editing._id}`, { method: "PUT", body: JSON.stringify(values) });
-        message.success("Pasien diupdate");
+        msg.success("Pasien diupdate");
       } else {
         await apiFetch("/api/pets", { method: "POST", body: JSON.stringify(values) });
-        message.success("Pasien ditambahkan");
+        msg.success("Pasien ditambahkan");
       }
       setModalOpen(false);
       fetchData();
     } catch (err: any) {
-      if (err.message) message.error(err.message);
+      if (err.message) msg.error(err.message);
     }
   };
 
   const handleDelete = (id: string) => {
-    Modal.confirm({ title: "Hapus pasien?", onOk: async () => { await apiFetch(`/api/pets/${id}`, { method: "DELETE" }); message.success("Dihapus"); fetchData(); } });
+    Modal.confirm({ title: "Hapus pasien?", onOk: async () => { await apiFetch(`/api/pets/${id}`, { method: "DELETE" }); msg.success("Dihapus"); fetchData(); } });
   };
 
   const columns = [
@@ -137,8 +138,23 @@ export default function PetsPage() {
             <Select options={[{ value: "male", label: "Jantan" }, { value: "female", label: "Betina" }]} />
           </Form.Item>
           <Form.Item name="customerId" label="Pemilik" rules={[{ required: true, message: "Pilih pemilik" }]}>
-            <Select showSearch placeholder="Cari pemilik..." onSearch={fetchCustomers} filterOption={false}
-              options={customers.map((c) => ({ value: c._id, label: c.name }))} />
+            <Select
+              showSearch
+              placeholder="Cari pemilik..."
+              onSearch={fetchCustomers}
+              filterOption={false}
+              options={customers.map((c) => ({ value: c._id, label: c.name }))}
+              notFoundContent={
+                <Empty
+                  description="Tidak ada pemilik"
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                >
+                  <Button type="link" icon={<UserPlus size={14} />} onClick={() => { setModalOpen(false); router.push("/dashboard/customers"); }}>
+                    Tambah Pemilik Baru
+                  </Button>
+                </Empty>
+              }
+            />
           </Form.Item>
           <Form.Item name="notes" label="Catatan">
             <Input.TextArea rows={2} />

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Descriptions, Table, Typography, Tag, Button, Space, Modal, Form, Input, Select, DatePicker, message, Timeline } from "antd";
-import { Plus, FileText, Activity, Clock } from "lucide-react";
+import { Card, Descriptions, Table, Typography, Tag, Button, Space, Modal, Form, Input, Select, DatePicker, Row, Col } from "antd";
+import { FileText } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
+import { useAntdMessage } from "../../../hooks/useAntdMessage";
 import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
-import { Row, Col } from "antd";
 
 const { Title, Text } = Typography;
 
@@ -49,6 +49,7 @@ export default function PetDetailPage() {
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const msg = useAntdMessage();
 
   const fetchData = async () => {
     setLoading(true);
@@ -60,7 +61,7 @@ export default function PetDetailPage() {
       setPet(petRes.data);
       setRecords(mhRes.data.records);
     } catch (err: any) {
-      message.error(err.message);
+      msg.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -111,11 +112,11 @@ export default function PetDetailPage() {
           notes: values.notes,
         }),
       });
-      message.success("Rekam medis ditambahkan");
+      msg.success("Rekam medis ditambahkan");
       setMhOpen(false);
       fetchData();
     } catch (err: any) {
-      if (err.message) message.error(err.message);
+      if (err.message) msg.error(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -161,7 +162,6 @@ export default function PetDetailPage() {
         <Table dataSource={records} columns={mhColumns} rowKey="_id" pagination={false} size="small" />
       </Card>
 
-      {/* Modal Create Medical History */}
       <Modal title="Tambah Rekam Medis" open={mhOpen} onOk={handleSubmitMH} onCancel={() => setMhOpen(false)} width={700} confirmLoading={submitting}>
         <Form form={form} layout="vertical">
           <Form.Item name="visitDate" label="Tanggal Kunjungan" rules={[{ required: true, message: "Pilih tanggal" }]}>
@@ -215,4 +215,3 @@ export default function PetDetailPage() {
     </div>
   );
 }
-

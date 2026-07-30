@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Table, Button, Input, Space, Modal, Form, Select, message, Typography, Row, Col, Tag, Switch } from "antd";
+import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row, Col, Tag, Switch } from "antd";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { apiFetch } from "../../context/auth";
+import { useAntdMessage } from "../../hooks/useAntdMessage";
 
 const { Title } = Typography;
 
@@ -29,6 +30,7 @@ export default function ProductsPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [form] = Form.useForm();
   const [productType, setProductType] = useState<"physical" | "service">("physical");
+  const msg = useAntdMessage();
 
   const fetchData = async (p = page, s = search, t = typeFilter) => {
     setLoading(true);
@@ -39,7 +41,7 @@ export default function ProductsPage() {
       setData(res.data);
       setTotal(res.meta.total);
     } catch (err: any) {
-      message.error(err.message);
+      msg.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -70,20 +72,20 @@ export default function ProductsPage() {
       const values = await form.validateFields();
       if (editing) {
         await apiFetch(`/api/products/${editing._id}`, { method: "PUT", body: JSON.stringify(values) });
-        message.success("Produk diupdate");
+        msg.success("Produk diupdate");
       } else {
         await apiFetch("/api/products", { method: "POST", body: JSON.stringify(values) });
-        message.success("Produk dibuat");
+        msg.success("Produk dibuat");
       }
       setModalOpen(false);
       fetchData();
     } catch (err: any) {
-      if (err.message) message.error(err.message);
+      if (err.message) msg.error(err.message);
     }
   };
 
   const handleDelete = (id: string) => {
-    Modal.confirm({ title: "Non-aktifkan produk?", onOk: async () => { await apiFetch(`/api/products/${id}`, { method: "DELETE" }); message.success("Dinonaktifkan"); fetchData(); } });
+    Modal.confirm({ title: "Non-aktifkan produk?", onOk: async () => { await apiFetch(`/api/products/${id}`, { method: "DELETE" }); msg.success("Dinonaktifkan"); fetchData(); } });
   };
 
   const columns = [

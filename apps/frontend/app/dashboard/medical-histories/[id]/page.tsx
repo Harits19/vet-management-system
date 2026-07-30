@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Descriptions, Table, Typography, Button, Space, message, Tag } from "antd";
+import { Card, Descriptions, Table, Typography, Button, Space, Tag } from "antd";
 import { ShoppingCart } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
+import { useAntdMessage } from "../../../hooks/useAntdMessage";
 import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
 
@@ -32,6 +33,7 @@ export default function MedicalHistoryDetailPage() {
   const [record, setRecord] = useState<MHDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const msg = useAntdMessage();
 
   useEffect(() => {
     apiFetch<{ data: MHDetail }>(`/api/medical-histories/${id}`)
@@ -47,10 +49,10 @@ export default function MedicalHistoryDetailPage() {
         method: "POST",
         body: JSON.stringify({ paidAmount: calcTotal(), paymentMethod: "Tunai" }),
       });
-      message.success(`Transaksi dibuat: ${res.data.receiptNumber}`);
+      msg.success(`Transaksi dibuat: ${res.data.receiptNumber}`);
       router.push(`/dashboard/vet-sales/${res.data._id}`);
     } catch (err: any) {
-      message.error(err.message);
+      msg.error(err.message);
     } finally {
       setGenerating(false);
     }

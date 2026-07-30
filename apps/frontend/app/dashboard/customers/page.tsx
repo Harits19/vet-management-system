@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Table, Button, Input, Space, Modal, Form, message, Tag, Typography, Row, Col } from "antd";
+import { Card, Table, Button, Input, Space, Modal, Form, Tag, Typography, Row, Col } from "antd";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
 import { apiFetch } from "../../context/auth";
+import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useRouter } from "next/navigation";
 
 const { Title } = Typography;
@@ -26,6 +27,7 @@ export default function CustomersPage() {
   const [editing, setEditing] = useState<Customer | null>(null);
   const [form] = Form.useForm();
   const router = useRouter();
+  const msg = useAntdMessage();
 
   const fetchData = async (p = page, s = search) => {
     setLoading(true);
@@ -35,7 +37,7 @@ export default function CustomersPage() {
       setData(res.data);
       setTotal(res.meta.total);
     } catch (err: any) {
-      message.error(err.message);
+      msg.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -53,15 +55,15 @@ export default function CustomersPage() {
       const values = await form.validateFields();
       if (editing) {
         await apiFetch(`/api/customers/${editing._id}`, { method: "PUT", body: JSON.stringify(values) });
-        message.success("Customer diupdate");
+        msg.success("Customer diupdate");
       } else {
         await apiFetch("/api/customers", { method: "POST", body: JSON.stringify(values) });
-        message.success("Customer dibuat");
+        msg.success("Customer dibuat");
       }
       setModalOpen(false);
       fetchData();
     } catch (err: any) {
-      if (err.message) message.error(err.message);
+      if (err.message) msg.error(err.message);
     }
   };
 
@@ -70,7 +72,7 @@ export default function CustomersPage() {
       title: "Hapus customer?",
       onOk: async () => {
         await apiFetch(`/api/customers/${id}`, { method: "DELETE" });
-        message.success("Customer dihapus");
+        msg.success("Customer dihapus");
         fetchData();
       },
     });
@@ -94,7 +96,7 @@ export default function CustomersPage() {
 
   return (
     <div>
-      <Title level={4}>Customer</Title>
+      <Title level={4}>Customer/Pemilik</Title>
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">

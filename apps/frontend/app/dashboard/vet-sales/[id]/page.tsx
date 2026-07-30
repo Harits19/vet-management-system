@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Descriptions, Table, Typography, Tag, Button, Space, message } from "antd";
+import { Card, Descriptions, Table, Typography, Tag, Button, Space } from "antd";
 import { Printer } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
 import { useParams } from "next/navigation";
@@ -69,6 +69,9 @@ export default function VetSaleDetailPage() {
           <Descriptions.Item label="Metode">{sale.paymentMethod}</Descriptions.Item>
           <Descriptions.Item label="Total">{formatPrice(sale.summary.total)}</Descriptions.Item>
           <Descriptions.Item label="Dibayar">{formatPrice(sale.summary.paid)}</Descriptions.Item>
+          {sale.summary.paid > sale.summary.total && (
+            <Descriptions.Item label="Kembalian"><span style={{ color: "#52c41a" }}>{formatPrice(sale.summary.paid - sale.summary.total)}</span></Descriptions.Item>
+          )}
           <Descriptions.Item label="Kasir">{sale.cashier?.name}</Descriptions.Item>
         </Descriptions>
         <Table dataSource={sale.items} columns={itemColumns} rowKey={(r: any) => r.product._id} pagination={false} size="small" style={{ marginTop: 16 }} />

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Table, Button, Input, Space, Modal, Form, Select, message, Typography, Row, Col, Tag, Descriptions } from "antd";
+import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row, Col, Tag, Descriptions } from "antd";
 import { Plus, Search, Eye, Trash2 } from "lucide-react";
 import { apiFetch } from "../../context/auth";
+import { useAntdMessage } from "../../hooks/useAntdMessage";
 import dayjs from "dayjs";
 
 const { Title } = Typography;
@@ -37,6 +38,8 @@ export default function SalesPage() {
   const [form] = Form.useForm();
   const [cart, setCart] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const paidAmount = Form.useWatch("paidAmount", form);
+  const msg = useAntdMessage();
 
   const fetchData = async (p = page, s = search) => {
     setLoading(true);
@@ -46,7 +49,7 @@ export default function SalesPage() {
       setData(res.data);
       setTotal(res.meta.total);
     } catch (err: any) {
-      message.error(err.message);
+      msg.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -91,7 +94,7 @@ export default function SalesPage() {
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   const handleCreateSale = async () => {
-    if (cart.length === 0) { message.warning("Pilih minimal 1 produk"); return; }
+    if (cart.length === 0) { msg.warning("Pilih minimal 1 produk"); return; }
     try {
       const values = await form.validateFields();
       setSubmitting(true);
@@ -104,11 +107,11 @@ export default function SalesPage() {
           items: cart.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         }),
       });
-      message.success("Transaksi berhasil!");
+      msg.success("Transaksi berhasil!");
       setCreateOpen(false);
       fetchData();
     } catch (err: any) {
-      if (err.message) message.error(err.message);
+      if (err.message) msg.error(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -131,7 +134,7 @@ export default function SalesPage() {
         <Space>
           <Button size="small" icon={<Eye size={14} />} onClick={() => setDetail(r)} />
           <Button size="small" danger icon={<Trash2 size={14} />} onClick={() => {
-            Modal.confirm({ title: "Hapus transaksi?", onOk: async () => { await apiFetch(`/api/sales/${r._id}`, { method: "DELETE" }); message.success("Dihapus"); fetchData(); } });
+            Modal.confirm({ title: "Hapus transaksi?", onOk: async () => { await apiFetch(`/api/sales/${r._id}`, { method: "DELETE" }); msg.success("Dihapus"); fetchData(); } });
           }} />
         </Space>
       ),
@@ -176,7 +179,13 @@ export default function SalesPage() {
             ))}
           </Space>
 
-          <div style={{ textAlign: "right", margin: "16px 0", fontSize: 18, fontWeight: "bold" }}>Total: {formatPrice(cartTotal)}</div>
+          <div style={{ textAlign: "right", margin: "16px 0", fontSize: 18, fontWeight: "bold" }}>Total: {formatPrice(cartTotal)}
+            {(() => {
+              const paid = parseFloat(paidAmount) || 0;
+              const change = paid > cartTotal ? paid - cartTotal : 0;
+              return change > 0 ? <div style={{ fontSize: 14, color: "#52c41a", fontWeight: "normal" }}>Kembalian: {formatPrice(change)}</div> : null;
+            })()}
+          </div>
 
           <Row gutter={16}>
             <Col span={12}>

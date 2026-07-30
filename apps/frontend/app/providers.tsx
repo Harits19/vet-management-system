@@ -1,6 +1,6 @@
 "use client";
 
-import { ConfigProvider } from "antd";
+import { ConfigProvider, App as AntApp } from "antd";
 import { AuthProvider } from "./context/auth";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -13,7 +13,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      <AuthProvider>{children}</AuthProvider>
+      <AntApp>
+        <AuthProvider>{children}</AuthProvider>
+      </AntApp>
     </ConfigProvider>
   );
 }

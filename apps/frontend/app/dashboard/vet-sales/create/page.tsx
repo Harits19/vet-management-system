@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Button, Form, Select, Input, Space, Typography, Row, Col, message, Tag } from "antd";
-import { ArrowLeft } from "lucide-react";
+import { Card, Button, Form, Select, Input, Space, Typography, Row, Col, Tag, Empty, Divider } from "antd";
+import { ArrowLeft, Plus, Info } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
+import { useAntdMessage } from "../../../hooks/useAntdMessage";
 import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
@@ -28,6 +29,9 @@ export default function CreateVetSalePage() {
   const [medicines, setMedicines] = useState<any[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const [paidAmount, setPaidAmount] = useState<number>(0);
+  const msg = useAntdMessage();
 
   useEffect(() => {
     Promise.all([
@@ -45,6 +49,9 @@ export default function CreateVetSalePage() {
     const res = await apiFetch<{ data: any[] }>(`/api/pets/by-customer/${customerId}`);
     setPets(res.data);
   };
+
+  const cartTotal = cart.reduce((s, i) => s + i.pricing.total, 0);
+  const kembalian = paidAmount > cartTotal ? paidAmount - cartTotal : 0;
 
   const addToCart = (productId: string, type: "service" | "physical") => {
     const list = type === "service" ? services : medicines;
@@ -71,10 +78,8 @@ export default function CreateVetSalePage() {
     setCart((prev) => prev.map((i) => i.product._id === productId ? { ...i, dosage } : i));
   };
 
-  const cartTotal = cart.reduce((s, i) => s + i.pricing.total, 0);
-
   const handleSubmit = async () => {
-    if (cart.length === 0) { message.warning("Minimal 1 item"); return; }
+    if (cart.length === 0) { msg.warning("Minimal 1 item"); return; }
     try {
       const values = await form.validateFields();
       setSubmitting(true);
@@ -93,10 +98,10 @@ export default function CreateVetSalePage() {
           })),
         }),
       });
-      message.success(`Transaksi berhasil: ${res.data.receiptNumber}`);
+      msg.success(`Transaksi berhasil: ${res.data.receiptNumber}`);
       router.push(`/dashboard/vet-sales/${res.data._id}`);
     } catch (err: any) {
-      if (err.message) message.error(err.message);
+      if (err.message) msg.error(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -113,16 +118,24 @@ export default function CreateVetSalePage() {
         <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="customerId" label="Customer" rules={[{ required: true, message: "Pilih customer" }]}>
-                <Select showSearch placeholder="Cari customer..." filterOption={(input, option) => (option?.label as string || "").toLowerCase().includes(input.toLowerCase())}
+              <Form.Item name="customerId" label="Pemilik" rules={[{ required: true, message: "Pilih pemilik" }]}>
+                <Select showSearch placeholder="Cari pemilik..." filterOption={(input, option) => (option?.label as string || "").toLowerCase().includes(input.toLowerCase())}
                   options={customers.map((c) => ({ value: c._id, label: c.name }))}
-                  onChange={(val) => { form.setFieldsValue({ petId: undefined }); loadPets(val); }} />
+                  onChange={(val) => { setSelectedCustomer(val); form.setFieldsValue({ petId: undefined }); loadPets(val); }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="petId" label="Pasien">
-                <Select showSearch placeholder="Pilih pasien..." allowClear
-                  options={pets.map((p) => ({ value: p._id, label: `${p.name} (${p.kind})` }))} />
+                <Select showSearch placeholder="Pilih pasien..." allowClear disabled={!selectedCustomer}
+                  options={pets.map((p) => ({ value: p._id, label: `${p.name} (${p.kind})` }))}
+                  notFoundContent={
+                    <Empty description="Belum ada pasien" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+                      <Button type="link" icon={<Plus size={14} />} onClick={() => router.push("/dashboard/pets")}>
+                        Tambah Pasien Baru
+                      </Button>
+                    </Empty>
+                  }
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -135,7 +148,7 @@ export default function CreateVetSalePage() {
             </Col>
             <Col span={12}>
               <Form.Item name="paidAmount" label="Dibayar" rules={[{ required: true }]}>
-                <Input type="number" />
+                <Input type="number" onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)} />
               </Form.Item>
             </Col>
           </Row>
@@ -171,11 +184,18 @@ export default function CreateVetSalePage() {
           ))}
         </Space>
 
-        <div style={{ textAlign: "right", fontSize: 18, margin: "16px 0", fontWeight: "bold" }}>
-          Total: {formatPrice(cartTotal)}
+        <Divider />
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 18, fontWeight: "bold" }}>Total: {formatPrice(cartTotal)}</div>
+          {kembalian > 0 && (
+            <div style={{ fontSize: 16, color: "#52c41a", marginTop: 4 }}>
+              <Info size={14} style={{ marginRight: 4 }} />
+              Kembalian: {formatPrice(kembalian)}
+            </div>
+          )}
         </div>
 
-        <Button type="primary" size="large" block loading={submitting} onClick={handleSubmit}>
+        <Button type="primary" size="large" block loading={submitting} onClick={handleSubmit} style={{ marginTop: 16 }}>
           Proses Pembayaran
         </Button>
       </Card>

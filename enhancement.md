@@ -1,64 +1,39 @@
 # Enhancement & Bug Fix
 
-## 1. Tambah Pasien — Pemilik Tidak Ditemukan
+## ✅ Selesai
 
-**Permasalahan:** Saat user menambah pasien hewan, jika pemilik (customer) tidak ada di hasil search atau data kosong, tidak ada aksi untuk membuat pemilik baru.
+### 1. Tambah Pasien — Pemilik Tidak Ditemukan
+Select pemilik di halaman tambah pasien sekarang menampilkan tombol **"Tambah Pemilik Baru"** saat hasil search kosong maupun data kosong sejak awal, mengarahkan ke halaman customer.
 
-**Solusi:** Tampilkan tombol **"Tambah Pemilik Baru"** yang mengarahkan ke halaman `/dashboard/customers/create`, baik saat hasil search kosong maupun saat daftar pemilik kosong sejak awal.
+### 2. Error Handling — Ant Design Static message
+Semua pemanggilan `message.error/success/warning` static dari antd diganti dengan `useAntdMessage()` hook via `App.useApp()`. Root layout sudah dibungkus `<App>` di `providers.tsx`.
 
----
+### 3. Transaksi Dokter — Tambah Pasien Baru dari Select
+Select pasien di halaman Transaksi Dokter Baru menampilkan tombol **"Tambah Pasien Baru"** jika belum ada pasien terdaftar untuk customer tersebut.
 
-## 2. Error Handling — Ant Design Static message
+### 4. Routing — Redirect Base URL & Login Session
+- `/` → redirect ke `/login`
+- `/login` → jika sudah login, redirect ke `/dashboard`
+- `/dashboard` → jika tidak ada sesi, redirect ke `/login`
 
-**Error:**
-```
-Warning: [antd: message] Static function can not consume context like dynamic theme.
-Please use 'App' component instead.
-```
+### 5. Disable Pilih Pasien Sebelum Customer Dipilih
+Di halaman **Transaksi Dokter Baru**, select pasien (pet) di-*disable* selama customer belum dipilih.
 
-**Lokasi:** `app\dashboard\sales\page.tsx:111`
+### 6. Informasi Kembalian
+Di halaman **Penjualan** dan **Transaksi Dokter**, tampilkan informasi **kembalian** saat jumlah dibayar melebihi total belanja.
 
-**Penyebab:** Pemanggilan `message.error()` via static function di luar komponen `App`.
-
-**Solusi:** Ganti semua `message.error/success/warning` menjadi menggunakan `App.useApp()` hook atau gunakan `antd` `App` component wrapper di root layout. Contoh:
-
-```tsx
-// providers.tsx
-import { App } from "antd";
-
-export default function Providers({ children }) {
-  return (
-    <ConfigProvider>
-      <App>{children}</App>
-    </ConfigProvider>
-  );
-}
-
-// Di komponen:
-import { App } from "antd";
-const { message } = App.useApp();
-message.error("...");
-```
+### 7. Alias Customer → Customer/Pemilik
+Ganti istilah "Customer" menjadi **"Customer/Pemilik"** di sidebar menu dan judul halaman agar lebih mudah dipahami user.
 
 ---
 
-## 3. Transaksi Dokter — Tambah Pasien Baru dari Select
+## 🔜 Belum Dikerjakan
 
-**Permasalahan:** Di halaman Transaksi Dokter Baru, select pemilik (customer) tidak bisa menambahkan pasien baru jika pasien tersebut belum terdaftar.
+### 8. Transaksi Penjualan — Handle MongoDB Replica Set Error
+**Issue:** `Transaction numbers are only allowed on a replica set member or mongos` saat membuat transaksi baru di Penjualan (Sale).
 
-**Solusi:** Tambahkan opsi/button **"Tambah Pasien Baru"** di dalam atau di samping select pasien yang mengarahkan ke halaman `/dashboard/pets/create`, lalu kembali dengan data pasien terpilih.
+**Lokasi:** `apps/backend/src/services/sale.service.ts` — fungsi `createSale()` menggunakan `mongoose.startSession()` + `startTransaction()`.
 
----
+**Penyebab:** Fungsi `createSale` masih menggunakan session + transaction. Sementara di `vet-sale.service.ts` sudah di-refactor tanpa transaction.
 
-## 4. Routing — Redirect Base URL & Login Session
-
-| Route | Behavior |
-|-------|----------|
-| `/` (base) | Redirect ke `/login` |
-| `/login` | Jika sudah login (ada sesi), redirect ke `/dashboard` |
-| `/dashboard` | Jika tidak ada sesi, redirect ke `/login` |
-
-**Lokasi implementasi:**
-- `app/page.tsx` — redirect ke `/login`
-- `app/login/page.tsx` — cek sesi, jika ada redirect ke `/dashboard`
-- `app/dashboard/layout.tsx` — sudah ada pengecekan sesi (saat ini sudah berfungsi)
+**Solusi:** Refactor `createSale()` di `sale.service.ts` untuk tidak menggunakan session/transaction, sama seperti `createVetSale()`.

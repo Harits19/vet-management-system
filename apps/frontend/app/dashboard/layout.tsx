@@ -19,7 +19,7 @@ function SidebarMenu({ role }: { role: string }) {
 
   const items = [
     { key: "/dashboard", icon: <LayoutDashboard size={18} />, label: <Link href="/dashboard">Dashboard</Link> },
-    { key: "/dashboard/customers", icon: <Users size={18} />, label: <Link href="/dashboard/customers">Customer</Link> },
+    { key: "/dashboard/customers", icon: <Users size={18} />, label: <Link href="/dashboard/customers">Customer/Pemilik</Link> },
     { key: "/dashboard/pets", icon: <Dog size={18} />, label: <Link href="/dashboard/pets">Pasien</Link> },
     { key: "/dashboard/products", icon: <Package size={18} />, label: <Link href="/dashboard/products">Produk & Jasa</Link> },
     { key: "/dashboard/sales", icon: <ShoppingBag size={18} />, label: <Link href="/dashboard/sales">Penjualan</Link> },

@@ -26,7 +26,7 @@ function SidebarMenu({ role }: { role: string }) {
   ];
 
   // Doctor-only menus
-  if (role === "doctor") {
+  if (["doctor", "superadmin"].includes(role)) {
     items.push(
       { key: "/dashboard/medical-histories", icon: <FileText size={18} />, label: <Link href="/dashboard/medical-histories">Rekam Medis</Link> },
     );

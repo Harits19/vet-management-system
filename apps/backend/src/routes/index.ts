@@ -4,3 +4,5 @@ export { default as petRoutes } from "./pet.route.js";
 export { default as productRoutes } from "./product.route.js";
 export { default as saleRoutes } from "./sale.route.js";
 export { default as dashboardRoutes } from "./dashboard.route.js";
+export { default as medicalHistoryRoutes } from "./medical-history.route.js";
+export { default as vetSaleRoutes } from "./vet-sale.route.js";

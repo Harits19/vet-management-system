@@ -5,6 +5,7 @@ import { Card, Table, Button, Input, Space, Tabs, Tag, Typography, Row, Col, Mod
 import { Plus, Search, Eye, Trash2, ShoppingBag, Stethoscope } from "lucide-react";
 import { apiFetch, useAuth } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
+import { useAntdModal } from "../../hooks/useAntdModal";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 
@@ -35,6 +36,7 @@ export default function TransactionsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const msg = useAntdMessage();
+  const modal = useAntdModal();
 
   const [data, setData] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +113,7 @@ export default function TransactionsPage() {
         <Space>
           <Button size="small" icon={<Eye size={14} />} onClick={() => setDetail(r)} />
           <Button size="small" danger icon={<Trash2 size={14} />} onClick={() => {
-            Modal.confirm({
+            modal.confirm({
               title: "Hapus transaksi?",
               onOk: async () => { await apiFetch(`/api/transactions/${r._id}`, { method: "DELETE" }); msg.success("Dihapus"); fetchData(); },
             });
@@ -132,7 +134,7 @@ export default function TransactionsPage() {
   ];
 
   const createMenuItems = [
-    { key: "shop", icon: <ShoppingBag size={14} />, label: "Transaksi Barang", onClick: () => router.push("/dashboard/sales") },
+    { key: "shop", icon: <ShoppingBag size={14} />, label: "Transaksi Barang", onClick: () => router.push("/dashboard/transactions/create-shop") },
     { key: "vet", icon: <Stethoscope size={14} />, label: "Konsultasi Dokter", onClick: () => router.push("/dashboard/vet-sales/create") },
   ];
 

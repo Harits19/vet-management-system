@@ -178,39 +178,79 @@
 **File lama tidak dihapus:** `/dashboard/sales` dan `/dashboard/vet-sales/*` masih bisa diakses via direct URL
 
 
+### 11. Fix Modal Static Function Context Warning
 
-## Belum Dikerjakan
+**Masalah:** Warning `Static function can not consume context like dynamic theme` muncul saat menggunakan `Modal.confirm()` di halaman `/dashboard/transactions`. `Modal.confirm()` adalah static method yang tidak terhubung ke `App` context.
 
-### 11. Fix issue 
-```
-## Error Type
-Console Error
+**Lokasi:** `app/dashboard/transactions/page.tsx:114`
 
-## Error Message
-Warning: [antd: Modal] Static function can not consume context like dynamic theme. Please use 'App' component instead.
+**Solusi:** Buat wrapper hook `useAntdModal()` via `App.useApp()` — pola yang sama seperti `useAntdMessage()`. Atau gunakan `modal.confirm()` dari `App.useApp()` sebagai pengganti `Modal.confirm()`.
 
-
-    at Object.onClick (app\dashboard\transactions\page.tsx:114:19)
-    at button (<anonymous>:null:null)
-    at render (app\dashboard\transactions\page.tsx:113:11)
-    at TransactionsPage (app\dashboard\transactions\page.tsx:156:9)
-
-## Code Frame
-  112 |           <Button size="small" icon={<Eye size={14} />} onClick={() => setDetail(r)} />
-  113 |           <Button size="small" danger icon={<Trash2 size={14} />} onClick={() => {
-> 114 |             Modal.confirm({
-      |                   ^
-  115 |               title: "Hapus transaksi?",
-  116 |               onOk: async () => { await apiFetch(`/api/transactions/${r._id}`, { method: "DELETE" }); msg.success("Dihapus"); fetchData(); },
-  117 |             });
-
-Next.js version: 15.5.22 (Webpack)
+**Contoh:**
+```tsx
+// hooks/useAntdModal.ts
+import { App } from "antd";
+export function useAntdModal() {
+  const { modal } = App.useApp();
+  return modal;
+}
 ```
 
+```tsx
+// di komponen
+const modal = useAntdModal();
+modal.confirm({ title: "...", onOk: ... });
+```
 
-### 12. Ganti modal transaksi barang menjadi halaman tersendiri seperti konsultasi dokter, dan sesuaikan tombol dropdown 
+**File diubah:** `app/dashboard/transactions/page.tsx`, (opsional) `hooks/useAntdModal.ts`
 
-### 13. Saya tidak menemukan cara dokter menambah rekam medis
+---
 
-###
+### 12. Modal Tambah Transaksi Barang Jadi Halaman Tersendiri
+
+**Masalah:** Form tambah transaksi barang saat ini berupa Modal di halaman `/dashboard/sales`. Modal jadi terlalu panjang dengan cart, produk select, dan form payment. Juga tidak konsisten dengan Transaksi Dokter yang punya halaman terpisah (`/dashboard/vet-sales/create`).
+
+**Solusi:** Buat halaman `/dashboard/transactions/create-shop` dengan layout yang sama seperti `/dashboard/vet-sales/create`. Sesuaikan tombol dropdown "Transaksi Baru" di halaman `/dashboard/transactions`:
+- "Transaksi Barang" → `/dashboard/transactions/create-shop`
+- "Konsultasi Dokter" → `/dashboard/vet-sales/create`
+
+**File baru:** `app/dashboard/transactions/create-shop/page.tsx`
+**File diubah:** `app/dashboard/transactions/page.tsx` (update dropdown path)
+
+---
+
+### 13. Flow Konsultasi Dokter — Tampilkan Riwayat Rekam Medis Saat Pasien Dipilih
+
+**Masalah:** Saat dokter membuat transaksi di halaman `/dashboard/vet-sales/create`, setelah memilih pasien tidak ada informasi riwayat rekam medis pasien tersebut. Dokter harus buka tab lain untuk lihat riwayat.
+
+**Solusi:** Setelah pasien dipilih, tampilkan panel **Riwayat Rekam Medis** pasien tersebut langsung di halaman yang sama. Panel berisi:
+- Tabel ringkas riwayat (tanggal kunjungan, diagnosis, jml tindakan, jml resep)
+- Tombol **"Tambah Rekam Medis"** yang membuka modal create rekam medis (sama seperti di halaman detail pasien)
+- Setelah rekam medis dibuat, otomatis kaitkan `medicalHistoryId` ke transaksi yang sedang dibuat
+
+**File diubah:** `app/dashboard/vet-sales/create/page.tsx`
+
+---
+
+### 14. Hapus Semua Code / File / Folder yang Tidak Digunakan
+
+**Masalah:** Setelah refactor backend dan frontend, beberapa file lama masih ada:
+- File shared types lama (`sale.ts`, `vet-sale.ts`) — sudah tidak di-export dari index.ts tapi file fisik masih ada
+- File frontend lama (`/dashboard/sales/page.tsx`, `/dashboard/vet-sales/page.tsx`, dll) — masih bisa diakses via direct URL meskipun sidebar sudah tidak nge-link
+- File backend lama — sudah dihapus saat item #9
+
+**Solusi:** Audit dan hapus:
+1. `packages/shared/src/sale.ts`
+2. `packages/shared/src/vet-sale.ts`
+3. `app/dashboard/sales/page.tsx` — fungsinya sudah digantikan `/dashboard/transactions`
+4. `app/dashboard/vet-sales/page.tsx` — fungsinya sudah digantikan `/dashboard/transactions`
+5. `app/dashboard/vet-sales/[id]/page.tsx` — bisa redirect ke `/dashboard/transactions/[id]`
+6. `app/dashboard/vet-sales/create/page.tsx` — masih dipake oleh dropdown Transaksi Dokter
+
+**Catatan:** Hapus hati-hati — pastikan tidak ada import atau referensi yang masih pointing ke file tersebut sebelum dihapus.
+
+
+
+## 🔜 Belum Dikerjakan
+
 

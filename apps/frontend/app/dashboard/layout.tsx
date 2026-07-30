@@ -6,7 +6,7 @@ import { useAuth } from "../context/auth";
 import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space } from "antd";
 import {
   Users, Dog, Package, LayoutDashboard, PawPrint, User as UserIcon,
-  ShoppingBag, Stethoscope, FileText, LogOut
+  ShoppingCart, Stethoscope, FileText, LogOut
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,27 +17,23 @@ const { Text } = Typography;
 function SidebarMenu({ role }: { role: string }) {
   const pathname = usePathname();
 
+  const isActive = (prefix: string) => pathname.startsWith(prefix);
+
   const items = [
     { key: "/dashboard", icon: <LayoutDashboard size={18} />, label: <Link href="/dashboard">Dashboard</Link> },
     { key: "/dashboard/customers", icon: <Users size={18} />, label: <Link href="/dashboard/customers">Customer/Pemilik</Link> },
     { key: "/dashboard/pets", icon: <Dog size={18} />, label: <Link href="/dashboard/pets">Pasien</Link> },
     { key: "/dashboard/products", icon: <Package size={18} />, label: <Link href="/dashboard/products">Produk & Jasa</Link> },
-    { key: "/dashboard/sales", icon: <ShoppingBag size={18} />, label: <Link href="/dashboard/sales">Penjualan</Link> },
+    { key: "/dashboard/transactions", icon: <ShoppingCart size={18} />, label: <Link href="/dashboard/transactions">Transaksi</Link> },
   ];
 
-  // Doctor-only menus
-  if (["doctor", "superadmin"].includes(role)) {
+  if (["doctor", "superadmin", "admin"].includes(role)) {
     items.push(
       { key: "/dashboard/medical-histories", icon: <FileText size={18} />, label: <Link href="/dashboard/medical-histories">Rekam Medis</Link> },
     );
   }
 
-  // All roles can see vet sales
-  items.push(
-    { key: "/dashboard/vet-sales", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/vet-sales">Transaksi Dokter</Link> },
-  );
-
-  return <Menu mode="inline" selectedKeys={[pathname]} items={items} style={{ borderInlineEnd: "none" }} />;
+  return <Menu mode="inline" selectedKeys={[items.find(i => isActive(i.key))?.key || ""]} items={items} style={{ borderInlineEnd: "none" }} />;
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

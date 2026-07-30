@@ -254,3 +254,27 @@ modal.confirm({ title: "...", onOk: ... });
 ## 🔜 Belum Dikerjakan
 
 
+### 15. Hapus Tindakan (Jasa) & Resep Obat dari Form Tambah Rekam Medis
+
+**Masalah:** Form tambah rekam medis (di halaman detail pasien & halaman konsultasi dokter) memiliki field terpisah untuk **Tindakan (Jasa)** dan **Resep Obat** yang harus diisi manual oleh dokter. Padahal item-item tersebut sudah ada di keranjang transaksi. Dokter harus input 2x — sekali di keranjang, sekali di rekam medis.
+
+**Solusi:**
+1. Hapus field **Tindakan (Jasa)** dan **Resep Obat** dari form tambah rekam medis
+2. Form rekam medis cukup: **Tanggal Kunjungan, Diagnosis, Catatan Dokter**
+3. Rekam medis dibuat **setelah** tombol "Proses Pembayaran" ditekan, dengan data tindakan & resep diambil dari item transaksi yang sudah dipilih
+4. Di backend, `createVetTransaction` otomatis membuat rekam medis jika ada `petId` dan item transaksi mengandung service/physical products
+
+**Alur baru:**
+```
+1. Dokter pilih customer & pasien
+2. Dokter tambah jasa & obat ke keranjang
+3. Dokter isi diagnosis singkat + catatan
+4. Klik "Proses Pembayaran"
+5. Backend: create transaction + create medical history (ambil treatments/prescriptions dari items)
+6. medicalHistoryId otomatis terisi di transaksi
+```
+
+**File diubah:**
+- `app/dashboard/vet-sales/create/page.tsx` — sederhanakan form rekam medis, pindah logika ke submit
+- `app/dashboard/pets/[id]/page.tsx` — sederhanakan modal rekam medis
+- `apps/backend/src/services/transaction.service.ts` — auto-create medical history saat transaksi vet

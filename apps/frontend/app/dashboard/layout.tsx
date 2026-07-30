@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/auth";
 import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space } from "antd";
 import {
-  ShoppingCart, Users, Dog, Package, LayoutDashboard, LogOut, PawPrint, User as UserIcon,
-  ShoppingBag, Activity
+  Users, Dog, Package, LayoutDashboard, PawPrint, User as UserIcon,
+  ShoppingBag, Stethoscope, FileText, LogOut
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,18 +14,35 @@ import { usePathname } from "next/navigation";
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
-const menuItems = [
-  { key: "/dashboard", icon: <LayoutDashboard size={18} />, label: <Link href="/dashboard">Dashboard</Link> },
-  { key: "/dashboard/customers", icon: <Users size={18} />, label: <Link href="/dashboard/customers">Customer</Link> },
-  { key: "/dashboard/pets", icon: <Dog size={18} />, label: <Link href="/dashboard/pets">Pasien</Link> },
-  { key: "/dashboard/products", icon: <Package size={18} />, label: <Link href="/dashboard/products">Produk & Jasa</Link> },
-  { key: "/dashboard/sales", icon: <ShoppingBag size={18} />, label: <Link href="/dashboard/sales">Penjualan</Link> },
-];
+function SidebarMenu({ role }: { role: string }) {
+  const pathname = usePathname();
+
+  const items = [
+    { key: "/dashboard", icon: <LayoutDashboard size={18} />, label: <Link href="/dashboard">Dashboard</Link> },
+    { key: "/dashboard/customers", icon: <Users size={18} />, label: <Link href="/dashboard/customers">Customer</Link> },
+    { key: "/dashboard/pets", icon: <Dog size={18} />, label: <Link href="/dashboard/pets">Pasien</Link> },
+    { key: "/dashboard/products", icon: <Package size={18} />, label: <Link href="/dashboard/products">Produk & Jasa</Link> },
+    { key: "/dashboard/sales", icon: <ShoppingBag size={18} />, label: <Link href="/dashboard/sales">Penjualan</Link> },
+  ];
+
+  // Doctor-only menus
+  if (role === "doctor") {
+    items.push(
+      { key: "/dashboard/medical-histories", icon: <FileText size={18} />, label: <Link href="/dashboard/medical-histories">Rekam Medis</Link> },
+    );
+  }
+
+  // All roles can see vet sales
+  items.push(
+    { key: "/dashboard/vet-sales", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/vet-sales">Transaksi Dokter</Link> },
+  );
+
+  return <Menu mode="inline" selectedKeys={[pathname]} items={items} style={{ borderInlineEnd: "none" }} />;
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -42,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Text strong>Vet System</Text>
           </Space>
         </div>
-        <Menu mode="inline" selectedKeys={[pathname]} items={menuItems} style={{ borderInlineEnd: "none" }} />
+        <SidebarMenu role={user.role} />
       </Sider>
       <Layout>
         <Header style={{ background: "#fff", padding: "0 24px", display: "flex", justifyContent: "flex-end", alignItems: "center", borderBottom: "1px solid #f0f0f0" }}>

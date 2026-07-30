@@ -25,15 +25,53 @@ Di halaman **Penjualan** dan **Transaksi Dokter**, tampilkan informasi **kembali
 ### 7. Alias Customer → Customer/Pemilik
 Ganti istilah "Customer" menjadi **"Customer/Pemilik"** di sidebar menu dan judul halaman agar lebih mudah dipahami user.
 
+### 8. Transaksi Penjualan — Handle MongoDB Replica Set Error
+Refactor `createSale()` di `sale.service.ts` untuk tidak menggunakan session/transaction, sama seperti `createVetSale()`. Operasi penjualan sekarang langsung sequential tanpa `startSession()`.
+
 ---
 
 ## 🔜 Belum Dikerjakan
 
-### 8. Transaksi Penjualan — Handle MongoDB Replica Set Error
-**Issue:** `Transaction numbers are only allowed on a replica set member or mongos` saat membuat transaksi baru di Penjualan (Sale).
+### 9. Gabung Sale + VetSale Jadi Satu Collection `Transaction`
 
-**Lokasi:** `apps/backend/src/services/sale.service.ts` — fungsi `createSale()` menggunakan `mongoose.startSession()` + `startTransaction()`.
+**Permasalahan:** Saat ini Sale (transaksi toko) dan VetSale (transaksi dokter) adalah dua collection terpisah dengan struktur hampir identik. Ini menyebabkan:
+- Dashboard & laporan perlu query 2 collection
+- Riwayat customer terpecah
+- Duplikasi kode (service, controller, route, frontend)
+- Struk tidak unified
 
-**Penyebab:** Fungsi `createSale` masih menggunakan session + transaction. Sementara di `vet-sale.service.ts` sudah di-refactor tanpa transaction.
+**Solusi:** Gabung jadi satu collection `Transaction` dengan field `type: "shop" | "vet"`.
 
-**Solusi:** Refactor `createSale()` di `sale.service.ts` untuk tidak menggunakan session/transaction, sama seperti `createVetSale()`.
+**Struktur usulan:**
+```ts
+{
+  _id: ObjectId,
+  type: "shop" | "vet",
+  receiptNumber: string,
+  timestamp: Date,
+  customer: { _id, name },
+  pet?: { _id, name, kind },           // vet-only
+  medicalHistoryId?: ObjectId,          // vet-only
+  cashier: { _id, name },
+  items: [{
+    product: { _id, name, type: "physical" | "service" },
+    quantity: number,
+    pricing: { cost?, selling, total },
+    dosage?: string                     // prescription-only
+  }],
+  summary: { total, profit, cost, paid },
+  paymentStatus: "paid" | "debt" | "dp",
+  paymentMethod: string,
+  createdAt, updatedAt
+}
+```
+
+**Yang perlu diubah:**
+| Lapisan | Perubahan |
+|---------|-----------|
+| Shared types | Hapus `sale.ts`, `vet-sale.ts`. Buat `transaction.ts` |
+| Backend model | Hapus `sale.model.ts`, `vet-sale.model.ts`. Buat `transaction.model.ts` |
+| Backend service | Gabung `sale.service.ts` + `vet-sale.service.ts` jadi `transaction.service.ts` |
+| Backend controller | Gabung → `transaction.controller.ts` |
+| Backend routes | 1 route `/api/transactions` dengan filter `?type=shop|vet` |
+| Frontend | 2 halaman tetap (Penjualan & Transaksi Dokter) tapi 1 API calls |

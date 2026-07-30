@@ -280,3 +280,13 @@ modal.confirm({ title: "...", onOk: ... });
 
 ## 🔜 Belum Dikerjakan
 
+### 16. Lihat Riwayat Medis di Detail Pasien
+
+**Fungsi:** Halaman `/dashboard/pets/[id]` menampilkan kartu **Riwayat Medis** yang berisi tabel riwayat rekam medis pasien tersebut.
+
+**Backend:** `GET /api/medical-histories/by-pet/:petId` — mengembalikan records terbaru (limit 5) + total kunjungan.
+
+**Frontend:** Kartu Riwayat Medis di halaman detail pasien dengan kolom Tanggal, Diagnosis, Dokter, Aksi. Tombol **"Konsultasi Baru"** mengarahkan ke `/dashboard/vet-sales/create?customerId=X&petId=Y` dengan form pre-filled.
+
+**Status:** ✅ Selesai (sudah diimplementasikan sejak item #13 & #15)
+

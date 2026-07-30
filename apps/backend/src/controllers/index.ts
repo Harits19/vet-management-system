@@ -4,7 +4,7 @@ export { getAll as getPets, getOne as getPet, create as createPet, update as upd
 export { getAll as getProducts, getServices, getPhysical, getOne as getProduct, create as createProduct, update as updateProduct, remove as deleteProduct, searchByCode } from "./product.controller.js";
 export { getAll as getMedicalHistories, getOne as getMedicalHistory, create as createMedicalHistory, update as updateMedicalHistory, remove as deleteMedicalHistory, getByPet } from "./medical-history.controller.js";
 export {
-  createShop, createVet, createFromMedicalHistory,
+  createShop, createVet,
   getAll as getTransactions, getOne as getTransaction, remove as deleteTransaction,
   dashboard, doctorDashboard,
 } from "./transaction.controller.js";

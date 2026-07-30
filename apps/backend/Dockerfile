@@ -30,8 +30,8 @@ COPY --from=shared-builder /app/node_modules ./node_modules
 # Copy backend source
 COPY apps/backend ./apps/backend
 
-# Build backend
-RUN npm run build --workspace @vet/backend 2>/dev/null; exit 0
+# Build backend — ignore TS path resolution errors, runtime uses symlink
+RUN npm run build --workspace @vet/backend; exit 0
 
 # ──────────────────────────────────────────
 # Stage 3: Production image

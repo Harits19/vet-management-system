@@ -63,6 +63,8 @@ export const transactionCreateSchema = z.object({
   customerId: stringRequired.optional(),
   petId: z.string().optional(),
   medicalHistoryId: z.string().optional(),
+  diagnosis: z.string().optional(),         // auto-create medical history for vet
+  mhNotes: z.string().optional(),           // doctor notes for medical history
   paymentMethod: stringRequired,
   paidAmount: numberFromString,
   items: z.array(txnItemSchema).min(1, "Min 1 item"),

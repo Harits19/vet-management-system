@@ -110,13 +110,45 @@ async function createTransaction(input: TransactionCreateRequest, cashierId: str
   const debt = Math.max(0, totalSelling - paid);
   const paymentStatus: "paid" | "debt" | "dp" = paid >= totalSelling ? "paid" : debt > 0 ? "debt" : "dp";
 
+  // Auto-create medical history for vet transactions
+  let mhId: mongoose.Types.ObjectId | undefined;
+  if (input.type === "vet" && petData && input.diagnosis) {
+    const services = items
+      .filter((i: any) => i.product.type === "service")
+      .map((i: any) => ({
+        productId: i.product._id,
+        name: i.product.name,
+        price: i.pricing.selling,
+      }));
+    const prescriptions = items
+      .filter((i: any) => i.product.type === "physical")
+      .map((i: any) => ({
+        productId: i.product._id,
+        name: i.product.name,
+        quantity: i.quantity,
+        price: i.pricing.selling,
+        dosage: i.dosage || undefined,
+      }));
+
+    const mh = await MedicalHistoryModel.create({
+      petId: petData._id,
+      visitDate: new Date(),
+      diagnosis: input.diagnosis,
+      doctorId: new mongoose.Types.ObjectId(cashierId),
+      treatments: services,
+      prescriptions,
+      notes: input.mhNotes || undefined,
+    });
+    mhId = mh._id as mongoose.Types.ObjectId;
+  }
+
   const txn = await TransactionModel.create({
     type: input.type,
     receiptNumber: generateReceiptNumber(input.type),
     timestamp: new Date(),
     customer: customerData,
     pet: petData,
-    medicalHistoryId: input.medicalHistoryId ? new mongoose.Types.ObjectId(input.medicalHistoryId) : undefined,
+    medicalHistoryId: input.medicalHistoryId ? new mongoose.Types.ObjectId(input.medicalHistoryId) : mhId,
     cashier: { _id: new mongoose.Types.ObjectId(cashierId), name: cashierName },
     items,
     summary: { total: totalSelling, profit, cost: totalCost, paid },

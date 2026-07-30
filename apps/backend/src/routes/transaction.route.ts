@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { create, getAll, getOne, remove } from "../controllers/sale.controller.js";
+import { createShop, createVet, createFromMedicalHistory, getAll, getOne, remove } from "../controllers/transaction.controller.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -7,7 +7,9 @@ router.use(authenticate);
 
 router.get("/", getAll);
 router.get("/:id", getOne);
-router.post("/", authorize("cashier", "admin", "superadmin"), create);
+router.post("/shop", createShop);
+router.post("/vet", createVet);
+router.post("/vet/from-medical-history/:medicalHistoryId", createFromMedicalHistory);
 router.delete("/:id", authorize("superadmin"), remove);
 
 export default router;

@@ -1,30 +1,28 @@
 import mongoose, { Schema } from "mongoose";
-import type { PaymentStatus } from "@vet/shared";
+import type { TransactionType, PaymentStatus } from "@vet/shared";
 
-export interface IVetSaleItemDoc {
+export interface ITransactionItemDoc {
   product: {
     _id: mongoose.Types.ObjectId;
     name: string;
     type: "physical" | "service";
+    code?: string;
   };
   quantity: number;
-  pricing: {
-    cost?: number;
-    selling: number;
-    total: number;
-  };
+  pricing: { cost?: number; selling: number; total: number };
   dosage?: string;
 }
 
-export interface IVetSaleDoc {
+export interface ITransactionDoc {
   _id: mongoose.Types.ObjectId;
+  type: TransactionType;
   receiptNumber: string;
   timestamp: Date;
-  customer: { _id: mongoose.Types.ObjectId; name: string };
+  customer?: { _id: mongoose.Types.ObjectId; name: string };
   pet?: { _id: mongoose.Types.ObjectId; name: string; kind: string };
   medicalHistoryId?: mongoose.Types.ObjectId;
   cashier: { _id: mongoose.Types.ObjectId; name: string };
-  items: IVetSaleItemDoc[];
+  items: ITransactionItemDoc[];
   summary: { total: number; profit: number; cost: number; paid: number };
   paymentStatus: PaymentStatus;
   paymentMethod: string;
@@ -32,12 +30,13 @@ export interface IVetSaleDoc {
   updatedAt: Date;
 }
 
-const VetSaleItemSubSchema = new Schema<IVetSaleItemDoc>(
+const TxnItemSubSchema = new Schema<ITransactionItemDoc>(
   {
     product: {
       _id: { type: Schema.Types.ObjectId, required: true, ref: "Product" },
       name: { type: String, required: true },
       type: { type: String, enum: ["physical", "service"], required: true },
+      code: { type: String },
     },
     quantity: { type: Number, required: true, min: 1 },
     pricing: {
@@ -50,13 +49,14 @@ const VetSaleItemSubSchema = new Schema<IVetSaleItemDoc>(
   { _id: false }
 );
 
-const VetSaleSchema = new Schema<IVetSaleDoc>(
+const TransactionSchema = new Schema<ITransactionDoc>(
   {
+    type: { type: String, enum: ["shop", "vet"], required: true, default: "shop" },
     receiptNumber: { type: String, required: true, unique: true },
     timestamp: { type: Date, required: true, default: Date.now },
     customer: {
-      _id: { type: Schema.Types.ObjectId, required: true, ref: "Customer" },
-      name: { type: String, required: true },
+      _id: { type: Schema.Types.ObjectId, ref: "Customer" },
+      name: { type: String },
     },
     pet: {
       _id: { type: Schema.Types.ObjectId, ref: "Pet" },
@@ -68,7 +68,7 @@ const VetSaleSchema = new Schema<IVetSaleDoc>(
       _id: { type: Schema.Types.ObjectId, required: true, ref: "User" },
       name: { type: String, required: true },
     },
-    items: { type: [VetSaleItemSubSchema], required: true, validate: [(v: IVetSaleItemDoc[]) => v.length > 0, "Min 1 item"] },
+    items: { type: [TxnItemSubSchema], required: true, validate: [(v: ITransactionItemDoc[]) => v.length > 0, "Min 1 item"] },
     summary: {
       total: { type: Number, default: 0 },
       profit: { type: Number, default: 0 },
@@ -81,7 +81,8 @@ const VetSaleSchema = new Schema<IVetSaleDoc>(
   { timestamps: true, versionKey: false }
 );
 
-VetSaleSchema.index({ timestamp: -1 });
-VetSaleSchema.index({ receiptNumber: 1 });
+TransactionSchema.index({ type: 1, timestamp: -1 });
+TransactionSchema.index({ receiptNumber: 1 });
+TransactionSchema.index({ "customer._id": 1 });
 
-export const VetSaleModel = mongoose.model<IVetSaleDoc>("VetSale", VetSaleSchema);
+export const TransactionModel = mongoose.model<ITransactionDoc>("Transaction", TransactionSchema);

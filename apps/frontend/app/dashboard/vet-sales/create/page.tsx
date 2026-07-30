@@ -83,7 +83,7 @@ export default function CreateVetSalePage() {
     try {
       const values = await form.validateFields();
       setSubmitting(true);
-      const res = await apiFetch<{ data: any }>("/api/vet-sales", {
+      const res = await apiFetch<{ data: any }>("/api/transactions/vet", {
         method: "POST",
         body: JSON.stringify({
           customerId: values.customerId,

@@ -45,7 +45,7 @@ export default function SalesPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(p), limit: "10", search: s, sortBy: "timestamp", order: "desc" });
-      const res = await apiFetch<{ data: Sale[]; meta: { total: number } }>(`/api/sales?${params}`);
+      const res = await apiFetch<{ data: any[]; meta: { total: number } }>(`/api/transactions?${params}`);
       setData(res.data);
       setTotal(res.meta.total);
     } catch (err: any) {
@@ -98,7 +98,7 @@ export default function SalesPage() {
     try {
       const values = await form.validateFields();
       setSubmitting(true);
-      await apiFetch("/api/sales", {
+      await apiFetch("/api/transactions/shop", {
         method: "POST",
         body: JSON.stringify({
           customerId: values.customerId || undefined,
@@ -134,7 +134,7 @@ export default function SalesPage() {
         <Space>
           <Button size="small" icon={<Eye size={14} />} onClick={() => setDetail(r)} />
           <Button size="small" danger icon={<Trash2 size={14} />} onClick={() => {
-            Modal.confirm({ title: "Hapus transaksi?", onOk: async () => { await apiFetch(`/api/sales/${r._id}`, { method: "DELETE" }); msg.success("Dihapus"); fetchData(); } });
+            Modal.confirm({ title: "Hapus transaksi?", onOk: async () => { await apiFetch(`/api/transactions/${r._id}`, { method: "DELETE" }); msg.success("Dihapus"); fetchData(); } });
           }} />
         </Space>
       ),

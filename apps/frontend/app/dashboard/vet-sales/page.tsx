@@ -38,7 +38,7 @@ export default function VetSalesPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(p), limit: "10", search, sortBy: "timestamp", order: "desc" });
-      const res = await apiFetch<{ data: VetSale[]; meta: { total: number } }>(`/api/vet-sales?${params}`);
+      const res = await apiFetch<{ data: any; meta: { total: number } }>(`/api/transactions?${params}`);
       setData(res.data);
       setTotal(res.meta.total);
     } catch (err: any) {

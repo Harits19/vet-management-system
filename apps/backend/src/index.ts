@@ -12,6 +12,8 @@ import {
   productRoutes,
   saleRoutes,
   dashboardRoutes,
+  medicalHistoryRoutes,
+  vetSaleRoutes,
 } from "./routes/index.js";
 import { frontendOrigins } from "./config/auth.js";
 
@@ -29,6 +31,8 @@ app.use("/api/pets", petRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/sales", saleRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/medical-histories", medicalHistoryRoutes);
+app.use("/api/vet-sales", vetSaleRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => {

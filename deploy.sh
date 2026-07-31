@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "================================"
+echo "========================================"
 echo "  Vet Management System — Deploy"
-echo "================================"
+echo "  Domain: http://wedi-animal-care.ahlabs.my.id"
+echo "========================================"
 
 # 1. Copy .env
 if [ ! -f .env ]; then
@@ -16,26 +17,17 @@ fi
 # 2. Load env
 set -a; source .env; set +a
 
-# 3. Buat folder SSL (letak manual)
-mkdir -p ssl
-if [ ! -f ssl/cert.pem ] || [ ! -f ssl/key.pem ]; then
-  echo "⚠️  SSL cert/key tidak ditemukan di ./ssl/"
-  echo "   Letakkan cert.pem & key.pem di ./ssl/ atau:"
-  echo "     docker compose -f docker-compose.prod.yml run --rm certbot ..."
-fi
-
-# 4. Pull & build
+# 3. Pull & build
 echo "📦 Building images..."
 docker compose -f docker-compose.prod.yml build
 
-# 5. Start
+# 4. Start
 echo "🚀 Starting services..."
 docker compose -f docker-compose.prod.yml up -d
 
 echo ""
 echo "✅ Deploy selesai!"
-echo "   Backend: http://localhost:3001"
-echo "   Frontend: http://localhost:3002"
-echo "   Nginx: http://<vps-ip>"
+echo "   Frontend: http://wedi-animal-care.ahlabs.my.id"
+echo "   API:      http://wedi-animal-care.ahlabs.my.id/api"
 echo ""
 echo "📋 Logs: docker compose -f docker-compose.prod.yml logs -f"

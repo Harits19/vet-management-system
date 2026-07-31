@@ -29,6 +29,7 @@ function SidebarMenu({ role }: { role: string }) {
 
   if (["doctor", "superadmin", "admin"].includes(role)) {
     items.push(
+      { key: "/dashboard/consultations", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/consultations/new">Konsultasi Baru</Link> },
       { key: "/dashboard/medical-histories", icon: <FileText size={18} />, label: <Link href="/dashboard/medical-histories">Rekam Medis</Link> },
     );
   }

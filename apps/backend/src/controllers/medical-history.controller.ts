@@ -9,6 +9,7 @@ import {
   getMedicalHistorySummary,
 } from "../services/medical-history.service.js";
 import { medicalHistoryCreateSchema, medicalHistoryUpdateSchema, medicalHistoryFilterSchema } from "@vet/shared";
+import { UserModel } from "../models/index.js";
 
 export async function getAll(req: AuthRequest, res: Response, next: NextFunction) {
   try {
@@ -28,7 +29,13 @@ export async function getOne(req: AuthRequest, res: Response, next: NextFunction
 export async function create(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const input = medicalHistoryCreateSchema.parse(req.body);
-    const data = await createMedicalHistory(input, req.user!.userId);
+    const user = req.user!;
+    let doctorName = user.username;
+    if (user.userId) {
+      const u = await UserModel.findById(user.userId).select("name").lean();
+      if (u?.name) doctorName = u.name;
+    }
+    const data = await createMedicalHistory(input, user.userId, doctorName);
     res.status(201).json({ success: true, data });
   } catch (err) { next(err); }
 }

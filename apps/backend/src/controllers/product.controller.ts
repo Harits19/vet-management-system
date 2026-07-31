@@ -1,6 +1,6 @@
 import type { Response, NextFunction } from "express";
 import type { AuthRequest } from "../config/auth.js";
-import { listProducts, getProduct, createProduct, updateProduct, deleteProduct, searchProductsByCode } from "../services/product.service.js";
+import { listProducts, getProduct, createProduct, updateProduct, deleteProduct, searchProductsByCode, getDistinctProductValues } from "../services/product.service.js";
 import { productCreateSchema, productUpdateSchema, productFilterSchema } from "@vet/shared";
 
 export async function getAll(req: AuthRequest, res: Response, next: NextFunction) {
@@ -46,6 +46,15 @@ export async function searchByCode(req: AuthRequest, res: Response, next: NextFu
     const code = req.query.code as string | undefined;
     if (!code) { res.json({ success: true, data: [] }); return; }
     const data = await searchProductsByCode(code);
+    res.json({ success: true, data });
+  } catch (err) { next(err); }
+}
+
+export async function distinct(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const field = req.query.field as string;
+    const productType = req.query.productType as string | undefined;
+    const data = await getDistinctProductValues(field, productType);
     res.json({ success: true, data });
   } catch (err) { next(err); }
 }

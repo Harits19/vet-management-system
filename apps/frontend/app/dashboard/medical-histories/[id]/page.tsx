@@ -198,6 +198,26 @@ export default function MedicalHistoryDetailPage() {
           <Text type="secondary">Tidak ada resep obat</Text>
         )}
       </Card>
+
+      <Card title="Barang (Non-Obat)" style={{ marginTop: 16 }}>
+        {(record as any).goods?.length > 0 ? (
+          <Table
+            dataSource={(record as any).goods}
+            rowKey={(r: any) => `${r.productId}-${r.name}`}
+            pagination={false}
+            size="small"
+            columns={[
+              { title: "Nama Barang", dataIndex: "name" },
+              { title: "Jumlah", dataIndex: "quantity" },
+              { title: "Harga", dataIndex: "price", render: (v: number) => formatPrice(v) },
+              { title: "Subtotal", key: "subtotal", render: (_: any, r: any) => formatPrice(r.price * r.quantity) },
+              { title: "Catatan", dataIndex: "notes", render: (v?: string) => v || "-" },
+            ]}
+          />
+        ) : (
+          <Text type="secondary">Tidak ada barang</Text>
+        )}
+      </Card>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import ProductsPage from "../products/page";
+import ProductManager from "../components/ProductManager";
 
 export default function ObatPage() {
-  return <ProductsPage categoryFilter="Obat" title="Obat" />;
+  return <ProductManager productTypeFilter="medicine" title="Obat" />;
 }

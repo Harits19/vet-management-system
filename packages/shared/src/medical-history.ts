@@ -27,13 +27,17 @@ export interface SoapData {
   };
   objective: {
     physicalExam: PhysicalExamItem[]; // Pemeriksaan Fisik (Berat Badan, Suhu, dll)
+    labResult?: string; // O — Hasil Pemeriksaan Laboratorium
   };
   assessment: {
     differentialDiagnosis: string; // Diagnosis Banding
+    physicalExamNote?: string; // A — Pemeriksaan Fisik (catatan text area)
   };
   plan: {
     treatmentPlan: string; // Rencana Penanganan
     doctorNotes?: string; // Catatan Dokter
+    ownerNote?: string; // P — Catatan Dokter Untuk Pemilik
+    paramedicNote?: string; // P — Catatan Dokter Untuk Paramedis
   };
 }
 
@@ -102,13 +106,17 @@ export const soapSchema = z.object({
   }),
   objective: z.object({
     physicalExam: z.array(physicalExamItemSchema).default([]),
+    labResult: z.string().optional(),
   }),
   assessment: z.object({
     differentialDiagnosis: stringRequired,
+    physicalExamNote: z.string().optional(),
   }),
   plan: z.object({
     treatmentPlan: stringRequired,
     doctorNotes: z.string().optional(),
+    ownerNote: z.string().optional(),
+    paramedicNote: z.string().optional(),
   }),
 });
 export type SoapRequest = z.infer<typeof soapSchema>;

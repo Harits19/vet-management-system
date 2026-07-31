@@ -28,9 +28,9 @@ interface MHDetail {
   visitDate: string;
   soap?: {
     subjective: { complaint: string };
-    objective: { physicalExam: { key: string; label: string; value?: number; unit?: string }[] };
-    assessment: { differentialDiagnosis: string };
-    plan: { treatmentPlan: string; doctorNotes?: string };
+    objective: { physicalExam: { key: string; label: string; value?: number; unit?: string }[]; labResult?: string };
+    assessment: { differentialDiagnosis: string; physicalExamNote?: string };
+    plan: { treatmentPlan: string; doctorNotes?: string; ownerNote?: string; paramedicNote?: string };
   };
   diagnosis: string;
   doctorId: { _id: string; name: string };
@@ -132,11 +132,23 @@ export default function MedicalHistoryDetailPage() {
           <Descriptions.Item label="A — Diagnosis Banding (Assessment)">
             {record.soap?.assessment?.differentialDiagnosis || "-"}
           </Descriptions.Item>
+          <Descriptions.Item label="A — Pemeriksaan Fisik (catatan)">
+            {record.soap?.assessment?.physicalExamNote || "-"}
+          </Descriptions.Item>
           <Descriptions.Item label="P — Rencana Penanganan (Plan)">
             {record.soap?.plan?.treatmentPlan || "-"}
           </Descriptions.Item>
           <Descriptions.Item label="P — Catatan Dokter (Plan)">
             {record.soap?.plan?.doctorNotes || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="P — Catatan Dokter Untuk Pemilik">
+            {record.soap?.plan?.ownerNote || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="P — Catatan Dokter Untuk Paramedis">
+            {record.soap?.plan?.paramedicNote || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="O — Hasil Pemeriksaan Laboratorium">
+            {record.soap?.objective?.labResult || "-"}
           </Descriptions.Item>
         </Descriptions>
       </Card>

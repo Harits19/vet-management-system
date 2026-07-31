@@ -5,6 +5,7 @@ import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row
 import { Plus, Search, Edit, Trash2, UserPlus, Eye } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
+import { useAntdModal } from "../../hooks/useAntdModal";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { computePetAge } from "@vet/shared";
@@ -36,6 +37,7 @@ export default function PetsPage() {
   const [form] = Form.useForm();
   const msg = useAntdMessage();
   const router = useRouter();
+  const modal = useAntdModal();
 
   const fetchData = async (p = page, s = search) => {
     setLoading(true);
@@ -102,7 +104,18 @@ export default function PetsPage() {
   };
 
   const handleDelete = (id: string) => {
-    Modal.confirm({ title: "Hapus pasien?", onOk: async () => { await apiFetch(`/api/pets/${id}`, { method: "DELETE" }); msg.success("Dihapus"); fetchData(); } });
+    modal.confirm({
+      title: "Hapus pasien?",
+      onOk: async () => {
+        try {
+          await apiFetch(`/api/pets/${id}`, { method: "DELETE" });
+          msg.success("Dihapus");
+          fetchData();
+        } catch (err: any) {
+          msg.error(err.message);
+        }
+      },
+    });
   };
 
   const columns = [
@@ -127,7 +140,7 @@ export default function PetsPage() {
 
   return (
     <div>
-      <Title level={4}>Pasien Hewan</Title>
+      <Title level={4}>Pasien Baru</Title>
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">
@@ -143,10 +156,11 @@ export default function PetsPage() {
 
       <Modal title={editing ? "Edit Pasien" : "Tambah Pasien"} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={500}>
         <Form form={form} layout="vertical">
+          <Typography.Title level={5} style={{ marginBottom: 8 }}>Data Pasien</Typography.Title>
           <Form.Item name="name" label="Nama Hewan" rules={[{ required: true, message: "Wajib" }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="kind" label="Jenis" rules={[{ required: true, message: "Wajib" }]}>
+          <Form.Item name="kind" label="Jenis Hewan" rules={[{ required: true, message: "Wajib" }]}>
             <Select showSearch placeholder="Pilih jenis" options={[
               { value: "Kucing", label: "Kucing" },
               { value: "Anjing", label: "Anjing" },
@@ -158,13 +172,15 @@ export default function PetsPage() {
               { value: "Lainnya", label: "Lainnya" },
             ]} />
           </Form.Item>
-          <Form.Item name="breed" label="Ras">
+
+          <Typography.Title level={5} style={{ marginBottom: 8 }}>Signalment</Typography.Title>
+          <Form.Item name="breed" label="Ras Hewan">
             <Input placeholder="Contoh: Persian, Labrador (opsional)" />
           </Form.Item>
-          <Form.Item name="gender" label="Gender" rules={[{ required: true, message: "Wajib" }]}>
+          <Form.Item name="gender" label="Jenis Kelamin" rules={[{ required: true, message: "Wajib" }]}>
             <Select options={[{ value: "male", label: "Jantan" }, { value: "female", label: "Betina" }]} />
           </Form.Item>
-          <Form.Item name="birthDate" label="Tanggal Lahir">
+          <Form.Item name="birthDate" label="Umur (Tanggal Lahir)">
             <DatePicker style={{ width: "100%" }} placeholder="Pilih tanggal lahir" />
           </Form.Item>
           <Form.Item name={["initialAge", "value"]} label="Umur Awal (jika tgl lahir tidak diketahui)">
@@ -173,6 +189,10 @@ export default function PetsPage() {
           <Form.Item name={["initialAge", "unit"]} label="Satuan Umur Awal">
             <Select placeholder="Pilih satuan" options={[{ value: "month", label: "Bulan" }, { value: "year", label: "Tahun" }]} />
           </Form.Item>
+          <Form.Item name="notes" label="Ciri Khusus">
+            <Input.TextArea rows={2} placeholder="Ciri khas / tanda khusus hewan (opsional)" />
+          </Form.Item>
+
           <Form.Item name="customerId" label="Pemilik" rules={[{ required: true, message: "Pilih pemilik" }]}>
             <Select
               showSearch
@@ -191,9 +211,6 @@ export default function PetsPage() {
                 </Empty>
               }
             />
-          </Form.Item>
-          <Form.Item name="notes" label="Catatan">
-            <Input.TextArea rows={2} />
           </Form.Item>
         </Form>
       </Modal>

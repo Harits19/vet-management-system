@@ -277,9 +277,6 @@ modal.confirm({ title: "...", onOk: ... });
 - `app/dashboard/pets/[id]/page.tsx` — sederhanakan modal rekam medis
 - `apps/backend/src/services/transaction.service.ts` — auto-create medical history saat transaksi vet
 
-
-## 🔜 Belum Dikerjakan
-
 ### 16. Lihat Riwayat Medis di Detail Pasien
 
 **Fungsi:** Halaman `/dashboard/pets/[id]` menampilkan kartu **Riwayat Medis** yang berisi tabel riwayat rekam medis pasien tersebut.
@@ -290,3 +287,112 @@ modal.confirm({ title: "...", onOk: ... });
 
 **Status:** ✅ Selesai (sudah diimplementasikan sejak item #13 & #15)
 
+
+## 🔜 Belum Dikerjakan
+
+> **⚠️ PENTING:** Sebelum menjalankan update ini, **drop database** yang dipakai (tanpa terkecuali) dan mulai dari fresh.
+
+### 17. Diagnosis Menggunakan Dropdown + Auto-fill Item
+
+**Masalah:** Diagnosis saat ini berupa input text bebas. Tidak ada daftar diagnosis standar, tidak ada pilihan cepat, dan dokter harus memilih item (obat/jasa/barang) satu per satu setelah mengisi diagnosis.
+
+**Solusi:**
+- Diagnosis berupa **dropdown** (autocomplete): pilih dari daftar diagnosis yang sudah ada, atau ketik input baru jika diagnosis tersebut belum pernah dipakai
+- Ketika diagnosis dipilih → otomatis muncul input untuk **Obat, Jasa, dan Barang** 
+- **Konsultasi dokter bisa gratis** — transaksi bisa dibuat tanpa item, hanya diagnosis (total Rp 0)
+
+**File diubah:**
+- `packages/shared/src/medical-history.ts` — schema diagnosis
+- `apps/backend/src/services/transaction.service.ts` — izinkan items kosong untuk vet
+- `apps/frontend/app/dashboard/vet-sales/create/page.tsx` — dropdown diagnosis + auto-fill
+
+---
+
+### 18. Tambah Field di Rekam Medis (SOAP)
+
+**Masalah:** Rekam medis saat ini hanya punya Diagnosis & Catatan. Tidak ada struktur pemeriksaan klinis standar.
+
+**Solusi:** Tambah field SOAP di rekam medis:
+| Field | Label | Tipe |
+|-------|-------|------|
+| `O` | **Hasil Pemeriksaan Laboratorium** | Text area |
+| `A` | **Pemeriksaan Fisik** | Text area |
+| `P` | **Catatan Dokter Untuk Pemilik** | Text area |
+| `P` | **Catatan Dokter Untuk Paramedis** | Text area |
+
+**File diubah:**
+- `packages/shared/src/medical-history.ts` — tambah field baru
+- `apps/backend/src/models/medical-history.model.ts` — tambah field schema
+- `apps/frontend/app/dashboard/vet-sales/create/page.tsx` — form tambah field
+- `apps/frontend/app/dashboard/medical-histories/[id]/page.tsx` — tampilkan field baru
+- `apps/frontend/app/dashboard/pets/[id]/page.tsx` — modal rekam medis
+
+---
+
+### 19. Tambah Pasien — Urutan Field Baru (Signalment)
+
+**Masalah:** Form tambah pasien saat ini berurutan campur aduk (nama, jenis, gender, catatan) tanpa pengelompokan logis.
+
+**Solusi:** Urutkan ulang form tambah pasien menjadi 2 bagian:
+
+**Data Pasien:**
+1. Nama Hewan
+2. Jenis Hewan
+
+**Signalment:**
+3. Ras Hewan
+4. Jenis Kelamin
+5. Umur
+6. ~~Catatan~~ → diganti **"Ciri Khusus"**
+
+**File diubah:**
+- `packages/shared/src/pet.ts` — rename field notes → ciriKhusus / tambah ras, umur
+- `apps/backend/src/models/pet.model.ts` — schema
+- `apps/frontend/app/dashboard/pets/page.tsx` — form tambah/edit pasien
+- `apps/frontend/app/dashboard/pets/[id]/page.tsx` — detail pasien
+
+---
+
+### 20. Urutan & Rename Menu Sidebar
+
+**Masalah:** Sidebar saat ini: Dashboard, Pemilik, Pasien, Produk & Jasa, Transaksi, Rekam Medis. Tidak sesuai alur kerja klinik (klien → pasien baru/lama → pemeriksaan).
+
+**Solusi:** Urutan & nama menu baru:
+| Urutan | Menu | Keterangan |
+|--------|------|------------|
+| 1 | Dashboard | tetap |
+| 2 | **Klien** | rename dari "Pemilik" (ex-Customer) |
+| 3 | **Pasien Baru** | rename dari "Pasien" (tambah pasien baru) |
+| 4 | **Pasien Lama** | rename dari "Konsultasi Baru" (konsultasi pasien yang sudah terdaftar) |
+| 5 | Rekam Medis | tetap |
+| 6 | **Jasa** | split dari "Produk & Jasa" — filter type=service |
+| 7 | **Obat** | split dari "Produk & Jasa" — filter type=medicine |
+| 8 | **Barang** | split dari "Produk & Jasa" — filter type=physical |
+| 9 | Transaksi | tetap |
+
+**Catatan:** Menu 6-8 perlu penjelasan lebih lanjut — Jasa/Obat/Barang adalah 3 halaman terpisah
+
+**File diubah:**
+- `apps/frontend/app/dashboard/layout.tsx` — urutan & label menu
+- `apps/frontend/app/dashboard/customers/page.tsx` — judul Klien
+- `apps/frontend/app/dashboard/pets/page.tsx` — judul Pasien Baru
+- `apps/frontend/app/dashboard/vet-sales/create/page.tsx` — jadi Pasien Lama
+
+---
+
+### 21. Bug — Icon Delete Tidak Berhasil Delete
+
+**Masalah:** Icon delete (trash) di beberapa halaman tidak melakukan delete. Data tidak terhapus saat tombol ditekan.
+
+**Solusi:** Audit semua tombol delete:
+1. Cek apakah `apiFetch` DELETE dipanggil dengan benar (`method: "DELETE"`)
+2. Cek apakah `Modal.confirm` menggunakan `useAntdModal()` (bukan static `Modal.confirm`)
+3. Cek backend route — apakah role user punya akses (misal kasir tidak boleh delete?)
+4. Cek response error — apakah error handling menampilkan pesan yang benar
+
+**File yang perlu dicek:**
+- `apps/frontend/app/dashboard/transactions/page.tsx`
+- `apps/frontend/app/dashboard/pets/page.tsx`
+- `apps/frontend/app/dashboard/customers/page.tsx`
+- `apps/frontend/app/dashboard/products/page.tsx`
+- `apps/backend/src/routes/*.route.ts` — role authorization

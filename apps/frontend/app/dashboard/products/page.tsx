@@ -5,6 +5,7 @@ import { Card, Table, Button, Input, Space, Modal, Form, Typography, Row, Col, T
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
+import { useAntdModal } from "../../hooks/useAntdModal";
 
 const { Title } = Typography;
 
@@ -18,7 +19,7 @@ interface Product {
   isActive: boolean;
 }
 
-export default function ProductsPage() {
+export default function ProductsPage({ categoryFilter, title }: { categoryFilter?: string; title?: string }) {
   const [data, setData] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -28,11 +29,13 @@ export default function ProductsPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [form] = Form.useForm();
   const msg = useAntdMessage();
+  const modal = useAntdModal();
 
   const fetchData = async (p = page, s = search) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(p), limit: "10", search: s });
+      if (categoryFilter) params.set("category", categoryFilter);
       const res = await apiFetch<{ data: Product[]; meta: { total: number } }>(`/api/products?${params}`);
       setData(res.data);
       setTotal(res.meta.total);
@@ -68,7 +71,18 @@ export default function ProductsPage() {
   };
 
   const handleDelete = (id: string) => {
-    Modal.confirm({ title: "Non-aktifkan barang?", onOk: async () => { await apiFetch(`/api/products/${id}`, { method: "DELETE" }); msg.success("Dinonaktifkan"); fetchData(); } });
+    modal.confirm({
+      title: "Non-aktifkan barang?",
+      onOk: async () => {
+        try {
+          await apiFetch(`/api/products/${id}`, { method: "DELETE" });
+          msg.success("Dinonaktifkan");
+          fetchData();
+        } catch (err: any) {
+          msg.error(err.message);
+        }
+      },
+    });
   };
 
   const fmt = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
@@ -92,7 +106,7 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <Title level={4}>Barang</Title>
+      <Title level={4}>{title || "Barang"}</Title>
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">

@@ -47,6 +47,7 @@ export interface IMedicalHistoryDoc {
   doctorId: mongoose.Types.ObjectId;
   treatments: ITreatmentSubDoc[];
   prescriptions: IPrescriptionSubDoc[];
+  goods: ITreatmentSubDoc[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -117,6 +118,7 @@ const MedicalHistorySchema = new Schema<IMedicalHistoryDoc>(
     doctorId: { type: Schema.Types.ObjectId, required: true, ref: "User" },
     treatments: { type: [TreatmentSubSchema], default: [] },
     prescriptions: { type: [PrescriptionSubSchema], default: [] },
+    goods: { type: [TreatmentSubSchema], default: [] },
   },
   { timestamps: true, versionKey: false }
 );

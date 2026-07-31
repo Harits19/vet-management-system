@@ -182,7 +182,11 @@ interface MhItemInput {
   notes?: string;
 }
 
-export async function buildTransactionItemsFromMh(treatments: MhItemInput[], prescriptions: MhItemInput[]) {
+export async function buildTransactionItemsFromMh(
+  treatments: MhItemInput[],
+  prescriptions: MhItemInput[],
+  goods: MhItemInput[] = []
+) {
   const items: any[] = [];
   let totalCost = 0;
   let totalSelling = 0;
@@ -201,9 +205,10 @@ export async function buildTransactionItemsFromMh(treatments: MhItemInput[], pre
     });
   }
 
-  for (const p of prescriptions) {
+  // Obat (medicine) + Barang (good) — keduanya item physical dari ProductModel
+  for (const p of [...prescriptions, ...goods]) {
     const product = await ProductModel.findById(p.productId);
-    if (!product) throw Object.assign(new Error(`Obat ${p.name || p.productId} tidak ditemukan`), { status: 404 });
+    if (!product) throw Object.assign(new Error(`Produk ${p.name || p.productId} tidak ditemukan`), { status: 404 });
     const cost = (product.pricing.cost ?? 0) * p.quantity;
     const selling = p.price * p.quantity;
     totalCost += cost;
@@ -212,7 +217,7 @@ export async function buildTransactionItemsFromMh(treatments: MhItemInput[], pre
       product: { _id: product._id, name: product.product.name, type: "physical", code: product.product.code },
       quantity: p.quantity,
       pricing: { cost, selling, total: selling },
-      dosage: p.dosage || undefined,
+      dosage: (p as any).dosage || undefined,
     });
     if ((product.inventory.quantity ?? 0) >= p.quantity) {
       await ProductModel.updateOne({ _id: product._id }, { $inc: { "inventory.quantity": -p.quantity } });
@@ -228,10 +233,11 @@ export async function createTransactionFromMedicalHistory(input: {
   customer?: { _id: mongoose.Types.ObjectId; name: string } | null;
   treatments: MhItemInput[];
   prescriptions: MhItemInput[];
+  goods?: MhItemInput[];
   cashierId: string;
   cashierName: string;
 }) {
-  const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions);
+  const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions, input.goods ?? []);
   if (items.length === 0) return null;
 
   const profit = totalSelling - totalCost;
@@ -257,12 +263,13 @@ export async function syncTransactionFromMedicalHistory(input: {
   medicalHistoryId: string;
   treatments: MhItemInput[];
   prescriptions: MhItemInput[];
+  goods?: MhItemInput[];
 }) {
   const txn = await TransactionModel.findOne({ medicalHistoryId: input.medicalHistoryId });
   if (!txn) return null;
   if (txn.paymentStatus === "paid") return txn.toObject() as any; // jangan ubah transaksi lunas
 
-  const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions);
+  const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions, input.goods ?? []);
   if (items.length === 0) {
     await TransactionModel.deleteOne({ _id: txn._id });
     return null;

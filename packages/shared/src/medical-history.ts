@@ -66,8 +66,9 @@ export interface IMedicalHistory {
   soap: SoapData;
   diagnosis: string; // Penegakan Diagnosis (di luar SOAP)
   doctorId: string;
-  treatments: TreatmentItem[];
-  prescriptions: PrescriptionItem[];
+  treatments: TreatmentItem[]; // Tindakan (jasa)
+  prescriptions: PrescriptionItem[]; // Resep Obat (obat/medicine)
+  goods: TreatmentItem[]; // Barang non-obat (good)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -128,6 +129,7 @@ export const medicalHistoryCreateSchema = z.object({
   diagnosis: stringRequired,
   treatments: z.array(treatmentItemSchema).default([]),
   prescriptions: z.array(prescriptionItemSchema).default([]),
+  goods: z.array(treatmentItemSchema).default([]),
 });
 export type MedicalHistoryCreateRequest = z.infer<typeof medicalHistoryCreateSchema>;
 

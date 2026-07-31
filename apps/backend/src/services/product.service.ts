@@ -2,8 +2,9 @@ import { ProductModel } from "../models/index.js";
 import type { ProductCreateRequest, ProductUpdateRequest, ProductFilter } from "@vet/shared";
 
 export async function listProducts(filter: ProductFilter) {
-  const { page, limit, search, category, sortBy, order } = filter;
+  const { page, limit, search, productType, category, sortBy, order } = filter;
   const query: any = { isActive: true };
+  if (productType) query.productType = productType;
   if (category) query.category = category;
   if (search) {
     query.$or = [
@@ -46,4 +47,16 @@ export async function deleteProduct(id: string) {
 
 export async function searchProductsByCode(code: string) {
   return ProductModel.find({ "product.code": { $regex: code, $options: "i" }, isActive: true }).limit(10).lean();
+}
+
+// Nilai unik untuk autocomplete (category, unit, product.name, dll)
+export async function getDistinctProductValues(field: string, productType?: string) {
+  const allowed = new Set(["category", "unit", "product.name", "productType"]);
+  if (!allowed.has(field)) throw Object.assign(new Error("Field tidak didukung"), { status: 400 });
+
+  const query: any = { isActive: true };
+  if (productType) query.productType = productType;
+
+  const values = await ProductModel.distinct(field, query);
+  return values.filter((v: unknown) => typeof v === "string" && (v as string).trim() !== "");
 }

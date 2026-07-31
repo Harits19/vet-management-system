@@ -1,6 +1,6 @@
 import type { Response, NextFunction } from "express";
 import type { AuthRequest } from "../config/auth.js";
-import { listPets, getPet, createPet, updatePet, deletePet, searchCustomerPets } from "../services/pet.service.js";
+import { listPets, getPet, createPet, updatePet, deletePet, searchCustomerPets, getDistinctPetValues } from "../services/pet.service.js";
 import { petCreateSchema, petUpdateSchema, petFilterSchema } from "@vet/shared";
 
 export async function getAll(req: AuthRequest, res: Response, next: NextFunction) {
@@ -44,6 +44,14 @@ export async function remove(req: AuthRequest, res: Response, next: NextFunction
 export async function getByCustomer(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const data = await searchCustomerPets(req.params.customerId as string);
+    res.json({ success: true, data });
+  } catch (err) { next(err); }
+}
+
+export async function distinct(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const field = req.query.field as string;
+    const data = await getDistinctPetValues(field);
     res.json({ success: true, data });
   } catch (err) { next(err); }
 }

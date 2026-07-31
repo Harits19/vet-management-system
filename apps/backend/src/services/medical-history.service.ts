@@ -10,6 +10,7 @@ import mongoose from "mongoose";
 // ──────────────────────────────────────────
 // Distinct diagnoses — untuk dropdown autocomplete
 // ──────────────────────────────────────────
+// Nilai unik diagnosis untuk autocomplete
 export async function listDistinctDiagnoses(search?: string) {
   const match: any = { diagnosis: { $ne: "" } };
   if (search) match.diagnosis = { $regex: search, $options: "i" };
@@ -102,6 +103,26 @@ async function enrichPrescriptions(prescriptions: any[]) {
   );
 }
 
+// Barang non-obat (good) — sama seperti treatments tapi dari ProductModel
+async function enrichGoods(goods: any[]) {
+  return Promise.all(
+    goods.map(async (g) => {
+      if (g.productId) {
+        const prod = await ProductModel.findById(g.productId).lean();
+        if (prod) {
+          return {
+            ...g,
+            name: g.name || prod.product.name,
+            price: g.price ?? prod.pricing.selling,
+            quantity: g.quantity ?? 1,
+          };
+        }
+      }
+      return { ...g, quantity: g.quantity ?? 1 };
+    })
+  );
+}
+
 // ──────────────────────────────────────────
 // Create — SOAP + Diagnosis + Tindakan + Resep
 // Otomatis membuat transaksi (type: vet) dari tindakan & resep.
@@ -112,6 +133,7 @@ export async function createMedicalHistory(input: MedicalHistoryCreateRequest, d
 
   const treatments = await enrichTreatments(input.treatments || []);
   const prescriptions = await enrichPrescriptions(input.prescriptions || []);
+  const goods = await enrichGoods(input.goods || []);
 
   const record = await MedicalHistoryModel.create({
     petId: input.petId,
@@ -121,9 +143,10 @@ export async function createMedicalHistory(input: MedicalHistoryCreateRequest, d
     doctorId: new mongoose.Types.ObjectId(doctorId),
     treatments,
     prescriptions,
+    goods,
   });
 
-  // Auto-create transaction (utang) dari tindakan & resep
+  // Auto-create transaction (utang) dari tindakan & resep & barang
   const customer = await CustomerModel.findById(pet.customerId).select("name").lean();
   const txn = await createTransactionFromMedicalHistory({
     medicalHistoryId: record._id.toString(),
@@ -131,6 +154,7 @@ export async function createMedicalHistory(input: MedicalHistoryCreateRequest, d
     customer: customer ? { _id: customer._id, name: customer.name } : null,
     treatments,
     prescriptions,
+    goods,
     cashierId: doctorId,
     cashierName: doctorName,
   });
@@ -148,12 +172,15 @@ export async function updateMedicalHistory(id: string, input: MedicalHistoryUpda
 
   let treatments = input.treatments;
   let prescriptions = input.prescriptions;
+  let goods = input.goods;
   if (treatments) treatments = await enrichTreatments(treatments);
   if (prescriptions) prescriptions = await enrichPrescriptions(prescriptions);
+  if (goods) goods = await enrichGoods(goods);
 
   const patch: any = { ...input };
   if (treatments) patch.treatments = treatments;
   if (prescriptions) patch.prescriptions = prescriptions;
+  if (goods) patch.goods = goods;
 
   const updated = await MedicalHistoryModel.findByIdAndUpdate(id, { $set: patch }, { new: true, runValidators: true }).lean();
   if (!updated) throw Object.assign(new Error("Medical history not found"), { status: 404 });
@@ -163,6 +190,7 @@ export async function updateMedicalHistory(id: string, input: MedicalHistoryUpda
     medicalHistoryId: id,
     treatments: treatments ?? updated.treatments ?? [],
     prescriptions: prescriptions ?? updated.prescriptions ?? [],
+    goods: goods ?? updated.goods ?? [],
   });
 
   return { ...updated, transaction: txn };
@@ -200,6 +228,7 @@ export async function getMedicalHistorySummary(petId: string) {
       doctorId: r.doctorId,
       treatments: r.treatments,
       prescriptions: r.prescriptions,
+      goods: r.goods,
       weight,
       temperature,
     };

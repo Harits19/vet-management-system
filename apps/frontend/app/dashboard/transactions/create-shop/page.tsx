@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Button, Form, Select, Input, Space, Typography, Row, Col, Tag, message, Divider } from "antd";
+import { Card, Button, Form, Select, Input, Space, Typography, Row, Col, Tag, Divider } from "antd";
 import { ArrowLeft, Info } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
@@ -33,7 +33,7 @@ export default function CreateShopPage() {
   useEffect(() => {
     Promise.all([
       apiFetch<{ data: any[] }>("/api/customers?page=1&limit=100"),
-      apiFetch<{ data: any[] }>("/api/products/physical?limit=100"),
+      apiFetch<{ data: any[] }>("/api/products?limit=100"),
     ]).then(([c, p]) => {
       setCustomers(c.data);
       setProducts(p.data);
@@ -92,8 +92,8 @@ export default function CreateShopPage() {
         <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="customerId" label="Pemilik (opsional)">
-                <Select showSearch placeholder="Cari pemilik..." allowClear
+              <Form.Item name="customerId" label="Klien (opsional)">
+                <Select showSearch placeholder="Cari klien..." allowClear
                   filterOption={(input, option) => (option?.label as string || "").toLowerCase().includes(input.toLowerCase())}
                   options={customers.map((c) => ({ value: c._id, label: c.name }))} />
               </Form.Item>

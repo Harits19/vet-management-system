@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row, Col, Tag, Empty, DatePicker, InputNumber } from "antd";
+import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row, Col, Tag, Empty, DatePicker, InputNumber, Radio, AutoComplete } from "antd";
 import { Plus, Search, Edit, Trash2, UserPlus, Eye } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
@@ -34,10 +34,25 @@ export default function PetsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Pet | null>(null);
   const [customers, setCustomers] = useState<{ _id: string; name: string }[]>([]);
+  const [kindOptions, setKindOptions] = useState<{ value: string }[]>([]);
+  const [breedOptions, setBreedOptions] = useState<{ value: string }[]>([]);
+  const [notesOptions, setNotesOptions] = useState<{ value: string }[]>([]);
   const [form] = Form.useForm();
   const msg = useAntdMessage();
   const router = useRouter();
   const modal = useAntdModal();
+
+  const ageMode = Form.useWatch("ageMode", form);
+
+  const fetchDistinct = async (field: "kind" | "breed" | "notes") => {
+    try {
+      const res = await apiFetch<{ data: string[] }>(`/api/pets/distinct?field=${field}`);
+      const opts = res.data.map((v) => ({ value: v }));
+      if (field === "kind") setKindOptions(opts);
+      else if (field === "breed") setBreedOptions(opts);
+      else setNotesOptions(opts);
+    } catch { /* ignore */ }
+  };
 
   const fetchData = async (p = page, s = search) => {
     setLoading(true);
@@ -59,17 +74,23 @@ export default function PetsPage() {
     setCustomers(res.data);
   };
 
-  useEffect(() => { fetchData(); fetchCustomers(); }, []);
+  useEffect(() => { fetchData(); fetchCustomers(); fetchDistinct("kind"); fetchDistinct("breed"); fetchDistinct("notes"); }, []);
 
   const handleSearch = () => { setPage(1); fetchData(1, search); };
 
-  const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    form.resetFields();
+    form.setFieldsValue({ ageMode: "birthDate" });
+    setModalOpen(true);
+  };
   const openEdit = (p: Pet) => {
     setEditing(p);
     form.setFieldsValue({
       ...p,
       customerId: p.customerId._id,
       birthDate: p.birthDate ? dayjs(p.birthDate) : undefined,
+      ageMode: p.birthDate ? "birthDate" : "initialAge",
     });
     setModalOpen(true);
   };
@@ -77,7 +98,9 @@ export default function PetsPage() {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const birthDate = values.birthDate ? dayjs(values.birthDate).toISOString() : undefined;
+      // Input kondisional: hanya satu sumber umur yang boleh terisi
+      const useBirthDate = values.ageMode !== "initialAge";
+      const birthDate = useBirthDate && values.birthDate ? dayjs(values.birthDate).toISOString() : undefined;
       const payload: any = {
         name: values.name,
         kind: values.kind,
@@ -86,8 +109,7 @@ export default function PetsPage() {
         customerId: values.customerId,
         notes: values.notes,
         birthDate,
-        // Umur awal hanya diisi jika tanggal lahir tidak diketahui
-        initialAge: !birthDate && values.initialAge?.value ? values.initialAge : undefined,
+        initialAge: !useBirthDate && values.initialAge?.value ? values.initialAge : undefined,
       };
       if (editing) {
         await apiFetch(`/api/pets/${editing._id}`, { method: "PUT", body: JSON.stringify(payload) });
@@ -161,36 +183,50 @@ export default function PetsPage() {
             <Input />
           </Form.Item>
           <Form.Item name="kind" label="Jenis Hewan" rules={[{ required: true, message: "Wajib" }]}>
-            <Select showSearch placeholder="Pilih jenis" options={[
-              { value: "Kucing", label: "Kucing" },
-              { value: "Anjing", label: "Anjing" },
-              { value: "Kelinci", label: "Kelinci" },
-              { value: "Hamster", label: "Hamster" },
-              { value: "Burung", label: "Burung" },
-              { value: "Reptil", label: "Reptil" },
-              { value: "Ikan", label: "Ikan" },
-              { value: "Lainnya", label: "Lainnya" },
-            ]} />
+            <AutoComplete
+              options={kindOptions}
+              placeholder="Pilih atau ketik jenis hewan (Kucing, Anjing...)"
+              filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
+            />
           </Form.Item>
 
           <Typography.Title level={5} style={{ marginBottom: 8 }}>Signalment</Typography.Title>
           <Form.Item name="breed" label="Ras Hewan">
-            <Input placeholder="Contoh: Persian, Labrador (opsional)" />
+            <AutoComplete
+              options={breedOptions}
+              placeholder="Pilih atau ketik ras (Persian, Labrador...)"
+              filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
+            />
           </Form.Item>
           <Form.Item name="gender" label="Jenis Kelamin" rules={[{ required: true, message: "Wajib" }]}>
             <Select options={[{ value: "male", label: "Jantan" }, { value: "female", label: "Betina" }]} />
           </Form.Item>
-          <Form.Item name="birthDate" label="Umur (Tanggal Lahir)">
-            <DatePicker style={{ width: "100%" }} placeholder="Pilih tanggal lahir" />
+          <Form.Item name="ageMode" label="Sumber Umur">
+            <Radio.Group optionType="button" buttonStyle="solid" style={{ width: "100%" }}>
+              <Radio.Button value="birthDate" style={{ width: "50%", textAlign: "center" }}>📅 Tanggal Lahir</Radio.Button>
+              <Radio.Button value="initialAge" style={{ width: "50%", textAlign: "center" }}>🐣 Umur Awal</Radio.Button>
+            </Radio.Group>
           </Form.Item>
-          <Form.Item name={["initialAge", "value"]} label="Umur Awal (jika tgl lahir tidak diketahui)">
-            <InputNumber style={{ width: "100%" }} min={0} placeholder="Contoh: 6" />
-          </Form.Item>
-          <Form.Item name={["initialAge", "unit"]} label="Satuan Umur Awal">
-            <Select placeholder="Pilih satuan" options={[{ value: "month", label: "Bulan" }, { value: "year", label: "Tahun" }]} />
-          </Form.Item>
+          {ageMode !== "initialAge" ? (
+            <Form.Item name="birthDate" label="Tanggal Lahir">
+              <DatePicker style={{ width: "100%" }} placeholder="Pilih tanggal lahir" />
+            </Form.Item>
+          ) : (
+            <>
+              <Form.Item name={["initialAge", "value"]} label="Umur Awal" rules={[{ required: true, message: "Wajib" }]}>
+                <InputNumber style={{ width: "100%" }} min={0} placeholder="Contoh: 6" />
+              </Form.Item>
+              <Form.Item name={["initialAge", "unit"]} label="Satuan Umur Awal" rules={[{ required: true, message: "Pilih satuan" }]}>
+                <Select placeholder="Pilih satuan" options={[{ value: "month", label: "Bulan" }, { value: "year", label: "Tahun" }]} />
+              </Form.Item>
+            </>
+          )}
           <Form.Item name="notes" label="Ciri Khusus">
-            <Input.TextArea rows={2} placeholder="Ciri khas / tanda khusus hewan (opsional)" />
+            <AutoComplete
+              options={notesOptions}
+              placeholder="Ciri khas / tanda khusus hewan (opsional)"
+              filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
+            />
           </Form.Item>
 
           <Form.Item name="customerId" label="Pemilik" rules={[{ required: true, message: "Pilih pemilik" }]}>

@@ -3,9 +3,14 @@ import { stringRequired, numberFromString, numberOptional } from "./common.js";
 
 // ──────────────────────────────────────────
 // Product (Barang) — collection terpisah dari Jasa (Service)
+// productType: "medicine" (obat) | "good" (barang non-obat)
 // ──────────────────────────────────────────
+export const productTypeEnum = z.enum(["medicine", "good"] as const);
+export type ProductType = z.infer<typeof productTypeEnum>;
+
 export interface IProduct {
   _id: string;
+  productType: ProductType;
   category: string;
   product: {
     code?: string;
@@ -43,6 +48,7 @@ const inventorySubSchema = z.object({
 });
 
 export const productCreateSchema = z.object({
+  productType: productTypeEnum.default("good"),
   category: stringRequired,
   product: productSubSchema,
   pricing: pricingSubSchema,
@@ -58,6 +64,7 @@ export const productFilterSchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(10),
   search: z.string().default(""),
+  productType: productTypeEnum.optional(),
   category: z.string().optional(),
   sortBy: z.enum(["product.name", "pricing.selling", "inventory.quantity", "createdAt"]).default("createdAt"),
   order: z.enum(["asc", "desc"]).default("desc"),

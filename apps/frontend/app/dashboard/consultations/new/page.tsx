@@ -6,6 +6,7 @@ import { ArrowLeft, Save, Info } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
 import { useRouter, useSearchParams } from "next/navigation";
+import dayjs from "dayjs";
 import { computePetAge } from "@vet/shared";
 import PhysicalExamEditor from "../../components/PhysicalExamEditor";
 import TreatmentEditor, { TreatmentLine } from "../../components/TreatmentEditor";
@@ -36,12 +37,16 @@ export default function NewConsultationPage() {
 
   const [services, setServices] = useState<any[]>([]);
   const [medicines, setMedicines] = useState<any[]>([]);
+  const [goods, setGoods] = useState<any[]>([]);
   const [mastersLoading, setMastersLoading] = useState(true);
 
   const [treatments, setTreatments] = useState<TreatmentLine[]>([]);
   const [prescriptions, setPrescriptions] = useState<PrescriptionLine[]>([]);
+  const [goodsLines, setGoodsLines] = useState<TreatmentLine[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [diagnosisOptions, setDiagnosisOptions] = useState<{ value: string }[]>([]);
+  const [mhRecords, setMhRecords] = useState<any[]>([]);
+  const [mhLoading, setMhLoading] = useState(false);
 
   const selectedDiagnosis = Form.useWatch("diagnosis", form);
 
@@ -52,16 +57,27 @@ export default function NewConsultationPage() {
     } catch { /* ignore */ }
   };
 
+  const loadMedicalHistory = async (petId: string) => {
+    if (!petId) { setMhRecords([]); return; }
+    setMhLoading(true);
+    try {
+      const res = await apiFetch<{ data: { records: any[] } }>(`/api/medical-histories/by-pet/${petId}`);
+      setMhRecords(res.data.records || []);
+    } catch { setMhRecords([]); } finally { setMhLoading(false); }
+  };
+
   useEffect(() => {
     Promise.all([
       apiFetch<{ data: any[] }>("/api/customers?page=1&limit=100"),
       apiFetch<{ data: any[] }>("/api/services?limit=100"),
-      apiFetch<{ data: any[] }>("/api/products?limit=100"),
+      apiFetch<{ data: any[] }>("/api/products?productType=medicine&limit=100"),
+      apiFetch<{ data: any[] }>("/api/products?productType=good&limit=100"),
     ])
-      .then(async ([c, s, m]) => {
+      .then(async ([c, s, m, g]) => {
         setCustomers(c.data);
         setServices(s.data);
         setMedicines(m.data);
+        setGoods(g.data);
 
         const customerId = searchParams.get("customerId");
         const petId = searchParams.get("petId");
@@ -72,6 +88,7 @@ export default function NewConsultationPage() {
         if (customerId && petId) {
           form.setFieldsValue({ petId });
           await loadPetDetail(petId);
+          loadMedicalHistory(petId);
         }
       })
       .catch(console.error)
@@ -88,6 +105,7 @@ export default function NewConsultationPage() {
     try {
       const res = await apiFetch<{ data: PetOption }>(`/api/pets/${petId}`);
       setSelectedPet(res.data);
+      loadMedicalHistory(petId);
     } catch (err: any) {
       msg.error(err.message);
     } finally {
@@ -127,6 +145,9 @@ export default function NewConsultationPage() {
         prescriptions: prescriptions
           .filter((p) => p.productId)
           .map((p) => ({ productId: p.productId, name: p.name, quantity: p.quantity, price: p.price, dosage: p.dosage, usage: p.usage, notes: p.notes })),
+        goods: goodsLines
+          .filter((g) => g.productId)
+          .map((g) => ({ productId: g.productId, name: g.name, quantity: g.quantity, price: g.price, notes: g.notes })),
       };
 
       const res = await apiFetch<{ data: any }>("/api/medical-histories", {
@@ -204,6 +225,21 @@ export default function NewConsultationPage() {
                   icon={<Info size={14} />}
                   message={`Umur dihitung otomatis dari ${selectedPet.birthDate ? "tanggal lahir" : "umur awal"} pasien — tidak diinput pada konsultasi ini.`}
                 />
+                <Card size="small" title="Riwayat Rekam Medis" style={{ marginTop: 12 }} loading={mhLoading}>
+                  {mhRecords.length === 0 ? (
+                    <Text type="secondary">Belum ada riwayat medis</Text>
+                  ) : (
+                    <Space direction="vertical" style={{ width: "100%" }}>
+                      {mhRecords.slice(0, 5).map((r: any) => (
+                        <Row key={r._id} gutter={8}>
+                          <Col span={6}><Text type="secondary">{dayjs(r.visitDate).format("DD/MM/YY")}</Text></Col>
+                          <Col span={12}><Text ellipsis>{r.diagnosis}</Text></Col>
+                          <Col span={6}><Text type="secondary">{r.treatments?.length || 0} tnd, {r.prescriptions?.length || 0} rsp, {r.goods?.length || 0} brg</Text></Col>
+                        </Row>
+                      ))}
+                    </Space>
+                  )}
+                </Card>
               </>
             )}
           </Card>
@@ -277,7 +313,7 @@ export default function NewConsultationPage() {
               </Card>
 
               <Card title="Resep Obat" style={{ marginTop: 16 }}>
-                <Text type="secondary">Obat diambil dari Master Obat dan otomatis menjadi item obat pada transaksi.</Text>
+                <Text type="secondary">Obat diambil dari Master Obat dan otomatis menjadi item obat pada transaksi. Obat suntik: tuliskan di catatan resep.</Text>
                 <div style={{ marginTop: 12 }}>
                   <PrescriptionEditor
                     items={prescriptions}
@@ -287,9 +323,21 @@ export default function NewConsultationPage() {
                   />
                 </div>
               </Card>
+
+              <Card title="Barang (Non-Obat)" style={{ marginTop: 16 }}>
+                <Text type="secondary">Barang diambil dari Master Barang dan otomatis menjadi item barang pada transaksi.</Text>
+                <div style={{ marginTop: 12 }}>
+                  <TreatmentEditor
+                    items={goodsLines}
+                    onChange={setGoodsLines}
+                    options={goods.map((g) => ({ _id: g._id, name: g.product?.name, selling: g.pricing?.selling }))}
+                    loading={mastersLoading}
+                  />
+                </div>
+              </Card>
             </>
           ) : (
-            <Alert style={{ marginTop: 16 }} type="info" showIcon message="Isi diagnosis terlebih dahulu untuk menambahkan tindakan (jasa) dan resep obat. Konsultasi bisa gratis — simpan tanpa tindakan/obat." />
+            <Alert style={{ marginTop: 16 }} type="info" showIcon message="Isi diagnosis terlebih dahulu untuk menambahkan tindakan (jasa), resep obat, dan barang. Konsultasi bisa gratis — simpan tanpa tindakan/obat." />
           )}
 
           <Divider />

@@ -13,7 +13,7 @@ const DEFAULT_FRONTEND_ORIGINS = ["http://localhost:3002"];
 
 export const frontendOrigins = (process.env.FRONTEND_ORIGINS?.split(",").map((s) => s.trim()).filter(Boolean)) ?? DEFAULT_FRONTEND_ORIGINS;
 
-export const isSecureRequest = () => process.env.COOKIE_SECURE === "true" || process.env.NODE_ENV === "production";
+export const isSecureRequest = () => process.env.COOKIE_SECURE === "true";
 
 export const getCookieOptions = () => ({
   httpOnly: true,

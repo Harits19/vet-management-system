@@ -20,8 +20,18 @@ interface PhysicalExamEditorProps {
   onChange?: (items: { key: string; label: string; value?: number; unit?: string }[]) => void;
 }
 
+interface ExamItem {
+  key: string;
+  label: string;
+  value?: number;
+  unit?: string;
+}
+
 export default function PhysicalExamEditor({ value = [], onChange }: PhysicalExamEditorProps) {
-  const items = value.length > 0 ? value : PHYSICAL_EXAM_FIELDS.map((f) => ({ key: f.key, label: f.label, unit: f.unit }));
+  const items: ExamItem[] =
+    value.length > 0
+      ? value
+      : PHYSICAL_EXAM_FIELDS.map((f) => ({ key: f.key, label: f.label, unit: f.unit, value: undefined }));
 
   const updateValue = (key: string, val?: number) => {
     onChange?.(items.map((i) => (i.key === key ? { ...i, value: val } : i)));

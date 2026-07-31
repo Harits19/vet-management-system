@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Form, Input, Select, Button, Row, Col, Typography, Space, Divider, Tag, Empty, Spin, Alert } from "antd";
+import { Card, Form, Input, Select, Button, Row, Col, Typography, Space, Divider, Tag, Empty, Spin, Alert, AutoComplete } from "antd";
 import { ArrowLeft, Save, Info } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
@@ -41,6 +41,16 @@ export default function NewConsultationPage() {
   const [treatments, setTreatments] = useState<TreatmentLine[]>([]);
   const [prescriptions, setPrescriptions] = useState<PrescriptionLine[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [diagnosisOptions, setDiagnosisOptions] = useState<{ value: string }[]>([]);
+
+  const selectedDiagnosis = Form.useWatch("diagnosis", form);
+
+  const loadDiagnoses = async (q = "") => {
+    try {
+      const res = await apiFetch<{ data: string[] }>(`/api/medical-histories/diagnoses?search=${encodeURIComponent(q)}`);
+      setDiagnosisOptions(res.data.map((d) => ({ value: d })));
+    } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -101,11 +111,13 @@ export default function NewConsultationPage() {
         visitDate: new Date().toISOString(),
         soap: {
           subjective: { complaint: values.complaint },
-          objective: { physicalExam },
-          assessment: { differentialDiagnosis: values.differentialDiagnosis },
+          objective: { physicalExam, labResult: values.labResult || undefined },
+          assessment: { differentialDiagnosis: values.differentialDiagnosis, physicalExamNote: values.physicalExamNote || undefined },
           plan: {
             treatmentPlan: values.treatmentPlan,
             doctorNotes: values.doctorNotes || undefined,
+            ownerNote: values.ownerNote || undefined,
+            paramedicNote: values.paramedicNote || undefined,
           },
         },
         diagnosis: values.diagnosis,
@@ -140,7 +152,7 @@ export default function NewConsultationPage() {
     <div>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>Kembali</Button>
-        <Title level={4} style={{ margin: 0 }}>Form Konsultasi — Rekam Medis (SOAP)</Title>
+        <Title level={4} style={{ margin: 0 }}>Pasien Lama — Konsultasi</Title>
       </Space>
 
       <Spin spinning={mastersLoading}>
@@ -207,11 +219,17 @@ export default function NewConsultationPage() {
               <Form.Item name="physicalExam" initialValue={[]}>
                 <PhysicalExamEditor />
               </Form.Item>
+              <Form.Item name="labResult" label="O — Hasil Pemeriksaan Laboratorium">
+                <Input.TextArea rows={3} placeholder="Hasil lab darah, urin, dll (opsional)" />
+              </Form.Item>
             </Card>
 
             <Card type="inner" title="A — Assessment (Diagnosis Banding)" style={{ marginTop: 12 }}>
               <Form.Item name="differentialDiagnosis" label="Diagnosis Banding" rules={[{ required: true, message: "Diagnosis banding wajib diisi" }]}>
                 <Input.TextArea rows={3} placeholder="Kemungkinan diagnosis yang perlu dipertimbangkan..." />
+              </Form.Item>
+              <Form.Item name="physicalExamNote" label="A — Pemeriksaan Fisik (catatan)">
+                <Input.TextArea rows={2} placeholder="Catatan pemeriksaan fisik lanjutan (opsional)" />
               </Form.Item>
             </Card>
 
@@ -222,45 +240,63 @@ export default function NewConsultationPage() {
               <Form.Item name="doctorNotes" label="Catatan Dokter">
                 <Input.TextArea rows={2} placeholder="Catatan tambahan dokter (opsional)" />
               </Form.Item>
+              <Form.Item name="ownerNote" label="P — Catatan Dokter Untuk Pemilik">
+                <Input.TextArea rows={2} placeholder="Instruksi / pesan untuk pemilik hewan (opsional)" />
+              </Form.Item>
+              <Form.Item name="paramedicNote" label="P — Catatan Dokter Untuk Paramedis">
+                <Input.TextArea rows={2} placeholder="Instruksi untuk paramedis / staff (opsional)" />
+              </Form.Item>
             </Card>
           </Card>
 
           <Card title="Penegakan Diagnosis" style={{ marginTop: 16 }}>
             <Form.Item name="diagnosis" label="Diagnosis" rules={[{ required: true, message: "Diagnosis wajib diisi" }]}>
-              <Input.TextArea rows={2} placeholder="Diagnosis final setelah penegakan..." />
+              <AutoComplete
+                options={diagnosisOptions}
+                onSearch={loadDiagnoses}
+                onFocus={() => loadDiagnoses()}
+                filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
+                placeholder="Ketik diagnosis baru atau pilih dari daftar..."
+              />
             </Form.Item>
           </Card>
         </Form>
 
-        <Card title="Tindakan (Jasa)" style={{ marginTop: 16 }}>
-          <Text type="secondary">Tindakan diambil dari Master Tindakan dan otomatis menjadi item jasa pada transaksi.</Text>
-          <div style={{ marginTop: 12 }}>
-            <TreatmentEditor
-              items={treatments}
-              onChange={setTreatments}
-              options={services.map((s) => ({ _id: s._id, name: s.name, selling: s.price }))}
-              loading={mastersLoading}
-            />
-          </div>
-        </Card>
+          {selectedDiagnosis ? (
+            <>
+              <Card title="Tindakan (Jasa)" style={{ marginTop: 16 }}>
+                <Text type="secondary">Tindakan diambil dari Master Tindakan dan otomatis menjadi item jasa pada transaksi.</Text>
+                <div style={{ marginTop: 12 }}>
+                  <TreatmentEditor
+                    items={treatments}
+                    onChange={setTreatments}
+                    options={services.map((s) => ({ _id: s._id, name: s.name, selling: s.price }))}
+                    loading={mastersLoading}
+                  />
+                </div>
+              </Card>
 
-        <Card title="Resep Obat" style={{ marginTop: 16 }}>
-          <Text type="secondary">Obat diambil dari Master Obat dan otomatis menjadi item obat pada transaksi.</Text>
-          <div style={{ marginTop: 12 }}>
-            <PrescriptionEditor
-              items={prescriptions}
-              onChange={setPrescriptions}
-              options={medicines.map((m) => ({ _id: m._id, name: m.product?.name, selling: m.pricing?.selling }))}
-              loading={mastersLoading}
-            />
-          </div>
-        </Card>
+              <Card title="Resep Obat" style={{ marginTop: 16 }}>
+                <Text type="secondary">Obat diambil dari Master Obat dan otomatis menjadi item obat pada transaksi.</Text>
+                <div style={{ marginTop: 12 }}>
+                  <PrescriptionEditor
+                    items={prescriptions}
+                    onChange={setPrescriptions}
+                    options={medicines.map((m) => ({ _id: m._id, name: m.product?.name, selling: m.pricing?.selling }))}
+                    loading={mastersLoading}
+                  />
+                </div>
+              </Card>
+            </>
+          ) : (
+            <Alert style={{ marginTop: 16 }} type="info" showIcon message="Isi diagnosis terlebih dahulu untuk menambahkan tindakan (jasa) dan resep obat. Konsultasi bisa gratis — simpan tanpa tindakan/obat." />
+          )}
 
-        <Divider />
-        <Button type="primary" size="large" block icon={<Save size={16} />} loading={submitting} onClick={handleSubmit}>
-          Simpan Rekam Medis & Buat Transaksi
-        </Button>
-      </Spin>
+          <Divider />
+          <Button type="primary" size="large" block icon={<Save size={16} />} loading={submitting} onClick={handleSubmit}>
+            Simpan Rekam Medis & Buat Transaksi
+          </Button>
+        </Spin>
     </div>
   );
 }

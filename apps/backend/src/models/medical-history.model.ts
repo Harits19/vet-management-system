@@ -15,9 +15,9 @@ export interface IPhysicalExamSubDoc {
 
 export interface ISoapSubDoc {
   subjective: { complaint: string };
-  objective: { physicalExam: IPhysicalExamSubDoc[] };
-  assessment: { differentialDiagnosis: string };
-  plan: { treatmentPlan: string; doctorNotes?: string };
+  objective: { physicalExam: IPhysicalExamSubDoc[]; labResult?: string };
+  assessment: { differentialDiagnosis: string; physicalExamNote?: string };
+  plan: { treatmentPlan: string; doctorNotes?: string; ownerNote?: string; paramedicNote?: string };
 }
 
 export interface ITreatmentSubDoc {
@@ -68,13 +68,17 @@ const SoapSubSchema = new Schema<ISoapSubDoc>(
     },
     objective: {
       physicalExam: { type: [PhysicalExamSubSchema], default: [] },
+      labResult: { type: String },
     },
     assessment: {
       differentialDiagnosis: { type: String, required: true },
+      physicalExamNote: { type: String },
     },
     plan: {
       treatmentPlan: { type: String, required: true },
       doctorNotes: { type: String },
+      ownerNote: { type: String },
+      paramedicNote: { type: String },
     },
   },
   { _id: false }

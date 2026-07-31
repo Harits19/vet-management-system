@@ -5,6 +5,7 @@ import { Card, Table, Button, Input, Space, Modal, Form, Typography, Row, Col, T
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
+import { useAntdModal } from "../../hooks/useAntdModal";
 
 const { Title } = Typography;
 
@@ -27,6 +28,7 @@ export default function ServicesPage() {
   const [editing, setEditing] = useState<Service | null>(null);
   const [form] = Form.useForm();
   const msg = useAntdMessage();
+  const modal = useAntdModal();
 
   const fetchData = async (p = page, s = search) => {
     setLoading(true);
@@ -67,7 +69,18 @@ export default function ServicesPage() {
   };
 
   const handleDelete = (id: string) => {
-    Modal.confirm({ title: "Non-aktifkan jasa?", onOk: async () => { await apiFetch(`/api/services/${id}`, { method: "DELETE" }); msg.success("Dinonaktifkan"); fetchData(); } });
+    modal.confirm({
+      title: "Non-aktifkan jasa?",
+      onOk: async () => {
+        try {
+          await apiFetch(`/api/services/${id}`, { method: "DELETE" });
+          msg.success("Dinonaktifkan");
+          fetchData();
+        } catch (err: any) {
+          msg.error(err.message);
+        }
+      },
+    });
   };
 
   const fmt = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);

@@ -3,5 +3,6 @@ export * from "./auth.js";
 export * from "./customer.js";
 export * from "./pet.js";
 export * from "./product.js";
+export * from "./service.js";
 export * from "./transaction.js";
 export * from "./medical-history.js";

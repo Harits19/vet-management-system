@@ -45,8 +45,8 @@ export default function NewConsultationPage() {
   useEffect(() => {
     Promise.all([
       apiFetch<{ data: any[] }>("/api/customers?page=1&limit=100"),
-      apiFetch<{ data: any[] }>("/api/products/services?limit=100"),
-      apiFetch<{ data: any[] }>("/api/products/physical?limit=100"),
+      apiFetch<{ data: any[] }>("/api/services?limit=100"),
+      apiFetch<{ data: any[] }>("/api/products?limit=100"),
     ])
       .then(async ([c, s, m]) => {
         setCustomers(c.data);
@@ -238,7 +238,7 @@ export default function NewConsultationPage() {
             <TreatmentEditor
               items={treatments}
               onChange={setTreatments}
-              options={services.map((s) => ({ _id: s._id, name: s.product?.name, selling: s.pricing?.selling }))}
+              options={services.map((s) => ({ _id: s._id, name: s.name, selling: s.price }))}
               loading={mastersLoading}
             />
           </div>

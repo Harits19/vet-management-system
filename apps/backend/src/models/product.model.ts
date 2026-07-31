@@ -1,9 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import type { ProductType } from "@vet/shared";
 
 export interface IProductDoc {
   _id: mongoose.Types.ObjectId;
-  type: ProductType;
   category: string;
   product: {
     code?: string;
@@ -26,7 +24,6 @@ export interface IProductDoc {
 
 const ProductSchema = new Schema<IProductDoc>(
   {
-    type: { type: String, enum: ["physical", "service"], required: true, default: "physical" },
     category: { type: String, required: true, trim: true },
     product: {
       code: { type: String, trim: true, sparse: true },
@@ -48,6 +45,6 @@ const ProductSchema = new Schema<IProductDoc>(
 );
 
 ProductSchema.index({ "product.name": 1 });
-ProductSchema.index({ type: 1, category: 1 });
+ProductSchema.index({ category: 1 });
 
 export const ProductModel = mongoose.model<IProductDoc>("Product", ProductSchema);

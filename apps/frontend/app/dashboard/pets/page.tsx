@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row, Col, Tag, Empty } from "antd";
+import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row, Col, Tag, Empty, DatePicker, InputNumber } from "antd";
 import { Plus, Search, Edit, Trash2, UserPlus, Eye } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useRouter } from "next/navigation";
+import dayjs from "dayjs";
+import { computePetAge } from "@vet/shared";
 
 const { Title } = Typography;
 
@@ -13,7 +15,10 @@ interface Pet {
   _id: string;
   name: string;
   kind: string;
+  breed?: string;
   gender: "male" | "female";
+  birthDate?: string;
+  initialAge?: { value: number; unit: "month" | "year" };
   notes?: string;
   customerId: { _id: string; name: string; whatsapp?: string };
   createdAt: string;
@@ -59,18 +64,34 @@ export default function PetsPage() {
   const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
   const openEdit = (p: Pet) => {
     setEditing(p);
-    form.setFieldsValue({ ...p, customerId: p.customerId._id });
+    form.setFieldsValue({
+      ...p,
+      customerId: p.customerId._id,
+      birthDate: p.birthDate ? dayjs(p.birthDate) : undefined,
+    });
     setModalOpen(true);
   };
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      const birthDate = values.birthDate ? dayjs(values.birthDate).toISOString() : undefined;
+      const payload: any = {
+        name: values.name,
+        kind: values.kind,
+        breed: values.breed,
+        gender: values.gender,
+        customerId: values.customerId,
+        notes: values.notes,
+        birthDate,
+        // Umur awal hanya diisi jika tanggal lahir tidak diketahui
+        initialAge: !birthDate && values.initialAge?.value ? values.initialAge : undefined,
+      };
       if (editing) {
-        await apiFetch(`/api/pets/${editing._id}`, { method: "PUT", body: JSON.stringify(values) });
+        await apiFetch(`/api/pets/${editing._id}`, { method: "PUT", body: JSON.stringify(payload) });
         msg.success("Pasien diupdate");
       } else {
-        await apiFetch("/api/pets", { method: "POST", body: JSON.stringify(values) });
+        await apiFetch("/api/pets", { method: "POST", body: JSON.stringify(payload) });
         msg.success("Pasien ditambahkan");
       }
       setModalOpen(false);
@@ -87,6 +108,8 @@ export default function PetsPage() {
   const columns = [
     { title: "Nama", dataIndex: "name", key: "name" },
     { title: "Jenis", dataIndex: "kind", key: "kind" },
+    { title: "Ras", dataIndex: "breed", key: "breed", render: (v?: string) => v || "-" },
+    { title: "Umur", key: "age", render: (_: any, r: Pet) => computePetAge(r)?.label || "-" },
     { title: "Gender", dataIndex: "gender", key: "gender", render: (v: string) => v === "male" ? "Jantan" : "Betina" },
     { title: "Pemilik", key: "owner", render: (_: any, r: Pet) => r.customerId?.name || "-" },
     { title: "Catatan", dataIndex: "notes", key: "notes", render: (v?: string) => v ? <Tag color="blue">{v}</Tag> : "-" },
@@ -135,8 +158,20 @@ export default function PetsPage() {
               { value: "Lainnya", label: "Lainnya" },
             ]} />
           </Form.Item>
+          <Form.Item name="breed" label="Ras">
+            <Input placeholder="Contoh: Persian, Labrador (opsional)" />
+          </Form.Item>
           <Form.Item name="gender" label="Gender" rules={[{ required: true, message: "Wajib" }]}>
             <Select options={[{ value: "male", label: "Jantan" }, { value: "female", label: "Betina" }]} />
+          </Form.Item>
+          <Form.Item name="birthDate" label="Tanggal Lahir">
+            <DatePicker style={{ width: "100%" }} placeholder="Pilih tanggal lahir" />
+          </Form.Item>
+          <Form.Item name={["initialAge", "value"]} label="Umur Awal (jika tgl lahir tidak diketahui)">
+            <InputNumber style={{ width: "100%" }} min={0} placeholder="Contoh: 6" />
+          </Form.Item>
+          <Form.Item name={["initialAge", "unit"]} label="Satuan Umur Awal">
+            <Select placeholder="Pilih satuan" options={[{ value: "month", label: "Bulan" }, { value: "year", label: "Tahun" }]} />
           </Form.Item>
           <Form.Item name="customerId" label="Pemilik" rules={[{ required: true, message: "Pilih pemilik" }]}>
             <Select

@@ -44,5 +44,5 @@ export async function deletePet(id: string) {
 }
 
 export async function searchCustomerPets(customerId: string) {
-  return PetModel.find({ customerId }).select("name kind gender").lean();
+  return PetModel.find({ customerId }).select("name kind breed gender birthDate initialAge").lean();
 }

@@ -160,6 +160,134 @@ async function createTransaction(input: TransactionCreateRequest, cashierId: str
 }
 
 // ──────────────────────────────────────────
+// Transaction sync from Medical History
+// Menyimpan rekam medis otomatis membuat/memperbarui transaksi (type: vet).
+// Tindakan → item jasa (service), Resep Obat → item obat (physical).
+// Transaksi yang sudah lunas tidak diubah (financial record tetap).
+// ──────────────────────────────────────────
+interface MhItemInput {
+  productId: string | mongoose.Types.ObjectId;
+  name: string;
+  quantity: number;
+  price: number;
+  dosage?: string;
+  usage?: string;
+  notes?: string;
+}
+
+export async function buildTransactionItemsFromMh(treatments: MhItemInput[], prescriptions: MhItemInput[]) {
+  const items: any[] = [];
+  let totalCost = 0;
+  let totalSelling = 0;
+
+  for (const t of treatments) {
+    const product = await ProductModel.findById(t.productId);
+    if (!product) throw Object.assign(new Error(`Tindakan ${t.name || t.productId} tidak ditemukan`), { status: 404 });
+    const cost = (product.pricing.cost ?? 0) * t.quantity;
+    const selling = t.price * t.quantity;
+    totalCost += cost;
+    totalSelling += selling;
+    items.push({
+      product: { _id: product._id, name: product.product.name, type: "service", code: product.product.code },
+      quantity: t.quantity,
+      pricing: { cost, selling, total: selling },
+    });
+  }
+
+  for (const p of prescriptions) {
+    const product = await ProductModel.findById(p.productId);
+    if (!product) throw Object.assign(new Error(`Obat ${p.name || p.productId} tidak ditemukan`), { status: 404 });
+    const cost = (product.pricing.cost ?? 0) * p.quantity;
+    const selling = p.price * p.quantity;
+    totalCost += cost;
+    totalSelling += selling;
+    items.push({
+      product: { _id: product._id, name: product.product.name, type: "physical", code: product.product.code },
+      quantity: p.quantity,
+      pricing: { cost, selling, total: selling },
+      dosage: p.dosage || undefined,
+    });
+    if ((product.inventory.quantity ?? 0) >= p.quantity) {
+      await ProductModel.updateOne({ _id: product._id }, { $inc: { "inventory.quantity": -p.quantity } });
+    }
+  }
+
+  return { items, totalCost, totalSelling };
+}
+
+export async function createTransactionFromMedicalHistory(input: {
+  medicalHistoryId: string;
+  pet: { _id: mongoose.Types.ObjectId; name: string; kind: string };
+  customer?: { _id: mongoose.Types.ObjectId; name: string } | null;
+  treatments: MhItemInput[];
+  prescriptions: MhItemInput[];
+  cashierId: string;
+  cashierName: string;
+}) {
+  const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions);
+  if (items.length === 0) return null;
+
+  const profit = totalSelling - totalCost;
+  const paymentStatus: "paid" | "debt" | "dp" = "debt"; // pembayaran menyusul di halaman transaksi
+
+  const txn = await TransactionModel.create({
+    type: "vet",
+    receiptNumber: generateReceiptNumber("vet"),
+    timestamp: new Date(),
+    customer: input.customer || undefined,
+    pet: input.pet,
+    medicalHistoryId: new mongoose.Types.ObjectId(input.medicalHistoryId),
+    cashier: { _id: new mongoose.Types.ObjectId(input.cashierId), name: input.cashierName },
+    items,
+    summary: { total: totalSelling, profit, cost: totalCost, paid: 0 },
+    paymentStatus,
+    paymentMethod: "Utang",
+  });
+  return txn.toObject() as any;
+}
+
+export async function syncTransactionFromMedicalHistory(input: {
+  medicalHistoryId: string;
+  treatments: MhItemInput[];
+  prescriptions: MhItemInput[];
+}) {
+  const txn = await TransactionModel.findOne({ medicalHistoryId: input.medicalHistoryId });
+  if (!txn) return null;
+  if (txn.paymentStatus === "paid") return txn.toObject() as any; // jangan ubah transaksi lunas
+
+  const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions);
+  if (items.length === 0) {
+    await TransactionModel.deleteOne({ _id: txn._id });
+    return null;
+  }
+
+  const profit = totalSelling - totalCost;
+  const paid = txn.summary.paid ?? 0;
+  const paymentStatus: "paid" | "debt" | "dp" = paid >= totalSelling ? "paid" : "debt";
+
+  const updated = await TransactionModel.findByIdAndUpdate(
+    txn._id,
+    {
+      $set: {
+        items,
+        summary: { total: totalSelling, profit, cost: totalCost, paid },
+        paymentStatus,
+      },
+    },
+    { new: true, runValidators: true }
+  ).lean();
+  return updated as any;
+}
+
+export async function deleteTransactionForMedicalHistory(medicalHistoryId: string) {
+  const txn = await TransactionModel.findOne({ medicalHistoryId });
+  if (!txn) return null;
+  if (txn.paymentStatus === "paid") return txn.toObject() as any; // jangan hapus transaksi lunas
+  const removed = await TransactionModel.findByIdAndDelete(txn._id).lean();
+  return removed as any;
+}
+
+// ──────────────────────────────────────────
 // List / Get / Delete
 // ──────────────────────────────────────────
 export async function listTransactions(filter: TransactionFilter) {

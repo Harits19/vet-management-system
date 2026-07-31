@@ -1,4 +1,4 @@
-import { MedicalHistoryModel, PetModel, CustomerModel, ProductModel } from "../models/index.js";
+import { MedicalHistoryModel, PetModel, CustomerModel, ServiceModel, ProductModel } from "../models/index.js";
 import type { MedicalHistoryCreateRequest, MedicalHistoryUpdateRequest, MedicalHistoryFilter } from "@vet/shared";
 import {
   createTransactionFromMedicalHistory,
@@ -54,12 +54,12 @@ async function enrichTreatments(treatments: any[]) {
   return Promise.all(
     treatments.map(async (t) => {
       if (t.productId) {
-        const prod = await ProductModel.findById(t.productId).lean();
-        if (prod) {
+        const svc = await ServiceModel.findById(t.productId).lean();
+        if (svc) {
           return {
             ...t,
-            name: t.name || prod.product.name,
-            price: t.price ?? prod.pricing.selling,
+            name: t.name || svc.name,
+            price: t.price ?? svc.price,
             quantity: t.quantity ?? 1,
           };
         }

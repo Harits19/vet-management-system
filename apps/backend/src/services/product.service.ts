@@ -2,9 +2,8 @@ import { ProductModel } from "../models/index.js";
 import type { ProductCreateRequest, ProductUpdateRequest, ProductFilter } from "@vet/shared";
 
 export async function listProducts(filter: ProductFilter) {
-  const { page, limit, search, type, category, sortBy, order } = filter;
+  const { page, limit, search, category, sortBy, order } = filter;
   const query: any = { isActive: true };
-  if (type) query.type = type;
   if (category) query.category = category;
   if (search) {
     query.$or = [

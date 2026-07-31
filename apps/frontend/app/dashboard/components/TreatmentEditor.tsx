@@ -46,19 +46,19 @@ export default function TreatmentEditor({ items, onChange, options, loading }: T
       {items.map((line) => (
         <Row key={line._key} gutter={8} align="middle">
           <Col flex="auto">
-            <Select
-              showSearch
-              style={{ width: "100%" }}
-              placeholder="Pilih tindakan..."
-              value={line.productId || undefined}
-              filterOption={(input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
-              options={options.map((o) => ({ value: o._id, label: `${o.name} - ${formatPrice(o.selling)}` }))}
-              loading={loading}
-              onChange={(val) => {
-                const opt = options.find((o) => o._id === val);
-                updateLine(line._key, { productId: val, name: opt?.name || "", price: opt?.selling ?? 0 });
-              }}
-            />
+      <Select
+        showSearch
+        style={{ width: "100%" }}
+        placeholder="Pilih tindakan..."
+        value={line.productId || undefined}
+        filterOption={(input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
+        options={options.map((o) => ({ value: o._id, label: `${o.name} - ${formatPrice(o.selling)}` }))}
+        loading={loading}
+        onChange={(val) => {
+          const opt = options.find((o) => o._id === val);
+          updateLine(line._key, { productId: val, name: opt?.name || "", price: opt?.selling ?? 0 });
+        }}
+      />
           </Col>
           <Col>
             <InputNumber min={1} value={line.quantity} onChange={(v) => updateLine(line._key, { quantity: v ?? 1 })} style={{ width: 60 }} placeholder="Jml" />

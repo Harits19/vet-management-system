@@ -23,13 +23,14 @@ function SidebarMenu({ role }: { role: string }) {
     { key: "/dashboard", icon: <LayoutDashboard size={18} />, label: <Link href="/dashboard">Dashboard</Link> },
     { key: "/dashboard/customers", icon: <Users size={18} />, label: <Link href="/dashboard/customers">Customer/Pemilik</Link> },
     { key: "/dashboard/pets", icon: <Dog size={18} />, label: <Link href="/dashboard/pets">Pasien</Link> },
-    { key: "/dashboard/products", icon: <Package size={18} />, label: <Link href="/dashboard/products">Produk & Jasa</Link> },
+    { key: "/dashboard/products", icon: <Package size={18} />, label: <Link href="/dashboard/products">Barang</Link> },
+    { key: "/dashboard/services", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/services">Jasa</Link> },
     { key: "/dashboard/transactions", icon: <ShoppingCart size={18} />, label: <Link href="/dashboard/transactions">Transaksi</Link> },
   ];
 
   if (["doctor", "superadmin", "admin"].includes(role)) {
     items.push(
-      { key: "/dashboard/consultations", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/consultations/new">Konsultasi Baru</Link> },
+      { key: "/dashboard/consultations", icon: <FileText size={18} />, label: <Link href="/dashboard/consultations/new">Konsultasi Baru</Link> },
       { key: "/dashboard/medical-histories", icon: <FileText size={18} />, label: <Link href="/dashboard/medical-histories">Rekam Medis</Link> },
     );
   }

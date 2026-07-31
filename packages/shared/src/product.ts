@@ -2,14 +2,10 @@ import { z } from "zod";
 import { stringRequired, numberFromString, numberOptional } from "./common.js";
 
 // ──────────────────────────────────────────
-// Product — physical goods & doctor services
+// Product (Barang) — collection terpisah dari Jasa (Service)
 // ──────────────────────────────────────────
-export const productTypeEnum = z.enum(["physical", "service"] as const);
-export type ProductType = z.infer<typeof productTypeEnum>;
-
 export interface IProduct {
   _id: string;
-  type: ProductType;
   category: string;
   product: {
     code?: string;
@@ -47,7 +43,6 @@ const inventorySubSchema = z.object({
 });
 
 export const productCreateSchema = z.object({
-  type: productTypeEnum.default("physical"),
   category: stringRequired,
   product: productSubSchema,
   pricing: pricingSubSchema,
@@ -63,7 +58,6 @@ export const productFilterSchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(10),
   search: z.string().default(""),
-  type: productTypeEnum.optional(),
   category: z.string().optional(),
   sortBy: z.enum(["product.name", "pricing.selling", "inventory.quantity", "createdAt"]).default("createdAt"),
   order: z.enum(["asc", "desc"]).default("desc"),

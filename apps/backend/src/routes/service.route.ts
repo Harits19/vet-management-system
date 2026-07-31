@@ -1,12 +1,11 @@
 import { Router } from "express";
-import { getAll, getOne, create, update, remove, searchByCode } from "../controllers/product.controller.js";
+import { getAll, getOne, create, update, remove } from "../controllers/service.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 router.use(authenticate);
 
 router.get("/", getAll);
-router.get("/search", searchByCode);
 router.get("/:id", getOne);
 router.post("/", create);
 router.put("/:id", update);

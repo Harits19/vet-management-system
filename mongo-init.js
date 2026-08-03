@@ -28,7 +28,9 @@ const appUsername = process.env.MONGO_APP_USERNAME || "vetapp";
 const appPassword = process.env.MONGO_APP_PASSWORD || "dev-app-password";
 const rootUser = process.env.MONGO_INITDB_ROOT_USERNAME || "root";
 const rootPass = process.env.MONGO_INITDB_ROOT_PASSWORD || "dev-root-password";
-const mongoHost = process.env.MONGO_HOST || '127.0.0.1'
+// Host mongo untuk koneksi — URI di-generate di sini (key MONGODB_URI tidak ada).
+// Docker memakai host "mongodb" (service name) lewat env compose; .env untuk run native.
+const mongoHost = process.env.MONGODB_HOST || "127.0.0.1";
 
 if (typeof db !== "undefined") {
   // ── Mode mongosh (docker) ──

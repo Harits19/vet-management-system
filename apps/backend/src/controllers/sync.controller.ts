@@ -1,24 +1,21 @@
-
-import { Request, Response } from 'express';
-import { readExcelFile } from '../services/excel.service';
-import { petClinicService } from '../services/pet-clinic.service';
+import type { Request, Response, NextFunction } from "express";
+import { petClinicService } from "../services/pet-clinic.service.js";
 
 class SyncController {
-    async syncInventory(req: Request, res: Response) {
-        const buffer = req.file?.buffer;
-        if (!buffer) {
-            return res.status(400).json({
-                message: "File is required",
-            });
+    async syncInventory(req: Request, res: Response, next: NextFunction) {
+        try {
+            const buffer = req.file?.buffer;
+            if (!buffer) {
+                res.status(400).json({ message: "File is required" });
+                return;
+            }
+
+            const data = await petClinicService.syncInventory(buffer);
+
+            res.json({ data, meta: { total: data.length } });
+        } catch (error) {
+            next(error);
         }
-
-
-        const data = await petClinicService.syncInventory(buffer);
-
-        return res.json({
-            total: data.length,
-            data,
-        });
     }
 }
 

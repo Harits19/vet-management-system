@@ -26,7 +26,7 @@ app.use("/api/services", serviceRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/medical-histories", medicalHistoryRoutes);
-app.use("/api/sync", syncRoutes)
+app.use("/api/sync", syncRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ success: true, message: "OK" }));

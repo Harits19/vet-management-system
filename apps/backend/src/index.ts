@@ -6,7 +6,7 @@ import { connectDB } from "./config/database.js";
 import { seedDefaultUsers } from "./services/auth.service.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import {
-  authRoutes, customerRoutes, petRoutes, productRoutes,
+  authRoutes, customerRoutes, petRoutes, productRoutes, serviceRoutes,
   dashboardRoutes, medicalHistoryRoutes, transactionRoutes,
 } from "./routes/index.js";
 import { frontendOrigins } from "./config/auth.js";
@@ -21,6 +21,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/pets", petRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/services", serviceRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/medical-histories", medicalHistoryRoutes);

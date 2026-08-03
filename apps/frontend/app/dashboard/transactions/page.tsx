@@ -135,7 +135,7 @@ export default function TransactionsPage() {
 
   const createMenuItems = [
     { key: "shop", icon: <ShoppingBag size={14} />, label: "Transaksi Barang", onClick: () => router.push("/dashboard/transactions/create-shop") },
-    { key: "vet", icon: <Stethoscope size={14} />, label: "Konsultasi Dokter", onClick: () => router.push("/dashboard/vet-sales/create") },
+    { key: "vet", icon: <Stethoscope size={14} />, label: "Konsultasi Dokter", onClick: () => router.push("/dashboard/consultations/new") },
   ];
 
   return (

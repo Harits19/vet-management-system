@@ -218,7 +218,10 @@ export async function buildTransactionItemsFromMh(
     });
   }
 
-  // Obat (medicine) + Barang (good) — keduanya item physical dari ProductModel
+  // Obat (medicine) + Barang (good) — keduanya item physical dari ProductModel.
+  // Kumpulkan dulu SEMUA item, validasi stok semua (strict), baru kurangi stok —
+  // supaya gagal di item terakhir tidak menyisakan pengurangan stok tanpa transaksi.
+  const physicalBatches: { item: any; product: any }[] = [];
   for (const p of [...prescriptions, ...goods]) {
     const product = await ProductModel.findById(p.productId);
     if (!product) throw Object.assign(new Error(`Produk ${p.name || p.productId} tidak ditemukan`), { status: 404 });
@@ -226,16 +229,24 @@ export async function buildTransactionItemsFromMh(
     const selling = p.price * p.quantity;
     totalCost += cost;
     totalSelling += selling;
-    items.push({
-      product: { _id: product._id, name: product.product.name, type: "physical", code: product.product.code },
-      quantity: p.quantity,
-      pricing: { cost, selling, total: selling },
-      dosage: (p as any).dosage || undefined,
+    physicalBatches.push({
+      product,
+      item: {
+        product: { _id: product._id, name: product.product.name, type: "physical", code: product.product.code },
+        quantity: p.quantity,
+        pricing: { cost, selling, total: selling },
+        dosage: (p as any).dosage || undefined,
+      },
     });
-    // Strict seperti transaksi barang: tolak bila stok tidak mencukupi
-    if ((product.inventory.quantity ?? 0) < p.quantity)
+  }
+  // Validasi stok SEMUA item dulu (sebelum mutasi apa pun)
+  for (const { product, item } of physicalBatches) {
+    if ((product.inventory.quantity ?? 0) < item.quantity)
       throw Object.assign(new Error(`Stok ${product.product.name} tidak mencukupi (sisa ${product.inventory.quantity ?? 0})`), { status: 400 });
-    await ProductModel.updateOne({ _id: product._id }, { $inc: { "inventory.quantity": -p.quantity } });
+  }
+  for (const { product, item } of physicalBatches) {
+    await ProductModel.updateOne({ _id: product._id }, { $inc: { "inventory.quantity": -item.quantity } });
+    items.push(item);
   }
 
   return { items, totalCost, totalSelling };
@@ -283,11 +294,11 @@ export async function syncTransactionFromMedicalHistory(input: {
   if (!txn) return null;
   if (txn.paymentStatus === "paid") return txn.toObject() as any; // jangan ubah transaksi lunas
 
-  // Kembalikan stok item lama dulu — buildTransactionItemsFromMh akan
-  // mengurangi lagi sesuai item baru (hindari double decrement tiap update MH)
-  await restoreStockFromItems(txn.items ?? []);
-
+  // Build & validasi item baru dulu (atomik: kalau stok kurang, tidak ada stok
+  // yang diubah), baru kembalikan stok item lama — hindari double decrement
+  // dan hindari stok berubah saat validasi gagal.
   const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions, input.goods ?? []);
+  await restoreStockFromItems(txn.items ?? []);
   if (items.length === 0) {
     await TransactionModel.deleteOne({ _id: txn._id });
     return null;

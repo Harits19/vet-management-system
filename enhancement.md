@@ -522,30 +522,30 @@ modal.confirm({ title: "...", onOk: ... });
    - **Jasa** (`treatments`) — diambil dari Master Tindakan (`/api/services`)
    - **Obat** (`prescriptions`) — diambil dari Master Obat (`/api/products?productType=medicine`)
    - **Barang** (`goods`) — diambil dari Master Barang (`/api/products?productType=good`)
-   - Setiap item template: `productId`, `name` (snapshot), `quantity`, `price` (snapshot dari master), plus `dosage`/`usage`/`notes` opsional untuk obat (mengikuti bentuk `PrescriptionItem` yang sudah ada)
+   - Setiap item template HANYA menyimpan `productId` + `quantity` — TIDAK ada snapshot nama/harga/satuan. Detail (nama, harga, satuan, stok) selalu di-GET dari master saat ditampilkan/diterapkan: jasa dari `/api/services`, obat dari `/api/products?productType=medicine`, barang dari `/api/products?productType=good`
 
 2. **CRUD penuh** — entri list diagnosis bisa dibuat, diubah, dan dihapus. **Akses: role `admin`, `superadmin`, `doctor`** (kasir tidak bisa)
 
 3. **Abaikan stok saat membuat/mengedit template** — produk dengan stok 0/habis TETAP bisa dipilih masuk template (pilihannya tidak di-filter stok). Validasi & pemotongan stok tetap berlaku normal saat transaksi dibuat — aturan bisnis yang sudah ada: transaksi hanya menagih stok tersedia, stok tidak pernah minus
 
 **Alur di form konsultasi (`/dashboard/consultations/new`):**
-1. Dokter pilih diagnosis (AutoComplete) — opsi digabung: master list diagnosis + distinct dari riwayat (master diutamakan)
+1. Dokter pilih diagnosis (AutoComplete) — opsi murni dari master list diagnosis (`/api/diagnosis-templates?search=`); distinct dari riwayat (`/api/medical-histories/diagnoses`) **ditiadakan**
 2. Jika diagnosis terdaftar di master → item template **otomatis terisi** di editor **Tindakan (Jasa)**, **Resep Obat**, dan **Barang** — dokter tetap bisa mengubah/menghapus item yang terisi
 3. Jika tidak terdaftar → seperti sekarang (editor kosong, dokter isi manual)
 4. Simpan → rekam medis + transaksi dibuat seperti biasa (item template menjadi item transaksi)
 
 **Backend:**
-- Model baru `DiagnosisTemplate` — `{ name (unique), items: { treatments[], prescriptions[], goods[] } }`
+- Model baru `DiagnosisTemplate` — `{ name (unique), items: { treatments: [{ productId, quantity }], prescriptions: [{ productId, quantity }], goods: [{ productId, quantity }] } }`
 - Service + controller + route baru — CRUD `/api/diagnosis-templates` (+ `?search=` untuk autocomplete)
-- Autocomplete diagnosis: gabung master list + distinct riwayat (master diutamakan)
+- Autocomplete diagnosis: dari master list saja — `GET /api/diagnosis-templates?search=`; endpoint `/api/medical-histories/diagnoses` (distinct riwayat) tidak dipakai lagi
 
 **Frontend:**
 - Halaman manajemen baru `/dashboard/diagnoses` — tabel + modal create/edit, picker produk tanpa filter stok
-- `/dashboard/consultations/new` — saat diagnosis dipilih & punya template, pre-fill editor
+- `/dashboard/consultations/new` — saat diagnosis dipilih & punya template, pre-fill editor: item di-join by `productId` ke master yang sudah dimuat di halaman (services/medicines/goods) untuk ambil nama & harga
 
 **File diubah:**
 - Baru: `apps/backend/src/models/diagnosis-template.model.ts`, `diagnosis-template.service.ts`, `diagnosis-template.controller.ts`, `diagnosis-template.route.ts`
 - Baru: `apps/frontend/app/dashboard/diagnoses/page.tsx`
 - `apps/frontend/app/dashboard/layout.tsx` — menu baru "List Diagnosis" (visible untuk role admin/superadmin/doctor)
 - `apps/frontend/app/dashboard/consultations/new/page.tsx` — pre-fill template saat diagnosis dipilih
-- (opsional) `apps/backend/src/services/medical-history.service.ts` — gabung sumber autocomplete diagnosis
+- `apps/backend/src/services/medical-history.service.ts` + `medical-history.route.ts` — hapus endpoint distinct diagnosis (`/api/medical-histories/diagnoses`), sudah digantikan master list

@@ -9,6 +9,8 @@ export interface IProductDoc {
     code?: string;
     name: string;
     weight?: number;
+    supplier?: string;
+    petClinicId?: string;
   };
   pricing: {
     cost?: number;
@@ -22,6 +24,7 @@ export interface IProductDoc {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  syncAt?: Date;
 }
 
 const ProductSchema = new Schema<IProductDoc>(
@@ -32,6 +35,8 @@ const ProductSchema = new Schema<IProductDoc>(
       code: { type: String, trim: true, sparse: true },
       name: { type: String, required: true, trim: true },
       weight: { type: Number, min: 0 },
+      supplier: { type: String },
+      petClinicId: { type: String, trim: true, sparse: true }
     },
     pricing: {
       cost: { type: Number, min: 0 },
@@ -43,6 +48,7 @@ const ProductSchema = new Schema<IProductDoc>(
     },
     unit: { type: String, trim: true },
     isActive: { type: Boolean, default: true },
+    syncAt: { type: Date, }
   },
   { timestamps: true, versionKey: false }
 );

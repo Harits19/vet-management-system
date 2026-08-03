@@ -6,3 +6,4 @@ export { default as serviceRoutes } from "./service.route.js";
 export { default as dashboardRoutes } from "./dashboard.route.js";
 export { default as medicalHistoryRoutes } from "./medical-history.route.js";
 export { default as transactionRoutes } from "./transaction.route.js";
+export { default as syncRoutes } from "./sync.route.js"

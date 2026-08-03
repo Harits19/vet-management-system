@@ -3,14 +3,33 @@
 //  - mongosh (docker-entrypoint-initdb.d → otomatis jalan di volume mongo baru)
 //  - Node   (npm run dev → predev: node mongo-init.js)
 const log = typeof print !== "undefined" ? print : console.log;
-
 const appDb = "vet-management";
-const appUsername = process.env.MONGO_APP_USERNAME;
-const appPassword = process.env.MONGO_APP_PASSWORD;
 
-if (!appUsername || !appPassword) {
-  log("⚠️  MONGO_APP_USERNAME/MONGO_APP_PASSWORD not set — skipping app user creation");
-} else if (typeof db !== "undefined") {
+// Mode Node (npm run dev): baca .env root project dulu.
+// Mode mongosh (docker): env MONGO_APP_* sudah ada di container.
+if (typeof db === "undefined") {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const envPath = path.join(__dirname, ".env");
+  if (fs.existsSync(envPath)) {
+    for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+      if (m && process.env[m[1]] === undefined) {
+        process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+      }
+    }
+  } else {
+    log("ℹ️  .env tidak ditemukan di root — pakai default dev (vetapp/dev-app-password). Copy template: cp .env.example .env");
+  }
+}
+
+// Default sama dengan docker-compose.yml, jadi konsisten walau tanpa .env
+const appUsername = process.env.MONGO_APP_USERNAME || "vetapp";
+const appPassword = process.env.MONGO_APP_PASSWORD || "dev-app-password";
+const rootUser = process.env.MONGO_INITDB_ROOT_USERNAME || "root";
+const rootPass = process.env.MONGO_INITDB_ROOT_PASSWORD || "dev-root-password";
+
+if (typeof db !== "undefined") {
   // ── Mode mongosh (docker) ──
   const appDbRef = db.getSiblingDB(appDb);
   if (appDbRef.getUser(appUsername)) {
@@ -26,21 +45,7 @@ if (!appUsername || !appPassword) {
 } else {
   // ── Mode Node (npm run dev) ──
   (async () => {
-    const fs = require("node:fs");
-    const path = require("node:path");
-    // Baca kredensial root dari .env root project (kalau belum ada di env)
-    const envPath = path.join(__dirname, ".env");
-    if (fs.existsSync(envPath)) {
-      for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
-        const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-        if (m && process.env[m[1]] === undefined) {
-          process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
-        }
-      }
-    }
     const mongoose = require("mongoose");
-    const rootUser = process.env.MONGO_INITDB_ROOT_USERNAME || "root";
-    const rootPass = process.env.MONGO_INITDB_ROOT_PASSWORD || "dev-root-password";
     const uri = `mongodb://${encodeURIComponent(rootUser)}:${encodeURIComponent(rootPass)}@127.0.0.1:27017/${appDb}?authSource=admin`;
     try {
       await mongoose.connect(uri, { serverSelectionTimeoutMS: 8000 });

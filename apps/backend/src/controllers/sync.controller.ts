@@ -17,6 +17,22 @@ class SyncController {
             next(error);
         }
     }
+
+    async syncService(req: Request, res: Response, next: NextFunction) {
+        try {
+            const buffer = req.file?.buffer;
+            if (!buffer) {
+                res.status(400).json({ message: "File is required" });
+                return;
+            }
+
+            const data = await petClinicService.syncService(buffer);
+
+            res.json({ data, meta: { total: data.length } });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export const syncController = new SyncController();

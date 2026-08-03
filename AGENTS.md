@@ -63,5 +63,5 @@ npm run dev                    # predev (mongo-init.js) → backend :3001 → fr
 
 - Komunikasi dalam **Bahasa Indonesia**.
 - Solusi minimal yang jalan ("caveman") > optimasi; root-cause fix sekecil mungkin.
-- Jangan jalankan verifikasi (typecheck/build/test) kecuali diminta.
+- Di server/VPS: HANYA lakukan perubahan kode. JANGAN jalankan verifikasi (typecheck/build/test) — biarkan laptop lokal yang mengecek.
 - Tanya dulu sebelum build Docker lama atau operasi destruktif (mis. reset DB).

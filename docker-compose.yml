@@ -18,17 +18,6 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-dev-root-password}
       MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:-vetapp}
       MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-dev-app-password}
-    # Jalankan mongo-init.js di SETIAP container start (bukan hanya volume baru):
-    # tunggu mongod siap, lalu eksekusi script via mongosh (idempotent).
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - |
-        docker-entrypoint.sh mongod &
-        MONGO_PID=$$!
-        trap 'kill $$MONGO_PID 2>/dev/null; wait $$MONGO_PID' SIGTERM SIGINT
-        until mongosh --quiet --eval 'quit(0)' 2>/dev/null; do sleep 1; done
-        mongosh --quiet "mongodb://$$MONGO_INITDB_ROOT_USERNAME:$$MONGO_INITDB_ROOT_PASSWORD@127.0.0.1:27017/vet-management?authSource=admin" --file /docker-entrypoint-initdb.d/mongo-init.js || echo "⚠️  mongo-init.js gagal dijalankan"
-        wait $$MONGO_PID
 
   backend:
     build:

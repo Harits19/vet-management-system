@@ -6,10 +6,11 @@ import {
   listTransactions,
   getTransaction,
   deleteTransaction,
+  payTransaction,
   getDashboardSummary,
   getDoctorDashboard,
 } from "../services/transaction.service.js";
-import { transactionFilterSchema, shopCreateSchema, transactionCreateSchema } from "@vet/shared";
+import { transactionFilterSchema, shopCreateSchema, transactionCreateSchema, transactionPaySchema } from "@vet/shared";
 
 // ──────────────────────────────────────────
 // Shop (Penjualan)
@@ -58,6 +59,17 @@ export async function remove(req: AuthRequest, res: Response, next: NextFunction
   try {
     await deleteTransaction(req.params.id as string);
     res.json({ success: true, data: null, message: "Deleted" });
+  } catch (err) { next(err); }
+}
+
+// ──────────────────────────────────────────
+// Pay debt — bayar transaksi hutang/DP
+// ──────────────────────────────────────────
+export async function pay(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const input = transactionPaySchema.parse(req.body);
+    const data = await payTransaction(req.params.id as string, input);
+    res.json({ success: true, data, message: "Pembayaran berhasil" });
   } catch (err) { next(err); }
 }
 

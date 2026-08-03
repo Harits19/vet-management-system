@@ -101,3 +101,15 @@ export const shopCreateSchema = z.object({
   items: z.array(shopItemSchema).min(1),
 });
 export type ShopCreateRequest = z.infer<typeof shopCreateSchema>;
+
+// ──────────────────────────────────────────
+// Pay debt — pembayaran transaksi yang masih hutang/DP
+// ──────────────────────────────────────────
+export const transactionPaySchema = z.object({
+  paidAmount: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
+    z.number().positive("Nominal harus lebih dari 0"),
+  ),
+  paymentMethod: stringRequired,
+});
+export type TransactionPayRequest = z.infer<typeof transactionPaySchema>;

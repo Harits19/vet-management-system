@@ -393,7 +393,6 @@ modal.confirm({ title: "...", onOk: ... });
 - `apps/frontend/app/dashboard/products/page.tsx`
 - `apps/backend/src/routes/*.route.ts` — role authorization
 
-## 🔜 Belum Dikerjakan
 
 ### 22. Tambah Pasien — Input Kondisional & Autocomplete
 
@@ -510,3 +509,9 @@ modal.confirm({ title: "...", onOk: ... });
 
 **File diubah:**
 - `apps/frontend/app/dashboard/transactions/create-shop/page.tsx`
+
+## 🔜 Belum Dikerjakan
+
+### 27. Buat fitur list diagnosis
+List dengan nama diagnosis, dan didalamnya terdapat template obat, jasa, barang yang digunakan untuk membuat rekam medis ketika input "Diagnosis"
+didalamnya bisa create, update, delete, abaikan stok jika membuat list diagnosis ini, jadi tetap bisa membuat diagnosis baru walaupun stok tidak ada

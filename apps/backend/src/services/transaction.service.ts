@@ -11,6 +11,18 @@ function generateReceiptNumber(type: "shop" | "vet"): string {
 }
 
 // ──────────────────────────────────────────
+// Stock sync — kembalikan stok item fisik saat transaksi dihapus/disinkron.
+// Hanya item physical (obat/barang) yang mengurangi stok; jasa tidak.
+// ──────────────────────────────────────────
+async function restoreStockFromItems(items: any[]) {
+  for (const item of items) {
+    if (item.product?.type === "physical" && item.product?._id) {
+      await ProductModel.updateOne({ _id: item.product._id }, { $inc: { "inventory.quantity": item.quantity } });
+    }
+  }
+}
+
+// ──────────────────────────────────────────
 // Shop transaction — simplified productId input
 // ──────────────────────────────────────────
 export async function createShopTransaction(input: ShopCreateRequest, cashierId: string, cashierName: string) {
@@ -269,6 +281,10 @@ export async function syncTransactionFromMedicalHistory(input: {
   if (!txn) return null;
   if (txn.paymentStatus === "paid") return txn.toObject() as any; // jangan ubah transaksi lunas
 
+  // Kembalikan stok item lama dulu — buildTransactionItemsFromMh akan
+  // mengurangi lagi sesuai item baru (hindari double decrement tiap update MH)
+  await restoreStockFromItems(txn.items ?? []);
+
   const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions, input.goods ?? []);
   if (items.length === 0) {
     await TransactionModel.deleteOne({ _id: txn._id });
@@ -298,6 +314,7 @@ export async function deleteTransactionForMedicalHistory(medicalHistoryId: strin
   if (!txn) return null;
   if (txn.paymentStatus === "paid") return txn.toObject() as any; // jangan hapus transaksi lunas
   const removed = await TransactionModel.findByIdAndDelete(txn._id).lean();
+  if (removed) await restoreStockFromItems((removed as any).items ?? []);
   return removed as any;
 }
 
@@ -335,6 +352,7 @@ export async function getTransaction(id: string) {
 export async function deleteTransaction(id: string) {
   const txn = await TransactionModel.findByIdAndDelete(id).lean();
   if (!txn) throw Object.assign(new Error("Transaction not found"), { status: 404 });
+  await restoreStockFromItems((txn as any).items ?? []);
   return txn as any;
 }
 

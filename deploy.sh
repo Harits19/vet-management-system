@@ -8,8 +8,8 @@ echo "========================================"
 
 # 1. Copy .env
 if [ ! -f .env ]; then
-  cp .env.production.example .env
-  echo "⚠️  Copy .env.production.example → .env"
+  cp .env.example .env
+  echo "⚠️  Copy .env.example → .env"
   echo "   EDIT .env DULU sebelum lanjut!"
   exit 1
 fi
@@ -19,15 +19,15 @@ set -a; source .env; set +a
 
 # 3. Pull & build
 echo "📦 Building images..."
-docker compose -f docker-compose.prod.yml build
+docker compose build
 
 # 4. Start
 echo "🚀 Starting services..."
-docker compose -f docker-compose.prod.yml up -d
+docker compose up -d
 
 echo ""
 echo "✅ Deploy selesai!"
 echo "   Frontend: http://wedi-animal-care.ahlabs.my.id"
 echo "   API:      http://wedi-animal-care.ahlabs.my.id/api"
 echo ""
-echo "📋 Logs: docker compose -f docker-compose.prod.yml logs -f"
+echo "📋 Logs: docker compose logs -f"

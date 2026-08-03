@@ -14,15 +14,15 @@
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "docker:dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d",
     "docker:build": "docker compose build",
+    "docker:mongo": "docker compose up -d mongodb",
     "docker:mongo:windows": "wsl docker compose up -d mongodb",
     "docker:mongo:stop:windows": "wsl docker compose stop mongodb",
     "deploy": "bash deploy.sh",
-    "deploy:up": "docker compose -f docker-compose.prod.yml up -d",
-    "deploy:build": "docker compose -f docker-compose.prod.yml build",
-    "deploy:logs": "docker compose -f docker-compose.prod.yml logs -f",
-    "deploy:down": "docker compose -f docker-compose.prod.yml down"
+    "deploy:up": "docker compose up -d",
+    "deploy:build": "docker compose build",
+    "deploy:logs": "docker compose logs -f",
+    "deploy:down": "docker compose down"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

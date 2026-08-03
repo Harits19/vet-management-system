@@ -1,12 +1,14 @@
-version: "3.9"
-
+# Single compose file (production).
+#   - Production: `docker compose up -d` — baca nilai dari .env (lihat .env.example)
+#   - Dev laptop: `docker compose up -d mongodb` lalu `npm run dev`
+# Semua nilai bisa di-override lewat .env; default di sini = aman untuk dev.
 services:
   mongodb:
     image: mongo:7
     container_name: vet-mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "${MONGO_PORT:-127.0.0.1:27017}:27017"
     volumes:
       - mongodb_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
@@ -21,37 +23,49 @@ services:
       dockerfile: apps/backend/Dockerfile
     container_name: vet-backend
     restart: unless-stopped
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-production}
       PORT: 3001
       MONGODB_URI: mongodb://${MONGO_APP_USERNAME:-vetapp}:${MONGO_APP_PASSWORD:-dev-app-password}@mongodb:27017/vet-management?authSource=vet-management
-      JWT_SECRET: change-me-to-a-secret-in-production
-      JWT_EXPIRES_IN: 1d
-      DEFAULT_USER_PASSWORD: password123
-      ENABLE_SEED: "true"
-      COOKIE_SECURE: "false"
-      FRONTEND_ORIGINS: "http://localhost:3002"
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      DEFAULT_USER_PASSWORD: ${DEFAULT_USER_PASSWORD:-password123}
+      ENABLE_SEED: ${ENABLE_SEED:-true}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:-http://localhost:3002}
     depends_on:
-      - backend-init
+      - mongodb
 
-  # One-shot init container to wait for MongoDB readiness
-  backend-init:
-    image: mongo:7
-    container_name: vet-mongo-init
-    restart: "no"
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+    container_name: vet-frontend
+    restart: unless-stopped
+    expose:
+      - "3002"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
     depends_on:
-      mongodb:
-        condition: service_started
-    entrypoint: >
-      sh -c "
-        echo '⏳ Waiting for MongoDB...' &&
-        until mongosh --host mongodb --eval 'db.runCommand({ ping: 1 })' > /dev/null 2>&1; do
-          sleep 2
-        done &&
-        echo '✅ MongoDB is ready'
-      "
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: vet-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
 
 volumes:
   mongodb_data:

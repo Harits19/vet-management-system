@@ -156,11 +156,21 @@ export default function NewConsultationPage() {
       });
 
       const txn = res.data?.transaction;
-      msg.success(
-        txn
-          ? `Rekam medis tersimpan. Transaksi ${txn.receiptNumber} dibuat (${txn.paymentStatus === "debt" ? "status: utang" : "lunas"}).`
-          : "Rekam medis tersimpan (tanpa transaksi — tidak ada tindakan/obat)."
-      );
+      const txnError = res.data?.transactionError;
+      const txnWarnings: string[] = res.data?.transactionWarnings ?? [];
+      if (txnError) {
+        // Rekam medis TETAP tersimpan walau transaksi gagal (mis. stok kurang)
+        msg.warning(`Rekam medis tersimpan, tapi transaksi gagal dibuat: ${txnError}`);
+      } else if (txnWarnings.length > 0) {
+        // Stok habis: transaksi hanya menagih stok yang tersedia
+        msg.warning(
+          `${txn ? "Rekam medis & transaksi tersimpan." : "Rekam medis tersimpan, transaksi tidak dibuat."} ${txnWarnings.join("; ")}`
+        );
+      } else if (txn) {
+        msg.success(`Rekam medis tersimpan. Transaksi ${txn.receiptNumber} dibuat (${txn.paymentStatus === "debt" ? "status: utang" : "lunas"}).`);
+      } else {
+        msg.success("Rekam medis tersimpan (tanpa transaksi — tidak ada tindakan/obat).");
+      }
       router.push(`/dashboard/medical-histories/${res.data._id}`);
     } catch (err: any) {
       if (err.message) msg.error(err.message);

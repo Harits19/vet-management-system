@@ -11,11 +11,11 @@ const appPassword = process.env.MONGO_APP_PASSWORD;
 if (!appUsername || !appPassword) {
   print("⚠️  MONGO_APP_USERNAME/MONGO_APP_PASSWORD not set — skipping app user creation");
 } else {
-  const db = db.getSiblingDB(appDb);
-  if (db.getUser(appUsername)) {
+  const appDbRef = db.getSiblingDB(appDb);
+  if (appDbRef.getUser(appUsername)) {
     print(`ℹ️  User '${appUsername}' already exists on '${appDb}', skipping`);
   } else {
-    db.createUser({
+    appDbRef.createUser({
       user: appUsername,
       pwd: appPassword,
       roles: [{ role: "dbOwner", db: appDb }],

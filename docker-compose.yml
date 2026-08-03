@@ -30,7 +30,9 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3001
-      MONGODB_URI: mongodb://${MONGO_APP_USERNAME:-vetapp}:${MONGO_APP_PASSWORD:-dev-app-password}@mongodb:27017/vet-management?authSource=vet-management
+      MONGODB_HOST: mongodb
+      MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:-vetapp}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-dev-app-password}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       DEFAULT_USER_PASSWORD: ${DEFAULT_USER_PASSWORD:-password123}

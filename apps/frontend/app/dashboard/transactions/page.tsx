@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Table, Button, Input, Space, Tabs, Tag, Typography, Row, Col, Modal, Form, Select, Descriptions, Dropdown } from "antd";
-import { Plus, Search, Eye, Trash2, ShoppingBag, Stethoscope, Wallet, Info } from "lucide-react";
-import { apiFetch, useAuth } from "../../context/auth";
+import { Card, Table, Button, Input, Space, Tag, Typography, Modal, Form, Select, Descriptions } from "antd";
+import { Eye, Trash2, Wallet, Info } from "lucide-react";
+import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
-import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
@@ -32,9 +31,8 @@ interface Transaction {
 const statusColors: Record<string, string> = { paid: "green", debt: "red", dp: "orange" };
 const statusLabels: Record<string, string> = { paid: "Lunas", debt: "Hutang", dp: "DP" };
 
+// Hanya transaksi berkaitan rekam medis (type=vet). Fitur POS (type=shop) disembunyikan.
 export default function TransactionsPage() {
-  const { user } = useAuth();
-  const router = useRouter();
   const msg = useAntdMessage();
   const modal = useAntdModal();
 
@@ -43,7 +41,6 @@ export default function TransactionsPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [tab, setTab] = useState<string>("all");
   const [detail, setDetail] = useState<Transaction | null>(null);
   const [payTxn, setPayTxn] = useState<Transaction | null>(null);
   const [paying, setPaying] = useState(false);
@@ -52,20 +49,10 @@ export default function TransactionsPage() {
   const paySisa = payTxn ? Math.max(0, payTxn.summary.total - payTxn.summary.paid) : 0;
   const payKembalian = paidInput ? (Number(paidInput) || 0) - paySisa : 0;
 
-  const typeFilter = tab === "all" ? undefined : tab === "shop" ? "shop" : "vet";
-
-  // Default tab based on role
-  useEffect(() => {
-    if (!user) return;
-    if (user.role === "cashier") setTab("shop");
-    else if (user.role === "doctor") setTab("vet");
-  }, [user]);
-
   const fetchData = async (p = page) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search, sortBy: "timestamp", order: "desc" });
-      if (typeFilter) params.set("type", typeFilter);
+      const params = new URLSearchParams({ page: String(p), limit: "10", search, sortBy: "timestamp", order: "desc", type: "vet" });
       const res = await apiFetch<{ data: any; meta: { total: number } }>(`/api/transactions?${params}`);
       setData(res.data);
       setTotal(res.meta.total);
@@ -76,7 +63,7 @@ export default function TransactionsPage() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [tab, page]);
+  useEffect(() => { fetchData(); }, [page]);
 
   const handleSearch = () => { setPage(1); fetchData(1); };
 
@@ -99,40 +86,15 @@ export default function TransactionsPage() {
     }
   };
 
-  const baseColumns = [
+  const columns = [
     { title: "No. Struk", dataIndex: "receiptNumber", width: 160 },
     { title: "Tanggal", dataIndex: "timestamp", render: (v: string) => dayjs(v).format("DD/MM/YY HH:mm"), width: 130 },
     { title: "Customer", key: "customer", render: (_: any, r: Transaction) => r.customer?.name || "-", width: 150 },
-  ];
-
-  const shopColumns = [
-    ...baseColumns,
-    { title: "Total", key: "total", render: (_: any, r: Transaction) => formatPrice(r.summary.total) },
-    { title: "Status", dataIndex: "paymentStatus", render: (v: string) => <Tag color={statusColors[v]}>{statusLabels[v]}</Tag> },
-    { title: "Metode", dataIndex: "paymentMethod" },
-    { title: "Kasir", key: "kasir", render: (_: any, r: Transaction) => r.cashier?.name },
-  ];
-
-  const vetColumns = [
-    ...baseColumns,
     { title: "Pasien", key: "pet", render: (_: any, r: Transaction) => r.pet ? `${r.pet.name} (${r.pet.kind})` : "-" },
     { title: "Total", key: "total", render: (_: any, r: Transaction) => formatPrice(r.summary.total) },
     { title: "Status", dataIndex: "paymentStatus", render: (v: string) => <Tag color={statusColors[v]}>{statusLabels[v]}</Tag> },
     { title: "Kasir", key: "kasir", render: (_: any, r: Transaction) => r.cashier?.name },
-  ];
-
-  const allColumns = [
-    { title: "Tipe", dataIndex: "type", render: (v: string) => v === "shop" ? <Tag>Barang</Tag> : <Tag color="blue">Dokter</Tag>, width: 80 },
-    ...baseColumns,
-    { title: "Pasien", key: "pet", render: (_: any, r: Transaction) => r.pet ? `${r.pet.name} (${r.pet.kind})` : "-" },
-    { title: "Total", key: "total", render: (_: any, r: Transaction) => formatPrice(r.summary.total) },
-    { title: "Status", dataIndex: "paymentStatus", render: (v: string) => <Tag color={statusColors[v]}>{statusLabels[v]}</Tag> },
-    { title: "Metode", dataIndex: "paymentMethod" },
-    { title: "Kasir", key: "kasir", render: (_: any, r: Transaction) => r.cashier?.name },
-  ];
-
-  const getColumns = () => {
-    const actionCol = {
+    {
       title: "Aksi", key: "action", width: 190,
       render: (_: any, r: Transaction) => (
         <Space>
@@ -151,42 +113,17 @@ export default function TransactionsPage() {
           }} />
         </Space>
       ),
-    };
-
-    if (tab === "all") return [...allColumns, actionCol];
-    if (tab === "shop") return [...shopColumns, actionCol];
-    return [...vetColumns, actionCol];
-  };
-
-  const tabItems = [
-    { key: "all", label: "Semua" },
-    { key: "shop", label: "Barang" },
-    { key: "vet", label: "Dokter" },
-  ];
-
-  const createMenuItems = [
-    { key: "shop", icon: <ShoppingBag size={14} />, label: "Transaksi Barang", onClick: () => router.push("/dashboard/transactions/create-shop") },
-    { key: "vet", icon: <Stethoscope size={14} />, label: "Konsultasi Dokter", onClick: () => router.push("/dashboard/consultations/new") },
+    },
   ];
 
   return (
     <div>
-      <Title level={4}>Transaksi</Title>
+      <Title level={4}>Transaksi Dokter</Title>
       <Card>
-        <Row gutter={16} style={{ marginBottom: 16 }}>
-          <Col flex="auto">
-            <Space>
-              <Input.Search placeholder="Cari no. struk..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={handleSearch} enterButton style={{ width: 250 }} />
-              <Tabs activeKey={tab} onChange={(k) => { setTab(k); setPage(1); }} items={tabItems} style={{ marginBottom: 0 }} />
-            </Space>
-          </Col>
-          <Col>
-            <Dropdown menu={{ items: createMenuItems }}>
-              <Button type="primary" icon={<Plus size={16} />}>Transaksi Baru</Button>
-            </Dropdown>
-          </Col>
-        </Row>
-        <Table dataSource={data} columns={getColumns()} rowKey="_id" loading={loading} scroll={{ x: 900 }}
+        <Space style={{ marginBottom: 16 }}>
+          <Input.Search placeholder="Cari no. struk..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={handleSearch} enterButton style={{ width: 250 }} />
+        </Space>
+        <Table dataSource={data} columns={columns} rowKey="_id" loading={loading} scroll={{ x: 900 }}
           pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
       </Card>
 
@@ -198,7 +135,6 @@ export default function TransactionsPage() {
               <Descriptions.Item label="Tanggal">{dayjs(detail.timestamp).format("DD/MM/YY HH:mm")}</Descriptions.Item>
               <Descriptions.Item label="Customer">{detail.customer?.name || "-"}</Descriptions.Item>
               <Descriptions.Item label="Pasien">{detail.pet ? `${detail.pet.name} (${detail.pet.kind})` : "-"}</Descriptions.Item>
-              <Descriptions.Item label="Tipe"><Tag color={detail.type === "vet" ? "blue" : "default"}>{detail.type === "vet" ? "Dokter" : "Barang"}</Tag></Descriptions.Item>
               <Descriptions.Item label="Status"><Tag color={statusColors[detail.paymentStatus]}>{statusLabels[detail.paymentStatus]}</Tag></Descriptions.Item>
               <Descriptions.Item label="Metode">{detail.paymentMethod}</Descriptions.Item>
               <Descriptions.Item label="Kasir">{detail.cashier?.name}</Descriptions.Item>

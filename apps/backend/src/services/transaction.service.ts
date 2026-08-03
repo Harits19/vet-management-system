@@ -339,6 +339,25 @@ export async function deleteTransaction(id: string) {
 }
 
 // ──────────────────────────────────────────
+// Pay debt — bayar transaksi yang masih hutang/DP
+// ──────────────────────────────────────────
+export async function payTransaction(id: string, input: { paidAmount: number; paymentMethod: string }) {
+  const txn = await TransactionModel.findById(id);
+  if (!txn) throw Object.assign(new Error("Transaction not found"), { status: 404 });
+  if (txn.paymentStatus === "paid") throw Object.assign(new Error("Transaksi sudah lunas"), { status: 400 });
+
+  const newPaid = (txn.summary.paid ?? 0) + input.paidAmount;
+  const paymentStatus: "paid" | "debt" | "dp" = newPaid >= txn.summary.total ? "paid" : "dp";
+
+  const updated = await TransactionModel.findByIdAndUpdate(
+    id,
+    { $set: { "summary.paid": newPaid, paymentStatus, paymentMethod: input.paymentMethod } },
+    { new: true, runValidators: true }
+  ).lean();
+  return updated as any;
+}
+
+// ──────────────────────────────────────────
 // Dashboard
 // ──────────────────────────────────────────
 export async function getDashboardSummary() {

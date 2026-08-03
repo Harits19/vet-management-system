@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Card, Table, Button, Input, Space, Tabs, Tag, Typography, Row, Col, Modal, Form, Select, Descriptions, Dropdown } from "antd";
-import { Plus, Search, Eye, Trash2, ShoppingBag, Stethoscope } from "lucide-react";
+import { Plus, Search, Eye, Trash2, ShoppingBag, Stethoscope, Wallet } from "lucide-react";
 import { apiFetch, useAuth } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 function formatPrice(n: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
@@ -45,6 +45,9 @@ export default function TransactionsPage() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<string>("all");
   const [detail, setDetail] = useState<Transaction | null>(null);
+  const [payTxn, setPayTxn] = useState<Transaction | null>(null);
+  const [paying, setPaying] = useState(false);
+  const [payForm] = Form.useForm();
 
   const typeFilter = tab === "all" ? undefined : tab === "shop" ? "shop" : "vet";
 
@@ -73,6 +76,25 @@ export default function TransactionsPage() {
   useEffect(() => { fetchData(); }, [tab, page]);
 
   const handleSearch = () => { setPage(1); fetchData(1); };
+
+  const handlePay = async () => {
+    if (!payTxn) return;
+    try {
+      const values = await payForm.validateFields();
+      setPaying(true);
+      await apiFetch(`/api/transactions/${payTxn._id}/pay`, {
+        method: "POST",
+        body: JSON.stringify({ paidAmount: values.paidAmount, paymentMethod: values.paymentMethod }),
+      });
+      msg.success("Pembayaran berhasil");
+      setPayTxn(null);
+      fetchData();
+    } catch (err: any) {
+      if (err.message) msg.error(err.message);
+    } finally {
+      setPaying(false);
+    }
+  };
 
   const baseColumns = [
     { title: "No. Struk", dataIndex: "receiptNumber", width: 160 },
@@ -108,9 +130,15 @@ export default function TransactionsPage() {
 
   const getColumns = () => {
     const actionCol = {
-      title: "Aksi", key: "action", width: 100,
+      title: "Aksi", key: "action", width: 190,
       render: (_: any, r: Transaction) => (
         <Space>
+          {r.paymentStatus !== "paid" && (
+            <Button size="small" type="primary" icon={<Wallet size={14} />} onClick={() => {
+              payForm.setFieldsValue({ paidAmount: r.summary.total - r.summary.paid, paymentMethod: "Tunai" });
+              setPayTxn(r);
+            }}>Bayar</Button>
+          )}
           <Button size="small" icon={<Eye size={14} />} onClick={() => setDetail(r)} />
           <Button size="small" danger icon={<Trash2 size={14} />} onClick={() => {
             modal.confirm({
@@ -188,6 +216,32 @@ export default function TransactionsPage() {
               ]}
               rowKey={(r: any) => r.product?._id} pagination={false} size="small" style={{ marginTop: 16 }} />
           </>
+        )}
+      </Modal>
+
+      <Modal title="Bayar Transaksi" open={!!payTxn} onCancel={() => setPayTxn(null)} onOk={handlePay}
+        confirmLoading={paying} okText="Bayar" width={420}>
+        {payTxn && (
+          <Form form={payForm} layout="vertical">
+            <Descriptions column={1} size="small" style={{ marginBottom: 8 }}>
+              <Descriptions.Item label="No. Struk">{payTxn.receiptNumber}</Descriptions.Item>
+              <Descriptions.Item label="Total">{formatPrice(payTxn.summary.total)}</Descriptions.Item>
+              <Descriptions.Item label="Sudah Dibayar">{formatPrice(payTxn.summary.paid)}</Descriptions.Item>
+              <Descriptions.Item label="Sisa"><Text strong style={{ color: "#cf1322" }}>{formatPrice(payTxn.summary.total - payTxn.summary.paid)}</Text></Descriptions.Item>
+            </Descriptions>
+            <Form.Item name="paidAmount" label="Jumlah Dibayar" rules={[{ required: true, message: "Masukkan nominal" }]}>
+              <Input type="number" min={1} placeholder="Masukkan nominal" />
+            </Form.Item>
+            <Form.Item name="paymentMethod" label="Metode Bayar" rules={[{ required: true, message: "Pilih metode" }]}>
+              <Select options={[
+                { value: "Tunai", label: "Tunai" },
+                { value: "Transfer", label: "Transfer" },
+                { value: "QRIS", label: "QRIS" },
+                { value: "Debit", label: "Kartu Debit" },
+                { value: "Kredit", label: "Kartu Kredit" },
+              ]} />
+            </Form.Item>
+          </Form>
         )}
       </Modal>
     </div>

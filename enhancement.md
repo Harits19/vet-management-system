@@ -366,7 +366,7 @@ modal.confirm({ title: "...", onOk: ... });
 | 8 | **Barang** | split dari "Produk & Jasa" — filter type=physical |
 | 9 | Transaksi | tetap |
 
-**Catatan:** Menu 6-8 perlu penjelasan lebih lanjut — Jasa/Obat/Barang adalah 3 halaman terpisah
+**Catatan:** Menu 6-8 sudah jadi 3 halaman terpisah: `/dashboard/services` (Jasa), `/dashboard/obat` (Obat), `/dashboard/products` (Barang)
 
 **File diubah:**
 - `apps/frontend/app/dashboard/layout.tsx` — urutan & label menu
@@ -476,7 +476,7 @@ modal.confirm({ title: "...", onOk: ... });
 
 **Masalah:** Form tambah obat (halaman `/dashboard/obat`) masih pakai input bebas untuk kategori & satuan, dan wording-nya "Tambah Barang" bukan "Tambah Obat". Belum ada pembeda barang vs obat.
 
-**Solusi:**1.
+**Solusi:**
 
 1. **Autocomplete distinct values** — field:
    - **Kategori** — dari distinct `category` di database (filter: yang sudah dipakai untuk barang)
@@ -484,12 +484,12 @@ modal.confirm({ title: "...", onOk: ... });
    - Pola: bisa pilih dari list atau ketik bebas
 
 **File diubah:**
-- `apps/backend/src/services/product.service.ts` + controller + route — endpoint distinct (reuse dari item 24)
+- `apps/backend/src/services/product.service.ts` + controller + route — endpoint distinct (pola sama seperti item 22)
 - `apps/frontend/app/dashboard/products/page.tsx` — autocomplete
 
 ---
 
-### 26. Transaksi Barang Baru — Fix CastError & Flow
+### 25. Transaksi Barang Baru — Fix CastError & Flow
 
 **Masalah:** Halaman `/dashboard/transactions/create-shop`:
 - Error backend: `CastError: Cast to ObjectId failed for value "physical" (type string) at path "_id" for model "Product"` — frontend mengirim `product._id` berupa string `"physical"` (salah struktur payload)
@@ -512,6 +512,40 @@ modal.confirm({ title: "...", onOk: ... });
 
 ## 🔜 Belum Dikerjakan
 
-### 27. Buat fitur list diagnosis
-List dengan nama diagnosis, dan didalamnya terdapat template obat, jasa, barang yang digunakan untuk membuat rekam medis ketika input "Diagnosis"
-didalamnya bisa create, update, delete, abaikan stok jika membuat list diagnosis ini, jadi tetap bisa membuat diagnosis baru walaupun stok tidak ada
+### 27. List Diagnosis — Template Obat/Jasa/Barang
+
+**Masalah:** Diagnosis di form konsultasi (Pasien Lama, `/dashboard/consultations/new`) saat ini hanya autocomplete dari riwayat diagnosis lama (`/api/medical-histories/diagnoses` — distinct string dari rekam medis yang pernah dibuat). Tidak ada master data diagnosis. Dokter yang menangani diagnosis yang sama berulang kali harus mengisi ulang tindakan (jasa), resep obat, dan barang satu per satu di setiap konsultasi.
+
+**Solusi:** Buat master data **List Diagnosis**:
+
+1. **Entri list diagnosis** — satu entri = `nama diagnosis` + template berisi 3 kelompok item:
+   - **Jasa** (`treatments`) — diambil dari Master Tindakan (`/api/services`)
+   - **Obat** (`prescriptions`) — diambil dari Master Obat (`/api/products?productType=medicine`)
+   - **Barang** (`goods`) — diambil dari Master Barang (`/api/products?productType=good`)
+   - Setiap item template: `productId`, `name` (snapshot), `quantity`, `price` (snapshot dari master), plus `dosage`/`usage`/`notes` opsional untuk obat (mengikuti bentuk `PrescriptionItem` yang sudah ada)
+
+2. **CRUD penuh** — entri list diagnosis bisa dibuat, diubah, dan dihapus. **Akses: role `admin`, `superadmin`, `doctor`** (kasir tidak bisa)
+
+3. **Abaikan stok saat membuat/mengedit template** — produk dengan stok 0/habis TETAP bisa dipilih masuk template (pilihannya tidak di-filter stok). Validasi & pemotongan stok tetap berlaku normal saat transaksi dibuat — aturan bisnis yang sudah ada: transaksi hanya menagih stok tersedia, stok tidak pernah minus
+
+**Alur di form konsultasi (`/dashboard/consultations/new`):**
+1. Dokter pilih diagnosis (AutoComplete) — opsi digabung: master list diagnosis + distinct dari riwayat (master diutamakan)
+2. Jika diagnosis terdaftar di master → item template **otomatis terisi** di editor **Tindakan (Jasa)**, **Resep Obat**, dan **Barang** — dokter tetap bisa mengubah/menghapus item yang terisi
+3. Jika tidak terdaftar → seperti sekarang (editor kosong, dokter isi manual)
+4. Simpan → rekam medis + transaksi dibuat seperti biasa (item template menjadi item transaksi)
+
+**Backend:**
+- Model baru `DiagnosisTemplate` — `{ name (unique), items: { treatments[], prescriptions[], goods[] } }`
+- Service + controller + route baru — CRUD `/api/diagnosis-templates` (+ `?search=` untuk autocomplete)
+- Autocomplete diagnosis: gabung master list + distinct riwayat (master diutamakan)
+
+**Frontend:**
+- Halaman manajemen baru `/dashboard/diagnoses` — tabel + modal create/edit, picker produk tanpa filter stok
+- `/dashboard/consultations/new` — saat diagnosis dipilih & punya template, pre-fill editor
+
+**File diubah:**
+- Baru: `apps/backend/src/models/diagnosis-template.model.ts`, `diagnosis-template.service.ts`, `diagnosis-template.controller.ts`, `diagnosis-template.route.ts`
+- Baru: `apps/frontend/app/dashboard/diagnoses/page.tsx`
+- `apps/frontend/app/dashboard/layout.tsx` — menu baru "List Diagnosis" (visible untuk role admin/superadmin/doctor)
+- `apps/frontend/app/dashboard/consultations/new/page.tsx` — pre-fill template saat diagnosis dipilih
+- (opsional) `apps/backend/src/services/medical-history.service.ts` — gabung sumber autocomplete diagnosis

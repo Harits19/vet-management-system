@@ -1,13 +1,16 @@
 import { configDotenv } from "dotenv";
+import { existsSync } from "node:fs";
 import path from "node:path";
 
-// Resolve env files from the repo root. npm workspace scripts run with cwd =
-// the workspace folder (apps/backend), so a relative ".env" path would silently
-// miss the root env file. Dev reads .env.example, production reads .env.
-const repoRoot = path.resolve(import.meta.dirname, "../../..");
-configDotenv({
-  path: path.join(repoRoot, process.env.NODE_ENV !== "production" ? ".env.example" : ".env"),
-});
+// Always read the root .env — for development AND production (no .env.example).
+// npm workspace scripts run with cwd = the workspace folder (apps/backend), so
+// resolve the file from the repo root.
+const repoRoot = path.resolve(import.meta.dirname, "../../../../");
+const envPath = path.join(repoRoot, ".env");
+if (!existsSync(envPath)) {
+  console.warn(`⚠️  ${envPath} tidak ditemukan. Copy template dulu: cp .env.example .env`);
+}
+configDotenv({ path: envPath });
 
 const env = {
   PORT: parseInt(process.env.PORT || "3001", 10),

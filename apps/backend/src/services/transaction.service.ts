@@ -119,9 +119,10 @@ async function createTransaction(input: TransactionCreateRequest, cashierId: str
       dosage: item.dosage,
     });
 
-    if (!isService && (product!.inventory.quantity ?? 0) >= item.quantity) {
-      await ProductModel.updateOne({ _id: product!._id }, { $inc: { "inventory.quantity": -item.quantity } });
-    }
+    // Strict seperti transaksi barang: tolak bila stok tidak mencukupi
+    if (!isService && (product!.inventory.quantity ?? 0) < item.quantity)
+      throw Object.assign(new Error(`Insufficient stock for ${product!.product.name}`), { status: 400 });
+    await ProductModel.updateOne({ _id: product!._id }, { $inc: { "inventory.quantity": -item.quantity } });
   }
 
   const profit = totalSelling - totalCost;
@@ -231,9 +232,10 @@ export async function buildTransactionItemsFromMh(
       pricing: { cost, selling, total: selling },
       dosage: (p as any).dosage || undefined,
     });
-    if ((product.inventory.quantity ?? 0) >= p.quantity) {
-      await ProductModel.updateOne({ _id: product._id }, { $inc: { "inventory.quantity": -p.quantity } });
-    }
+    // Strict seperti transaksi barang: tolak bila stok tidak mencukupi
+    if ((product.inventory.quantity ?? 0) < p.quantity)
+      throw Object.assign(new Error(`Stok ${product.product.name} tidak mencukupi (sisa ${product.inventory.quantity ?? 0})`), { status: 400 });
+    await ProductModel.updateOne({ _id: product._id }, { $inc: { "inventory.quantity": -p.quantity } });
   }
 
   return { items, totalCost, totalSelling };

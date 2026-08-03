@@ -13,11 +13,16 @@ function generateReceiptNumber(type: "shop" | "vet"): string {
 // ──────────────────────────────────────────
 // Stock sync — kembalikan stok item fisik saat transaksi dihapus/disinkron.
 // Hanya item physical (obat/barang) yang mengurangi stok; jasa tidak.
+// Mengembalikan sebesar stockDelta (yang benar-benar terpotong), bukan
+// quantity — karena saat stok kurang, potongan dibatasi agar tidak minus.
 // ──────────────────────────────────────────
 async function restoreStockFromItems(items: any[]) {
   for (const item of items) {
     if (item.product?.type === "physical" && item.product?._id) {
-      await ProductModel.updateOne({ _id: item.product._id }, { $inc: { "inventory.quantity": item.quantity } });
+      const delta = item.stockDelta ?? item.quantity;
+      if (delta > 0) {
+        await ProductModel.updateOne({ _id: item.product._id }, { $inc: { "inventory.quantity": delta } });
+      }
     }
   }
 }
@@ -201,6 +206,7 @@ export async function buildTransactionItemsFromMh(
   goods: MhItemInput[] = []
 ) {
   const items: any[] = [];
+  const warnings: string[] = [];
   let totalCost = 0;
   let totalSelling = 0;
 
@@ -219,37 +225,44 @@ export async function buildTransactionItemsFromMh(
   }
 
   // Obat (medicine) + Barang (good) — keduanya item physical dari ProductModel.
-  // Kumpulkan dulu SEMUA item, validasi stok semua (strict), baru kurangi stok —
-  // supaya gagal di item terakhir tidak menyisakan pengurangan stok tanpa transaksi.
-  const physicalBatches: { item: any; product: any }[] = [];
+  // Transaksi hanya menagih stok yang tersedia: quantity di-clamp ke stok
+  // (stok tidak pernah minus). Item dengan stok 0 tidak masuk transaksi.
+  // Rekam medis tetap menyimpan resep lengkap — yang di-clamp hanya item transaksi.
+  const physicalBatches: { item: any; product: any; prescribedQty: number }[] = [];
   for (const p of [...prescriptions, ...goods]) {
     const product = await ProductModel.findById(p.productId);
     if (!product) throw Object.assign(new Error(`Produk ${p.name || p.productId} tidak ditemukan`), { status: 404 });
-    const cost = (product.pricing.cost ?? 0) * p.quantity;
-    const selling = p.price * p.quantity;
+    const billedQty = Math.min(product.inventory.quantity ?? 0, p.quantity);
+    const cost = (product.pricing.cost ?? 0) * billedQty;
+    const selling = p.price * billedQty;
     totalCost += cost;
     totalSelling += selling;
     physicalBatches.push({
       product,
+      prescribedQty: p.quantity,
       item: {
         product: { _id: product._id, name: product.product.name, type: "physical", code: product.product.code },
-        quantity: p.quantity,
+        quantity: billedQty,
         pricing: { cost, selling, total: selling },
         dosage: (p as any).dosage || undefined,
+        stockDelta: billedQty, // stok yang benar-benar terpotong (untuk restore akurat)
       },
     });
   }
-  // Validasi stok SEMUA item dulu (sebelum mutasi apa pun)
-  for (const { product, item } of physicalBatches) {
-    if ((product.inventory.quantity ?? 0) < item.quantity)
-      throw Object.assign(new Error(`Stok ${product.product.name} tidak mencukupi (sisa ${product.inventory.quantity ?? 0})`), { status: 400 });
-  }
-  for (const { product, item } of physicalBatches) {
+  // Kurangi stok hanya sebesar yang ditagih & kumpulkan peringatan
+  for (const { product, item, prescribedQty } of physicalBatches) {
+    if (item.quantity === 0) {
+      warnings.push(`Stok ${product.product.name} di toko ini habis (sisa ${product.inventory.quantity ?? 0}); item tidak ditagih`);
+      continue;
+    }
     await ProductModel.updateOne({ _id: product._id }, { $inc: { "inventory.quantity": -item.quantity } });
     items.push(item);
+    if (item.quantity < prescribedQty) {
+      warnings.push(`Stok ${product.product.name} di toko ini habis (sisa ${product.inventory.quantity ?? 0}); hanya ${item.quantity} dari ${prescribedQty} ditagih`);
+    }
   }
 
-  return { items, totalCost, totalSelling };
+  return { items, totalCost, totalSelling, warnings };
 }
 
 export async function createTransactionFromMedicalHistory(input: {
@@ -262,7 +275,7 @@ export async function createTransactionFromMedicalHistory(input: {
   cashierId: string;
   cashierName: string;
 }) {
-  const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions, input.goods ?? []);
+  const { items, totalCost, totalSelling, warnings } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions, input.goods ?? []);
   if (items.length === 0) return null;
 
   const profit = totalSelling - totalCost;
@@ -281,7 +294,7 @@ export async function createTransactionFromMedicalHistory(input: {
     paymentStatus,
     paymentMethod: "Utang",
   });
-  return txn.toObject() as any;
+  return { ...txn.toObject(), warnings } as any;
 }
 
 export async function syncTransactionFromMedicalHistory(input: {
@@ -294,10 +307,9 @@ export async function syncTransactionFromMedicalHistory(input: {
   if (!txn) return null;
   if (txn.paymentStatus === "paid") return txn.toObject() as any; // jangan ubah transaksi lunas
 
-  // Build & validasi item baru dulu (atomik: kalau stok kurang, tidak ada stok
-  // yang diubah), baru kembalikan stok item lama — hindari double decrement
-  // dan hindari stok berubah saat validasi gagal.
-  const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions, input.goods ?? []);
+  // Build item baru dulu (stok dipotong sebatas yang tersedia), baru kembalikan
+  // stok item lama sebesar stockDelta — hindari double decrement tiap update MH.
+  const { items, totalCost, totalSelling, warnings } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions, input.goods ?? []);
   await restoreStockFromItems(txn.items ?? []);
   if (items.length === 0) {
     await TransactionModel.deleteOne({ _id: txn._id });
@@ -319,7 +331,7 @@ export async function syncTransactionFromMedicalHistory(input: {
     },
     { new: true, runValidators: true }
   ).lean();
-  return updated as any;
+  return { ...(updated as any), warnings };
 }
 
 export async function deleteTransactionForMedicalHistory(medicalHistoryId: string) {

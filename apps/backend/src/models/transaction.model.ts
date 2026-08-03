@@ -11,6 +11,7 @@ export interface ITransactionItemDoc {
   quantity: number;
   pricing: { cost?: number; selling: number; total: number };
   dosage?: string;
+  stockDelta?: number; // stok fisik yang benar-benar terpotong; bisa < quantity saat stok kurang (tidak pernah minus)
 }
 
 export interface ITransactionDoc {
@@ -45,6 +46,7 @@ const TxnItemSubSchema = new Schema<ITransactionItemDoc>(
       total: { type: Number, required: true, min: 0 },
     },
     dosage: { type: String },
+    stockDelta: { type: Number, min: 0 },
   },
   { _id: false }
 );

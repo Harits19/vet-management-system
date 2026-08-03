@@ -168,7 +168,7 @@ export async function createMedicalHistory(input: MedicalHistoryCreateRequest, d
   }
 
   const result = record.toObject() as any;
-  return { ...result, transaction: txn, transactionError };
+  return { ...result, transaction: txn, transactionError, transactionWarnings: (txn as any)?.warnings ?? [] };
 }
 
 // ──────────────────────────────────────────
@@ -209,7 +209,7 @@ export async function updateMedicalHistory(id: string, input: MedicalHistoryUpda
     transactionError = err?.message || "Sinkronisasi transaksi gagal";
   }
 
-  return { ...updated, transaction: txn, transactionError };
+  return { ...updated, transaction: txn, transactionError, transactionWarnings: (txn as any)?.warnings ?? [] };
 }
 
 // ──────────────────────────────────────────

@@ -52,8 +52,50 @@ export default function NewConsultationPage() {
 
   const loadDiagnoses = async (q = "") => {
     try {
-      const res = await apiFetch<{ data: string[] }>(`/api/medical-histories/diagnoses?search=${encodeURIComponent(q)}`);
-      setDiagnosisOptions(res.data.map((d) => ({ value: d })));
+      const res = await apiFetch<{ data: any[] }>(`/api/diagnosis-templates?search=${encodeURIComponent(q)}&limit=50`);
+      setDiagnosisOptions(res.data.map((d) => ({ value: d.name })));
+    } catch { /* ignore */ }
+  };
+
+  // Terapkan template list diagnosis: nama & harga di-GET dari master (join by productId),
+  // qty & dosage dari template. Item yang tidak ada di master di-skip dengan peringatan.
+  const applyTemplate = async (name: string) => {
+    try {
+      const res = await apiFetch<{ data: any[] }>(`/api/diagnosis-templates?search=${encodeURIComponent(name)}&limit=10`);
+      const tpl = res.data.find((d) => d.name === name);
+      if (!tpl) return;
+      let jasa = 0, obat = 0, brg = 0;
+      const skipped: string[] = [];
+
+      const tLines = (tpl.items?.treatments || []).flatMap((ti: any) => {
+        const m = services.find((s) => s._id === ti.productId);
+        if (!m) { skipped.push(ti.name || ti.productId); return []; }
+        jasa++;
+        return [{ productId: ti.productId, name: m.name, quantity: ti.quantity, price: m.price, _key: `t-${Date.now()}-${Math.random()}` }];
+      });
+      const pLines = (tpl.items?.prescriptions || []).flatMap((ti: any) => {
+        const m = medicines.find((md) => md._id === ti.productId);
+        if (!m) { skipped.push(ti.name || ti.productId); return []; }
+        obat++;
+        return [{ productId: ti.productId, name: m.product?.name || ti.name, quantity: ti.quantity, price: m.pricing?.selling ?? 0, dosage: ti.dosage || undefined, _key: `p-${Date.now()}-${Math.random()}` }];
+      });
+      const gLines = (tpl.items?.goods || []).flatMap((ti: any) => {
+        const m = goods.find((gd) => gd._id === ti.productId);
+        if (!m) { skipped.push(ti.name || ti.productId); return []; }
+        brg++;
+        return [{ productId: ti.productId, name: m.product?.name || ti.name, quantity: ti.quantity, price: m.pricing?.selling ?? 0, _key: `g-${Date.now()}-${Math.random()}` }];
+      });
+
+      setTreatments((prev) => [...prev, ...tLines]);
+      setPrescriptions((prev) => [...prev, ...pLines]);
+      setGoodsLines((prev) => [...prev, ...gLines]);
+
+      if (jasa + obat + brg > 0) {
+        const base = `Template "${name}" diterapkan: ${jasa} jasa, ${obat} obat, ${brg} barang.`;
+        msg.success(skipped.length ? `${base} ${skipped.length} item di-skip (tidak ada di master): ${skipped.join(", ")}.` : base);
+      } else {
+        msg.info(`Diagnosis "${name}" tidak punya template item.`);
+      }
     } catch { /* ignore */ }
   };
 
@@ -301,8 +343,9 @@ export default function NewConsultationPage() {
                 options={diagnosisOptions}
                 onSearch={loadDiagnoses}
                 onFocus={() => loadDiagnoses()}
+                onSelect={(val) => applyTemplate(val)}
                 filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
-                placeholder="Ketik diagnosis baru atau pilih dari daftar..."
+                placeholder="Ketik diagnosis baru atau pilih dari daftar... (template otomatis terisi bila ada)"
               />
             </Form.Item>
           </Card>

@@ -510,9 +510,7 @@ modal.confirm({ title: "...", onOk: ... });
 **File diubah:**
 - `apps/frontend/app/dashboard/transactions/create-shop/page.tsx`
 
-## 🔜 Belum Dikerjakan
-
-### 27. List Diagnosis — Template Obat/Jasa/Barang
+### 27. List Diagnosis — Template Obat/Jasa/Barang — ✅ Selesai
 
 **Masalah:** Diagnosis di form konsultasi (Pasien Lama, `/dashboard/consultations/new`) saat ini hanya autocomplete dari riwayat diagnosis lama (`/api/medical-histories/diagnoses` — distinct string dari rekam medis yang pernah dibuat). Tidak ada master data diagnosis. Dokter yang menangani diagnosis yang sama berulang kali harus mengisi ulang tindakan (jasa), resep obat, dan barang satu per satu di setiap konsultasi.
 
@@ -549,3 +547,5 @@ modal.confirm({ title: "...", onOk: ... });
 - `apps/frontend/app/dashboard/layout.tsx` — menu baru "List Diagnosis" (visible untuk role admin/superadmin/doctor)
 - `apps/frontend/app/dashboard/consultations/new/page.tsx` — pre-fill template saat diagnosis dipilih
 - `apps/backend/src/services/medical-history.service.ts` + `medical-history.route.ts` — hapus endpoint distinct diagnosis (`/api/medical-histories/diagnoses`), sudah digantikan master list
+
+**Status:** ✅ Selesai (implementasi server; typecheck/build diverifikasi dari laptop)

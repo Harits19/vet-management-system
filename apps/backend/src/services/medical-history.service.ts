@@ -146,21 +146,29 @@ export async function createMedicalHistory(input: MedicalHistoryCreateRequest, d
     goods,
   });
 
-  // Auto-create transaction (utang) dari tindakan & resep & barang
-  const customer = await CustomerModel.findById(pet.customerId).select("name").lean();
-  const txn = await createTransactionFromMedicalHistory({
-    medicalHistoryId: record._id.toString(),
-    pet: { _id: pet._id, name: pet.name, kind: pet.kind },
-    customer: customer ? { _id: customer._id, name: customer.name } : null,
-    treatments,
-    prescriptions,
-    goods,
-    cashierId: doctorId,
-    cashierName: doctorName,
-  });
+  // Auto-create transaction (utang) dari tindakan & resep & barang.
+  // Rekam medis TETAP tersimpan walau transaksi gagal dibuat (mis. stok kurang) —
+  // kegagalan transaksi dilaporkan lewat transactionError.
+  let txn: any = null;
+  let transactionError: string | undefined;
+  try {
+    const customer = await CustomerModel.findById(pet.customerId).select("name").lean();
+    txn = await createTransactionFromMedicalHistory({
+      medicalHistoryId: record._id.toString(),
+      pet: { _id: pet._id, name: pet.name, kind: pet.kind },
+      customer: customer ? { _id: customer._id, name: customer.name } : null,
+      treatments,
+      prescriptions,
+      goods,
+      cashierId: doctorId,
+      cashierName: doctorName,
+    });
+  } catch (err: any) {
+    transactionError = err?.message || "Transaksi gagal dibuat";
+  }
 
   const result = record.toObject() as any;
-  return { ...result, transaction: txn };
+  return { ...result, transaction: txn, transactionError };
 }
 
 // ──────────────────────────────────────────
@@ -185,15 +193,23 @@ export async function updateMedicalHistory(id: string, input: MedicalHistoryUpda
   const updated = await MedicalHistoryModel.findByIdAndUpdate(id, { $set: patch }, { new: true, runValidators: true }).lean();
   if (!updated) throw Object.assign(new Error("Medical history not found"), { status: 404 });
 
-  // Sinkron transaksi terkait (hanya jika masih utang)
-  const txn = await syncTransactionFromMedicalHistory({
-    medicalHistoryId: id,
-    treatments: treatments ?? updated.treatments ?? [],
-    prescriptions: prescriptions ?? updated.prescriptions ?? [],
-    goods: goods ?? updated.goods ?? [],
-  });
+  // Sinkron transaksi terkait (hanya jika masih utang).
+  // Rekam medis TETAP ter-update walau sinkronisasi gagal (mis. stok kurang) —
+  // kegagalan dilaporkan lewat transactionError.
+  let txn: any = null;
+  let transactionError: string | undefined;
+  try {
+    txn = await syncTransactionFromMedicalHistory({
+      medicalHistoryId: id,
+      treatments: treatments ?? updated.treatments ?? [],
+      prescriptions: prescriptions ?? updated.prescriptions ?? [],
+      goods: goods ?? updated.goods ?? [],
+    });
+  } catch (err: any) {
+    transactionError = err?.message || "Sinkronisasi transaksi gagal";
+  }
 
-  return { ...updated, transaction: txn };
+  return { ...updated, transaction: txn, transactionError };
 }
 
 // ──────────────────────────────────────────

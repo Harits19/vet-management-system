@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, Table, Button, Input, Space, Tabs, Tag, Typography, Row, Col, Modal, Form, Select, Descriptions, Dropdown } from "antd";
-import { Plus, Search, Eye, Trash2, ShoppingBag, Stethoscope, Wallet } from "lucide-react";
+import { Plus, Search, Eye, Trash2, ShoppingBag, Stethoscope, Wallet, Info } from "lucide-react";
 import { apiFetch, useAuth } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
@@ -48,6 +48,9 @@ export default function TransactionsPage() {
   const [payTxn, setPayTxn] = useState<Transaction | null>(null);
   const [paying, setPaying] = useState(false);
   const [payForm] = Form.useForm();
+  const paidInput = Form.useWatch("paidAmount", payForm);
+  const paySisa = payTxn ? Math.max(0, payTxn.summary.total - payTxn.summary.paid) : 0;
+  const payKembalian = paidInput ? (Number(paidInput) || 0) - paySisa : 0;
 
   const typeFilter = tab === "all" ? undefined : tab === "shop" ? "shop" : "vet";
 
@@ -232,6 +235,11 @@ export default function TransactionsPage() {
             <Form.Item name="paidAmount" label="Jumlah Dibayar" rules={[{ required: true, message: "Masukkan nominal" }]}>
               <Input type="number" min={1} placeholder="Masukkan nominal" />
             </Form.Item>
+            {payKembalian > 0 && (
+              <div style={{ textAlign: "right", marginBottom: 12, color: "#52c41a", fontSize: 14 }}>
+                <Info size={14} style={{ marginRight: 4 }} />Kembalian: {formatPrice(payKembalian)}
+              </div>
+            )}
             <Form.Item name="paymentMethod" label="Metode Bayar" rules={[{ required: true, message: "Pilih metode" }]}>
               <Select options={[
                 { value: "Tunai", label: "Tunai" },

@@ -12,7 +12,11 @@ const upload = multer({
     },
 });
 
-petClinic.post("/inventory", upload.single('file'), syncController.syncInventory);
+const singleFile = upload.single('file');
+
+petClinic.post("/inventory", singleFile, syncController.syncInventory);
+petClinic.post("/service", singleFile, syncController.syncService);
+
 
 router.use("/pet-clinic", petClinic);
 

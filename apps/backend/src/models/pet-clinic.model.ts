@@ -1,4 +1,4 @@
-export interface PetClinicInventory {
+export interface PetClinicInventoryModel {
     id: number;
     name: string;
     category: string;
@@ -11,4 +11,17 @@ export interface PetClinicInventory {
     created_at: Date;
     updated_at: Date;
     deleted_at?: Date;
+}
+
+
+export interface PetClinicServiceModel {
+    "id": number,
+    "name": string,
+    "description": string,
+    "price": number,
+    "hpp": number,
+    "branch_id": number,
+    "is_active": number,
+    "created_at": Date,
+    "updated_at": Date
 }

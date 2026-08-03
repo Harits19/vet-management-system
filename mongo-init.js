@@ -28,6 +28,7 @@ const appUsername = process.env.MONGO_APP_USERNAME || "vetapp";
 const appPassword = process.env.MONGO_APP_PASSWORD || "dev-app-password";
 const rootUser = process.env.MONGO_INITDB_ROOT_USERNAME || "root";
 const rootPass = process.env.MONGO_INITDB_ROOT_PASSWORD || "dev-root-password";
+const mongoHost = process.env.MONGO_HOST || '127.0.0.1'
 
 if (typeof db !== "undefined") {
   // ── Mode mongosh (docker) ──
@@ -46,7 +47,7 @@ if (typeof db !== "undefined") {
   // ── Mode Node (npm run dev) ──
   (async () => {
     const mongoose = require("mongoose");
-    const uri = `mongodb://${encodeURIComponent(rootUser)}:${encodeURIComponent(rootPass)}@127.0.0.1:27017/${appDb}?authSource=admin`;
+    const uri = `mongodb://${encodeURIComponent(rootUser)}:${encodeURIComponent(rootPass)}@${mongoHost}:27017/${appDb}?authSource=admin`;
     try {
       await mongoose.connect(uri, { serverSelectionTimeoutMS: 8000 });
       const dbRef = mongoose.connection.useDb(appDb);

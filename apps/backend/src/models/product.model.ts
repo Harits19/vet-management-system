@@ -56,5 +56,6 @@ const ProductSchema = new Schema<IProductDoc>(
 ProductSchema.index({ "product.name": 1 });
 ProductSchema.index({ category: 1 });
 ProductSchema.index({ productType: 1 });
+ProductSchema.index({ "product.petClinicId": 1 }, { unique: true, sparse: true });
 
 export const ProductModel = mongoose.model<IProductDoc>("Product", ProductSchema);

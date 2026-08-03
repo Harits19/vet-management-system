@@ -8,7 +8,7 @@ export interface PetClinicInventory {
     expiry_date: Date;
     supplier: string;
     branch_id: number;
-    created_at: Date; 
-    updated_at: Date; 
-    deleted_at?: Date; 
+    created_at: Date;
+    updated_at: Date;
+    deleted_at?: Date;
 }

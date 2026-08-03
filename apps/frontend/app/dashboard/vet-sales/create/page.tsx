@@ -42,12 +42,13 @@ export default function CreateVetSalePage() {
   useEffect(() => {
     Promise.all([
       apiFetch<{ data: any[] }>("/api/customers?page=1&limit=100"),
-      apiFetch<{ data: any[] }>("/api/products/services?limit=100"),
-      apiFetch<{ data: any[] }>("/api/products/physical?limit=100"),
+      apiFetch<{ data: any[] }>("/api/services?limit=100"),
+      apiFetch<{ data: any[] }>("/api/products?limit=100"),
     ]).then(async ([c, s, m]) => {
       setCustomers(c.data);
-      setServices(s.data);
-      setMedicines(m.data);
+      // Service (jasa) & Product (barang) sekarang collection terpisah dengan bentuk berbeda
+      setServices(s.data.map((x: any) => ({ _id: x._id, name: x.name, price: x.price, cost: x.cost ?? 0, type: "service" })));
+      setMedicines(m.data.map((x: any) => ({ _id: x._id, name: x.product?.name, price: x.pricing?.selling ?? 0, cost: x.pricing?.cost ?? 0, type: "physical" })));
 
       // Auto-select from URL params
       const customerId = searchParams.get("customerId");

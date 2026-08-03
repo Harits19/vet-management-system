@@ -277,9 +277,6 @@ modal.confirm({ title: "...", onOk: ... });
 - `app/dashboard/pets/[id]/page.tsx` — sederhanakan modal rekam medis
 - `apps/backend/src/services/transaction.service.ts` — auto-create medical history saat transaksi vet
 
-
-## 🔜 Belum Dikerjakan
-
 ### 16. Lihat Riwayat Medis di Detail Pasien
 
 **Fungsi:** Halaman `/dashboard/pets/[id]` menampilkan kartu **Riwayat Medis** yang berisi tabel riwayat rekam medis pasien tersebut.
@@ -290,3 +287,226 @@ modal.confirm({ title: "...", onOk: ... });
 
 **Status:** ✅ Selesai (sudah diimplementasikan sejak item #13 & #15)
 
+
+### 17. Diagnosis Menggunakan Dropdown + Auto-fill Item
+
+**Masalah:** Diagnosis saat ini berupa input text bebas. Tidak ada daftar diagnosis standar, tidak ada pilihan cepat, dan dokter harus memilih item (obat/jasa/barang) satu per satu setelah mengisi diagnosis.
+
+**Solusi:**
+- Diagnosis berupa **dropdown** (autocomplete): pilih dari daftar diagnosis yang sudah ada, atau ketik input baru jika diagnosis tersebut belum pernah dipakai
+- Ketika diagnosis dipilih → otomatis muncul input untuk **Obat, Jasa, dan Barang** 
+- **Konsultasi dokter bisa gratis** — transaksi bisa dibuat tanpa item, hanya diagnosis (total Rp 0)
+
+**File diubah:**
+- `packages/shared/src/medical-history.ts` — schema diagnosis
+- `apps/backend/src/services/transaction.service.ts` — izinkan items kosong untuk vet
+- `apps/frontend/app/dashboard/vet-sales/create/page.tsx` — dropdown diagnosis + auto-fill
+
+---
+
+### 18. Tambah Field di Rekam Medis (SOAP)
+
+**Masalah:** Rekam medis saat ini hanya punya Diagnosis & Catatan. Tidak ada struktur pemeriksaan klinis standar.
+
+**Solusi:** Tambah field SOAP di rekam medis:
+| Field | Label | Tipe |
+|-------|-------|------|
+| `O` | **Hasil Pemeriksaan Laboratorium** | Text area |
+| `A` | **Pemeriksaan Fisik** | Text area |
+| `P` | **Catatan Dokter Untuk Pemilik** | Text area |
+| `P` | **Catatan Dokter Untuk Paramedis** | Text area |
+
+**File diubah:**
+- `packages/shared/src/medical-history.ts` — tambah field baru
+- `apps/backend/src/models/medical-history.model.ts` — tambah field schema
+- `apps/frontend/app/dashboard/vet-sales/create/page.tsx` — form tambah field
+- `apps/frontend/app/dashboard/medical-histories/[id]/page.tsx` — tampilkan field baru
+- `apps/frontend/app/dashboard/pets/[id]/page.tsx` — modal rekam medis
+
+---
+
+### 19. Tambah Pasien — Urutan Field Baru (Signalment)
+
+**Masalah:** Form tambah pasien saat ini berurutan campur aduk (nama, jenis, gender, catatan) tanpa pengelompokan logis.
+
+**Solusi:** Urutkan ulang form tambah pasien menjadi 2 bagian:
+
+**Data Pasien:**
+1. Nama Hewan
+2. Jenis Hewan
+
+**Signalment:**
+3. Ras Hewan
+4. Jenis Kelamin
+5. Umur
+6. ~~Catatan~~ → diganti **"Ciri Khusus"**
+
+**File diubah:**
+- `packages/shared/src/pet.ts` — rename field notes → ciriKhusus / tambah ras, umur
+- `apps/backend/src/models/pet.model.ts` — schema
+- `apps/frontend/app/dashboard/pets/page.tsx` — form tambah/edit pasien
+- `apps/frontend/app/dashboard/pets/[id]/page.tsx` — detail pasien
+
+---
+
+### 20. Urutan & Rename Menu Sidebar
+
+**Masalah:** Sidebar saat ini: Dashboard, Pemilik, Pasien, Produk & Jasa, Transaksi, Rekam Medis. Tidak sesuai alur kerja klinik (klien → pasien baru/lama → pemeriksaan).
+
+**Solusi:** Urutan & nama menu baru:
+| Urutan | Menu | Keterangan |
+|--------|------|------------|
+| 1 | Dashboard | tetap |
+| 2 | **Klien** | rename dari "Pemilik" (ex-Customer) |
+| 3 | **Pasien Baru** | rename dari "Pasien" (tambah pasien baru) |
+| 4 | **Pasien Lama** | rename dari "Konsultasi Baru" (konsultasi pasien yang sudah terdaftar) |
+| 5 | Rekam Medis | tetap |
+| 6 | **Jasa** | split dari "Produk & Jasa" — filter type=service |
+| 7 | **Obat** | split dari "Produk & Jasa" — filter type=medicine |
+| 8 | **Barang** | split dari "Produk & Jasa" — filter type=physical |
+| 9 | Transaksi | tetap |
+
+**Catatan:** Menu 6-8 perlu penjelasan lebih lanjut — Jasa/Obat/Barang adalah 3 halaman terpisah
+
+**File diubah:**
+- `apps/frontend/app/dashboard/layout.tsx` — urutan & label menu
+- `apps/frontend/app/dashboard/customers/page.tsx` — judul Klien
+- `apps/frontend/app/dashboard/pets/page.tsx` — judul Pasien Baru
+- `apps/frontend/app/dashboard/vet-sales/create/page.tsx` — jadi Pasien Lama
+
+---
+
+### 21. Bug — Icon Delete Tidak Berhasil Delete
+
+**Masalah:** Icon delete (trash) di beberapa halaman tidak melakukan delete. Data tidak terhapus saat tombol ditekan.
+
+**Solusi:** Audit semua tombol delete:
+1. Cek apakah `apiFetch` DELETE dipanggil dengan benar (`method: "DELETE"`)
+2. Cek apakah `Modal.confirm` menggunakan `useAntdModal()` (bukan static `Modal.confirm`)
+3. Cek backend route — apakah role user punya akses (misal kasir tidak boleh delete?)
+4. Cek response error — apakah error handling menampilkan pesan yang benar
+
+**File yang perlu dicek:**
+- `apps/frontend/app/dashboard/transactions/page.tsx`
+- `apps/frontend/app/dashboard/pets/page.tsx`
+- `apps/frontend/app/dashboard/customers/page.tsx`
+- `apps/frontend/app/dashboard/products/page.tsx`
+- `apps/backend/src/routes/*.route.ts` — role authorization
+
+## 🔜 Belum Dikerjakan
+
+### 22. Tambah Pasien — Input Kondisional & Autocomplete
+
+**Masalah:** Form tambah pasien saat ini:
+- Bisa mengisi tanggal lahir DAN umur awal bersamaan (tidak konsisten)
+- Jenis hewan, ras, ciri khusus hanya input bebas — tidak ada pilihan cepat dari data yang sudah ada
+
+**Solusi:**
+
+1. **Umur input kondisional** — gunakan radio button: `[📅 Tanggal Lahir] [🐣 Umur Awal]`
+   - Pilih **Tanggal Lahir** → field DatePicker muncul, field umur awal hidden
+   - Pilih **Umur Awal** → field umur (value + satuan bulan/tahun) muncul, DatePicker hidden
+   - Tidak bisa keduanya terisi
+
+2. **Autocomplete distinct values** — untuk field:
+   - **Jenis Hewan** — dari distinct `kind` di database
+   - **Ras Hewan** — dari distinct `breed` di database
+   - **Ciri Khusus** — dari distinct `notes` di database
+   - Pola: `AutoComplete` dengan `options` dari API distinct. Bisa pilih dari list, atau ketik bebas jika nilai belum ada di list
+
+**Backend:** Tambah endpoint `GET /api/pets/distinct?field=kind|breed|notes` — mengembalikan array nilai unik.
+
+**File diubah:**
+- `apps/backend/src/services/pet.service.ts` + controller + route — endpoint distinct
+- `apps/frontend/app/dashboard/pets/page.tsx` — radio umur + autocomplete
+
+---
+
+### 23. Pasien Lama (Konsultasi) — Riwayat Medis & Barang
+
+**Masalah:** Halaman konsultasi (`/dashboard/consultations/new`):
+- Tidak menampilkan riwayat medis pasien setelah pasien dipilih
+- Diagnosis sudah autocomplete (item 17) tapi field lainnya belum lengkap
+- Hanya bisa tambah Jasa & Obat — belum bisa tambah Barang
+- Adjust flow lengkapnya
+    Kasir 
+    - input data klien
+    - input data hewan
+    - masukin data S dan O
+
+    hewan masuk ruang periksa
+
+    Dokter 
+    - masukin data A dan P
+    - Diagnosa
+    - Input tindakan 
+    - input resep obat
+    - pemberian obat suntik
+
+    Kasir 
+    - menerima tagihan dr dokter
+    - klien nunggu obat racik
+    - klien bayar
+- Setelah simpan, tidak diarahkan ke halaman riwayat medis
+
+
+**Solusi:**
+
+1. **Riwayat medis pasien** — setelah pasien dipilih, tampilkan komponen riwayat (reuse dari Riwayat Medis di Detail Pasien)
+
+2. **Diagnosis autocomplete** — sudah ada (item 17), pastikan tetap berjalan
+
+3. **Tambah Barang** — tambah editor baru di samping Tindakan (Jasa) & Resep Obat:
+   - Options dari `/api/products` (productType != obat)
+   - Item barang masuk ke `treatments` atau field baru `goods[]` di rekam medis → item transaksi type physical
+
+4. **Pemberian obat suntik** — jadikan **catatan di resep** (field `notes` pada prescription item), bukan item transaksi terpisah
+
+5. **Rekam medis DIHITUNG FINAL** — tidak ada konsep draft. Begitu disimpan, rekam medis langsung final + transaksi dibuat. Alur kasir→dokter→kasir tetap satu form konsultasi.
+
+6. **Redirect setelah simpan** — `router.push(\`/dashboard/medical-histories/${res.data._id}\`)` (sudah ada di handleSubmit — verify)
+
+**File diubah:**
+- `apps/frontend/app/dashboard/consultations/new/page.tsx`
+- `packages/shared/src/medical-history.ts` — field goods (opsional)
+- `apps/backend/src/services/medical-history.service.ts` — proyeksi goods ke transaksi
+
+---
+
+### 24. Tambah Obat — Autocomplete Kategori/Satuan
+
+**Masalah:** Form tambah obat (halaman `/dashboard/obat`) masih pakai input bebas untuk kategori & satuan, dan wording-nya "Tambah Barang" bukan "Tambah Obat". Belum ada pembeda barang vs obat.
+
+**Solusi:**1.
+
+1. **Autocomplete distinct values** — field:
+   - **Kategori** — dari distinct `category` di database (filter: yang sudah dipakai untuk barang)
+   - **Satuan** — dari distinct `unit` di database
+   - Pola: bisa pilih dari list atau ketik bebas
+
+**File diubah:**
+- `apps/backend/src/services/product.service.ts` + controller + route — endpoint distinct (reuse dari item 24)
+- `apps/frontend/app/dashboard/products/page.tsx` — autocomplete
+
+---
+
+### 26. Transaksi Barang Baru — Fix CastError & Flow
+
+**Masalah:** Halaman `/dashboard/transactions/create-shop`:
+- Error backend: `CastError: Cast to ObjectId failed for value "physical" (type string) at path "_id" for model "Product"` — frontend mengirim `product._id` berupa string `"physical"` (salah struktur payload)
+- Label masih "Pemilik" — harusnya "Klien"
+- Tombol "Tambah produk" tidak berfungsi
+- Setelah Proses Pembayaran sukses, tidak redirect ke halaman transaksi
+
+**Solusi:**
+
+1. **Fix CastError** — perbaiki payload item di frontend: kirim `{ productId, quantity }` (bukan `{ product: { _id, name, type } }`) sesuai `shopCreateSchema`. Backend `createShopTransaction` menerima `productId` + `quantity` (lihat `shopCreateSchema`)
+
+2. **Label** — "Pemilik" → "Klien"
+
+3. **Tambah produk** — perbaiki handler: `addToCart(productId)` harus menemukan produk dari list dengan `_id` yang benar, bukan string `"physical"`
+
+4. **Redirect** — setelah sukses `router.push("/dashboard/transactions")`
+
+**File diubah:**
+- `apps/frontend/app/dashboard/transactions/create-shop/page.tsx`

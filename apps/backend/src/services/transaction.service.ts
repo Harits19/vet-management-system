@@ -1,4 +1,4 @@
-import { TransactionModel, ProductModel, CustomerModel, PetModel, MedicalHistoryModel } from "../models/index.js";
+import { TransactionModel, ProductModel, ServiceModel, CustomerModel, PetModel, MedicalHistoryModel } from "../models/index.js";
 import type { TransactionCreateRequest, ShopCreateRequest, TransactionFilter } from "@vet/shared";
 import mongoose from "mongoose";
 
@@ -21,7 +21,6 @@ export async function createShopTransaction(input: ShopCreateRequest, cashierId:
   for (const item of input.items) {
     const product = await ProductModel.findById(item.productId);
     if (!product) throw Object.assign(new Error(`Product ${item.productId} not found`), { status: 404 });
-    if (product.type !== "physical") throw Object.assign(new Error(`${product.product.name} not a physical product`), { status: 400 });
     if ((product.inventory.quantity ?? 0) < item.quantity)
       throw Object.assign(new Error(`Insufficient stock for ${product.product.name}`), { status: 400 });
 
@@ -85,23 +84,31 @@ async function createTransaction(input: TransactionCreateRequest, cashierId: str
   let totalSelling = 0;
 
   for (const item of input.items) {
-    const product = await ProductModel.findById(item.product._id);
-    if (!product) throw Object.assign(new Error(`Product ${item.product._id} not found`), { status: 404 });
+    const isService = item.product.type === "service";
+    const service = isService ? await ServiceModel.findById(item.product._id) : null;
+    const product = isService ? null : await ProductModel.findById(item.product._id);
+    if (isService && !service) throw Object.assign(new Error(`Service ${item.product._id} not found`), { status: 404 });
+    if (!isService && !product) throw Object.assign(new Error(`Product ${item.product._id} not found`), { status: 404 });
 
-    const cost = (product.pricing.cost ?? 0) * item.quantity;
+    const cost = (isService ? (service!.cost ?? 0) : (product!.pricing.cost ?? 0)) * item.quantity;
     const selling = item.pricing.selling * item.quantity;
     totalCost += cost;
     totalSelling += selling;
 
     items.push({
-      product: { _id: product._id, name: product.product.name, type: product.type, code: product.product.code },
+      product: {
+        _id: isService ? service!._id : product!._id,
+        name: isService ? service!.name : product!.product.name,
+        type: item.product.type,
+        code: isService ? undefined : product!.product.code,
+      },
       quantity: item.quantity,
       pricing: { cost, selling, total: selling },
       dosage: item.dosage,
     });
 
-    if (product.type === "physical" && (product.inventory.quantity ?? 0) >= item.quantity) {
-      await ProductModel.updateOne({ _id: product._id }, { $inc: { "inventory.quantity": -item.quantity } });
+    if (!isService && (product!.inventory.quantity ?? 0) >= item.quantity) {
+      await ProductModel.updateOne({ _id: product!._id }, { $inc: { "inventory.quantity": -item.quantity } });
     }
   }
 
@@ -157,6 +164,141 @@ async function createTransaction(input: TransactionCreateRequest, cashierId: str
   });
 
   return txn.toObject() as any;
+}
+
+// ──────────────────────────────────────────
+// Transaction sync from Medical History
+// Menyimpan rekam medis otomatis membuat/memperbarui transaksi (type: vet).
+// Tindakan → item jasa (service), Resep Obat → item obat (physical).
+// Transaksi yang sudah lunas tidak diubah (financial record tetap).
+// ──────────────────────────────────────────
+interface MhItemInput {
+  productId: string | mongoose.Types.ObjectId;
+  name: string;
+  quantity: number;
+  price: number;
+  dosage?: string;
+  usage?: string;
+  notes?: string;
+}
+
+export async function buildTransactionItemsFromMh(
+  treatments: MhItemInput[],
+  prescriptions: MhItemInput[],
+  goods: MhItemInput[] = []
+) {
+  const items: any[] = [];
+  let totalCost = 0;
+  let totalSelling = 0;
+
+  for (const t of treatments) {
+    const service = await ServiceModel.findById(t.productId);
+    if (!service) throw Object.assign(new Error(`Tindakan ${t.name || t.productId} tidak ditemukan`), { status: 404 });
+    const cost = (service.cost ?? 0) * t.quantity;
+    const selling = t.price * t.quantity;
+    totalCost += cost;
+    totalSelling += selling;
+    items.push({
+      product: { _id: service._id, name: service.name, type: "service" },
+      quantity: t.quantity,
+      pricing: { cost, selling, total: selling },
+    });
+  }
+
+  // Obat (medicine) + Barang (good) — keduanya item physical dari ProductModel
+  for (const p of [...prescriptions, ...goods]) {
+    const product = await ProductModel.findById(p.productId);
+    if (!product) throw Object.assign(new Error(`Produk ${p.name || p.productId} tidak ditemukan`), { status: 404 });
+    const cost = (product.pricing.cost ?? 0) * p.quantity;
+    const selling = p.price * p.quantity;
+    totalCost += cost;
+    totalSelling += selling;
+    items.push({
+      product: { _id: product._id, name: product.product.name, type: "physical", code: product.product.code },
+      quantity: p.quantity,
+      pricing: { cost, selling, total: selling },
+      dosage: (p as any).dosage || undefined,
+    });
+    if ((product.inventory.quantity ?? 0) >= p.quantity) {
+      await ProductModel.updateOne({ _id: product._id }, { $inc: { "inventory.quantity": -p.quantity } });
+    }
+  }
+
+  return { items, totalCost, totalSelling };
+}
+
+export async function createTransactionFromMedicalHistory(input: {
+  medicalHistoryId: string;
+  pet: { _id: mongoose.Types.ObjectId; name: string; kind: string };
+  customer?: { _id: mongoose.Types.ObjectId; name: string } | null;
+  treatments: MhItemInput[];
+  prescriptions: MhItemInput[];
+  goods?: MhItemInput[];
+  cashierId: string;
+  cashierName: string;
+}) {
+  const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions, input.goods ?? []);
+  if (items.length === 0) return null;
+
+  const profit = totalSelling - totalCost;
+  const paymentStatus: "paid" | "debt" | "dp" = "debt"; // pembayaran menyusul di halaman transaksi
+
+  const txn = await TransactionModel.create({
+    type: "vet",
+    receiptNumber: generateReceiptNumber("vet"),
+    timestamp: new Date(),
+    customer: input.customer || undefined,
+    pet: input.pet,
+    medicalHistoryId: new mongoose.Types.ObjectId(input.medicalHistoryId),
+    cashier: { _id: new mongoose.Types.ObjectId(input.cashierId), name: input.cashierName },
+    items,
+    summary: { total: totalSelling, profit, cost: totalCost, paid: 0 },
+    paymentStatus,
+    paymentMethod: "Utang",
+  });
+  return txn.toObject() as any;
+}
+
+export async function syncTransactionFromMedicalHistory(input: {
+  medicalHistoryId: string;
+  treatments: MhItemInput[];
+  prescriptions: MhItemInput[];
+  goods?: MhItemInput[];
+}) {
+  const txn = await TransactionModel.findOne({ medicalHistoryId: input.medicalHistoryId });
+  if (!txn) return null;
+  if (txn.paymentStatus === "paid") return txn.toObject() as any; // jangan ubah transaksi lunas
+
+  const { items, totalCost, totalSelling } = await buildTransactionItemsFromMh(input.treatments, input.prescriptions, input.goods ?? []);
+  if (items.length === 0) {
+    await TransactionModel.deleteOne({ _id: txn._id });
+    return null;
+  }
+
+  const profit = totalSelling - totalCost;
+  const paid = txn.summary.paid ?? 0;
+  const paymentStatus: "paid" | "debt" | "dp" = paid >= totalSelling ? "paid" : "debt";
+
+  const updated = await TransactionModel.findByIdAndUpdate(
+    txn._id,
+    {
+      $set: {
+        items,
+        summary: { total: totalSelling, profit, cost: totalCost, paid },
+        paymentStatus,
+      },
+    },
+    { new: true, runValidators: true }
+  ).lean();
+  return updated as any;
+}
+
+export async function deleteTransactionForMedicalHistory(medicalHistoryId: string) {
+  const txn = await TransactionModel.findOne({ medicalHistoryId });
+  if (!txn) return null;
+  if (txn.paymentStatus === "paid") return txn.toObject() as any; // jangan hapus transaksi lunas
+  const removed = await TransactionModel.findByIdAndDelete(txn._id).lean();
+  return removed as any;
 }
 
 // ──────────────────────────────────────────

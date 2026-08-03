@@ -2,23 +2,36 @@ import { z } from "zod";
 import { stringRequired } from "./common.js";
 
 // ──────────────────────────────────────────
-// Pet
+// Pet — master data pasien (Single Source of Truth)
 // ──────────────────────────────────────────
 export interface IPet {
   _id: string;
   name: string;
   kind: string;
+  breed?: string;
   gender: "male" | "female";
+  birthDate?: Date;
+  initialAge?: { value: number; unit: "month" | "year" };
   notes?: string;
   customerId: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
+const initialAgeSchema = z
+  .object({
+    value: z.preprocess((val) => Number(val), z.number().min(0)),
+    unit: z.enum(["month", "year"]),
+  })
+  .optional();
+
 export const petCreateSchema = z.object({
   name: stringRequired,
   kind: stringRequired,
+  breed: z.string().trim().optional(),
   gender: z.enum(["male", "female"]),
+  birthDate: z.coerce.date().optional(),
+  initialAge: initialAgeSchema,
   notes: z.string().optional(),
   customerId: stringRequired,
 });
@@ -36,3 +49,38 @@ export const petFilterSchema = z.object({
   order: z.enum(["asc", "desc"]).default("desc"),
 });
 export type PetFilter = z.infer<typeof petFilterSchema>;
+
+// ──────────────────────────────────────────
+// Age helpers — umur dihitung otomatis dari data pasien,
+// TIDAK pernah diinput saat konsultasi.
+// ──────────────────────────────────────────
+export interface PetAgeInput {
+  birthDate?: Date | string | null;
+  initialAge?: { value: number; unit: "month" | "year" } | null;
+}
+
+export function computePetAge(pet: PetAgeInput): { months: number; label: string } | null {
+  if (pet?.birthDate) {
+    const birth = new Date(pet.birthDate);
+    if (isNaN(birth.getTime())) return null;
+    const now = new Date();
+    let months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+    if (now.getDate() < birth.getDate()) months -= 1;
+    if (months < 0) months = 0;
+    return { months, label: formatAgeMonths(months) };
+  }
+  if (pet?.initialAge && typeof pet.initialAge.value === "number") {
+    const months = pet.initialAge.unit === "year" ? pet.initialAge.value * 12 : pet.initialAge.value;
+    return { months, label: formatAgeMonths(months) };
+  }
+  return null;
+}
+
+export function formatAgeMonths(months: number): string {
+  if (months <= 0) return "< 1 bulan";
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+  if (years === 0) return `${rest} bulan`;
+  if (rest === 0) return `${years} tahun`;
+  return `${years} tahun ${rest} bulan`;
+}

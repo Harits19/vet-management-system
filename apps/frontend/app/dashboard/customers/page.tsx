@@ -5,6 +5,7 @@ import { Card, Table, Button, Input, Space, Modal, Form, Tag, Typography, Row, C
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
+import { useAntdModal } from "../../hooks/useAntdModal";
 import { useRouter } from "next/navigation";
 
 const { Title } = Typography;
@@ -28,6 +29,7 @@ export default function CustomersPage() {
   const [form] = Form.useForm();
   const router = useRouter();
   const msg = useAntdMessage();
+  const modal = useAntdModal();
 
   const fetchData = async (p = page, s = search) => {
     setLoading(true);
@@ -68,12 +70,16 @@ export default function CustomersPage() {
   };
 
   const handleDelete = (id: string) => {
-    Modal.confirm({
+    modal.confirm({
       title: "Hapus customer?",
       onOk: async () => {
-        await apiFetch(`/api/customers/${id}`, { method: "DELETE" });
-        msg.success("Customer dihapus");
-        fetchData();
+        try {
+          await apiFetch(`/api/customers/${id}`, { method: "DELETE" });
+          msg.success("Customer dihapus");
+          fetchData();
+        } catch (err: any) {
+          msg.error(err.message);
+        }
       },
     });
   };
@@ -96,7 +102,7 @@ export default function CustomersPage() {
 
   return (
     <div>
-      <Title level={4}>Customer/Pemilik</Title>
+      <Title level={4}>Klien</Title>
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">

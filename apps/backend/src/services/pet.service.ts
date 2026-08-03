@@ -44,5 +44,13 @@ export async function deletePet(id: string) {
 }
 
 export async function searchCustomerPets(customerId: string) {
-  return PetModel.find({ customerId }).select("name kind gender").lean();
+  return PetModel.find({ customerId }).select("name kind breed gender birthDate initialAge").lean();
+}
+
+// Nilai unik untuk autocomplete (kind, breed, notes)
+export async function getDistinctPetValues(field: string) {
+  const allowed = new Set(["kind", "breed", "notes"]);
+  if (!allowed.has(field)) throw Object.assign(new Error("Field tidak didukung"), { status: 400 });
+  const values = await PetModel.distinct(field);
+  return values.filter((v: unknown) => typeof v === "string" && (v as string).trim() !== "");
 }

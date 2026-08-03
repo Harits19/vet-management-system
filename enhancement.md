@@ -522,7 +522,7 @@ modal.confirm({ title: "...", onOk: ... });
    - **Jasa** (`treatments`) — diambil dari Master Tindakan (`/api/services`)
    - **Obat** (`prescriptions`) — diambil dari Master Obat (`/api/products?productType=medicine`)
    - **Barang** (`goods`) — diambil dari Master Barang (`/api/products?productType=good`)
-   - Setiap item template HANYA menyimpan id master + `quantity` (+ `dosage` untuk obat) — TIDAK ada snapshot nama/harga/satuan. Detail (nama, harga, satuan, stok) selalu di-GET dari master saat ditampilkan/diterapkan: jasa dari `/api/services`, obat dari `/api/products?productType=medicine`, barang dari `/api/products?productType=good`
+   - Setiap item template menyimpan `productId` + `name` (snapshot — untuk tampilan di halaman list diagnosis) + `quantity` (+ `dosage` untuk obat). Harga/satuan TIDAK disimpan. Saat diterapkan ke rekam medis, nama & harga di-GET dari master (jasa: `/api/services`, obat: `/api/products?productType=medicine`, barang: `/api/products?productType=good`) — bukan memakai snapshot dari template
 
 2. **CRUD penuh** — entri list diagnosis bisa dibuat, diubah, dan dihapus. **Akses: role `admin`, `superadmin`, `doctor`** (kasir tidak bisa)
 
@@ -535,7 +535,7 @@ modal.confirm({ title: "...", onOk: ... });
 4. Simpan → rekam medis + transaksi dibuat seperti biasa (item template menjadi item transaksi)
 
 **Backend:**
-- Model baru `DiagnosisTemplate` — `{ name (unique), items: { treatments: [{ productId, quantity }], prescriptions: [{ productId, quantity, dosage? }], goods: [{ productId, quantity }] } }`
+- Model baru `DiagnosisTemplate` — `{ name (unique), items: { treatments: [{ productId, name, quantity }], prescriptions: [{ productId, name, quantity, dosage? }], goods: [{ productId, name, quantity }] } }`
 - Service + controller + route baru — CRUD `/api/diagnosis-templates` (+ `?search=` untuk autocomplete)
 - Autocomplete diagnosis: dari master list saja — `GET /api/diagnosis-templates?search=`; endpoint `/api/medical-histories/diagnoses` (distinct riwayat) tidak dipakai lagi
 

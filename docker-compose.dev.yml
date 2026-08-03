@@ -12,7 +12,7 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3001
-      MONGODB_URI: mongodb://mongodb:27017/vet-management
+      MONGODB_URI: mongodb://${MONGO_APP_USERNAME:-vetapp}:${MONGO_APP_PASSWORD:-dev-app-password}@mongodb:27017/vet-management?authSource=vet-management
       JWT_SECRET: dev-secret-change-me
       JWT_EXPIRES_IN: 1d
       DEFAULT_USER_PASSWORD: password123

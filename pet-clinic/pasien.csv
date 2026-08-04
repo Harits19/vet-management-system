@@ -46,12 +46,12 @@ id;name;species;breed;fur_color;age;gender;owner_name;owner_phone;owner_email;ad
 5337;NOBY;kucing;MIXDOM;;-;male;AZZAHRA;81393202457;;JOGONALAN, NGRAWAT, PERUM;                                            ;77;1/21/2026 06:37;;KCG-2025-276;
 5338;MOMO;kucing;DOMESTIK;OREN PUTIH;2,5 BULAN;male;BU MARTI;82225207117;;DEMANGAN, KAJORAN, KLATEN;                                                                                        ;77;1/21/2026 06:44;;KCG-2025-0277;
 5339;MIMI;kucing;DOMESTIC;ABU TABBY PUTIH;2,5 BULAN;female;BU MARTI;82225207117;;DEMANGAN, KAJORAN, KLATEN;                                                                                        ;77;1/21/2026 06:50;;KCG-2025-0278;
-5340;NOLI;kucing;Tidak Diketahui;-;5 Bulan;female;AZZAHRA;81393202457;;JOGONALAN, NGRAWAT, PERUM;                                            ;77;1/21/2026 06:54;;KCG-2025-0279;
+5340;NOLI;kucing;;-;5 Bulan;female;AZZAHRA;81393202457;;JOGONALAN, NGRAWAT, PERUM;                                            ;77;1/21/2026 06:54;;KCG-2025-0279;
 5343;NN;kucing;DOMESTIK;OREN;1 BULAN;male;WAYANG MAHARANI;81226395984;;--;                                            ;77;1/21/2026 07:00;;KCG-2025-0280;
 5344;KENOL;kucing;PERSIA;-;7 BULAN;male;NURUL;85229963457;;-;                                            ;77;1/21/2026 07:12;;KCG-2025-0281;
 5345;MOKA;kucing;DOMESTIK;OREN PUTIH;±4 Tahun;female;AYUMI;85741391049;;SANDELAN, JABUNG, GANTIWARNO;                                            ;77;1/21/2026 07:18;;KCG-2025-0282;
 5346;MIKO;kucing;BSH MIX;ABU-PUTIH;Tidak Diketahui;male;BUDI RAHARJO;8122752525;;Prambanan;                                            ;77;1/21/2026 07:26;;KCG-2025-0283;
-5347;SII;kucing;Tidak Diketahui;HITAM;8 BULAN;male;CARLI;81210628301;;WEDI;                                            ;77;1/21/2026 07:31;;KCG-2025-0284;
+5347;SII;kucing;;HITAM;8 BULAN;male;CARLI;81210628301;;WEDI;                                            ;77;1/21/2026 07:31;;KCG-2025-0284;
 5348;LESTI;kucing;DOMESTIK;;2-3 TAHUN;female;JENY;89601603093;;WEDI;                                            ;77;1/21/2026 07:37;;KCG-2025-0285;
 5350;REMBO;kucing;DOMESTIK;OREN PUTIH;;male;AGUSTINA;81392450286;;SOMOPURO;                                            ;77;1/21/2026 07:42;;KCG-2025-0286;
 5351;YONO;kucing;MIXDOM;OREN;3 TAHUN;male;RISKA PERMATA RAHAYU;88233267943;;GANTIWARNO;                                            ;77;1/21/2026 07:46;;KCG-2025-0288;
@@ -239,7 +239,7 @@ id;name;species;breed;fur_color;age;gender;owner_name;owner_phone;owner_email;ad
 5614;NN;kucing;MIX DOM;OREN;3-4 BULAN;male;YUSUF;81214159874;;MELIKAN, WEDI;                                            ;77;1/27/2026 10:47;;KCG-2025-0138;
 5615;NN 2;kucing;MIX DOM;;3-4 BULAN;male;YUSUF;81214159874;;MELIKAN, WEDI;                                                                                        ;77;1/27/2026 10:48;;KCG-2025-0139;
 5651;BATMAN ;kucing;MIX DOM;ABU-ABU;1 TAHUN;male;VIVI;87750393526;;MUTIHAN, GANTIWARNO;                                            ;77;1/29/2026 11:12;;KCG-2025-097;
-5652;MOCA;kucing;-;PUTIH-KREM;1 TAHUN;male;NINIK RUPIAH;-;;WEDI;                                            ;77;1/29/2026 11:17;;KCG-2025-098;
+5652;MOCA;kucing;;PUTIH-KREM;1 TAHUN;male;NINIK RUPIAH;-;;WEDI;                                            ;77;1/29/2026 11:17;;KCG-2025-098;
 5653;CIKI;kucing;MIX PERSIA;OREN-PUTIH;1 TAHUN;male;NINA;81227402788;;MUTIHAN, GANTIWARNO;                                            ;77;1/29/2026 11:44;;KCG-2025-099;
 5654;PUTIH;kucing;DOMESTIC;PUTIH, MATA BIRU;7 BULAN;male;WIET;-;;PRAMBANAN;                                            ;77;1/29/2026 11:48;;KCG-2025-0100;
 5655;MELI;kucing;CALICO;;1 TAHUN;female;NINAH;85729074815;;GEDONGAN, WEDI;                                            ;77;1/29/2026 11:52;;KCG-2025-0101;
@@ -313,7 +313,7 @@ id;name;species;breed;fur_color;age;gender;owner_name;owner_phone;owner_email;ad
 5814;CIKO;kucing;TELON;3 WARNA;;female;PURNOMO SAPUTRO;85712307074;;SEKARBOLO,JIWO WETAN;                                            ;77;2/4/2026 03:04;;KCG-2025-043;
 5815;GERY;kucing;BSH MIX;ABU;5 TAHUN;male;MARSYA;89562115639;;WEDI;                                            ;77;2/4/2026 03:08;;KCG-2025-045;
 5816;CICI;kucing;MIX DOM;SETENGAH OREN;1 TAHUN;female;ETIK;82134759006;;PADANGAN,SUMBEREJO;                                            ;77;2/4/2026 03:09;;KCG-2025-0300;
-5817;JIBI;kucing;-;-;10 TAHUN;female;WAHYU;81392292130;;TLOGO,PRAMBANAN;                                            ;77;2/4/2026 03:22;;KCG-2025-0301;
+5817;JIBI;kucing;;-;10 TAHUN;female;WAHYU;81392292130;;TLOGO,PRAMBANAN;                                            ;77;2/4/2026 03:22;;KCG-2025-0301;
 5818;ONA;kucing;DOMESTIK;-;1 TAHUN;female;ADINDA;81220134691;;KEBONARUM;                                            ;77;2/4/2026 03:30;;KCG-2025-0302;
 5819;NN;kucing;;;2 BULAN;male;VANISA;85520762384;;PAKAHAN;                                            ;77;2/4/2026 03:33;;KCG-2025-046;
 5820;SATI;kucing;DOMESTIK;MUJAER;6 BULAN;female;WAHYU/GILANG;81548782009;;SENGON,PRAMBANAN;                                            ;77;2/4/2026 03:33;;KCG-2025-0303;
@@ -406,7 +406,7 @@ id;name;species;breed;fur_color;age;gender;owner_name;owner_phone;owner_email;ad
 5954;MILO;kucing;MIX HIMALAYA;;4 BULAN;male;BERIL;82135001032;;WARU;                                            ;77;2/9/2026 05:14;;KCG-2026-0423;
 5955;CASPER;kucing;MIX HIMALAYA;PUTIH HITAM;2 TAHUN;male;TIAN;87719282550;;CANDI MLESE, GANTIWARNO;                                            ;77;2/9/2026 05:15;;KCG-2026-0424;
 5956;NN;kucing;;;2 BULAN;female;RUDI;-;;;                                            ;77;2/9/2026 05:18;;KCG-2026-0425;
-5957;JOJO ;kucing;#NAME?;PUTIH;4-5 TAHUN;male;BIAN ;87834804892;;KALIBAJENG;                                            ;77;2/9/2026 05:25;;kcg-2026-0444;
+5957;JOJO ;kucing;;PUTIH;4-5 TAHUN;male;BIAN ;87834804892;;KALIBAJENG;                                            ;77;2/9/2026 05:25;;kcg-2026-0444;
 5958;KIAN ;kucing;MIXDOM;OREN;1 TAHUN;male;ANGGI NURMALA SARI;0;;;                                            ;77;2/9/2026 05:39;;KCG-2026-0446;
 5959;CILO;kucing;DOMESTIK;ABU ;1 TAHUN;male;GHAIDA;85743413969;;SIDODADI MLESE GANTIWARNO;                                            ;77;2/9/2026 05:43;;KCG-2026-0447;
 5961;JUJU;kucing;;;;unknown;RUDI;-;;;                                            ;77;2/9/2026 06:50;;KCG-2026-0426;

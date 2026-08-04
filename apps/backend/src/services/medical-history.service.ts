@@ -38,7 +38,7 @@ export async function getMedicalHistory(id: string) {
   const record = await MedicalHistoryModel.findById(id)
     .populate({
       path: "petId",
-      select: "name kind breed gender birthDate initialAge customerId",
+      select: "name kind breed gender birthDate initialAge customerId createdAt",
       populate: { path: "customerId", select: "name whatsapp address" },
     })
     .populate("doctorId", "name")

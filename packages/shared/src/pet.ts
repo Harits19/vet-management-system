@@ -57,20 +57,33 @@ export type PetFilter = z.infer<typeof petFilterSchema>;
 export interface PetAgeInput {
   birthDate?: Date | string | null;
   initialAge?: { value: number; unit: "month" | "year" } | null;
+  createdAt?: Date | string | null;
+}
+
+function monthsBetween(from: Date, to: Date): number {
+  let months = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
+  if (to.getDate() < from.getDate()) months -= 1;
+  return months;
 }
 
 export function computePetAge(pet: PetAgeInput): { months: number; label: string } | null {
   if (pet?.birthDate) {
     const birth = new Date(pet.birthDate);
     if (isNaN(birth.getTime())) return null;
-    const now = new Date();
-    let months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
-    if (now.getDate() < birth.getDate()) months -= 1;
-    if (months < 0) months = 0;
+    const months = Math.max(0, monthsBetween(birth, new Date()));
     return { months, label: formatAgeMonths(months) };
   }
   if (pet?.initialAge && typeof pet.initialAge.value === "number") {
-    const months = pet.initialAge.unit === "year" ? pet.initialAge.value * 12 : pet.initialAge.value;
+    const base = pet.initialAge.unit === "year" ? pet.initialAge.value * 12 : pet.initialAge.value;
+    // initialAge = umur saat createdAt → umur bertambah seiring waktu.
+    // Fallback: tanpa createdAt, umur tetap statis (perilaku lama).
+    let months = base;
+    if (pet.createdAt) {
+      const created = new Date(pet.createdAt);
+      if (!isNaN(created.getTime())) {
+        months += Math.max(0, monthsBetween(created, new Date()));
+      }
+    }
     return { months, label: formatAgeMonths(months) };
   }
   return null;

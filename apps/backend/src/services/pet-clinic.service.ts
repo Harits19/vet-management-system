@@ -15,7 +15,6 @@ import {
 } from "../models/medical-history.model.js";
 import { CustomerModel, ICustomerDoc } from "../models/customer.model.js";
 import { UserModel } from "../models/user.model.js";
-import { stringToDate } from "@vet/shared";
 
 class PetClinicService {
   async syncInventory(file: Buffer): Promise<IProductDoc[]> {
@@ -241,7 +240,7 @@ class PetClinicService {
 
       patients.push({
         _id: new mongoose.Types.ObjectId(),
-        createdAt: stringToDate(patient.created_at)!,
+        createdAt: patient.created_at,
         customerId: owner._id,
         gender: patient.gender,
         kind: patient.species,

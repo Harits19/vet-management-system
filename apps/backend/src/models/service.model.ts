@@ -9,6 +9,8 @@ export interface IServiceDoc {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  petClinicId?: string;
+  syncAt?: Date;
 }
 
 const ServiceSchema = new Schema<IServiceDoc>(
@@ -18,10 +20,16 @@ const ServiceSchema = new Schema<IServiceDoc>(
     price: { type: Number, required: true, min: 0 },
     cost: { type: Number, min: 0 },
     isActive: { type: Boolean, default: true },
+    petClinicId: { type: String, trim: true },
+    syncAt: { type: Date },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 ServiceSchema.index({ name: 1 });
+ServiceSchema.index({ petClinicId: 1 }, { sparse: true, unique: true });
 
-export const ServiceModel = mongoose.model<IServiceDoc>("Service", ServiceSchema);
+export const ServiceModel = mongoose.model<IServiceDoc>(
+  "Service",
+  ServiceSchema,
+);

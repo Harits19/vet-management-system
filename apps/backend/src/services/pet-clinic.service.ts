@@ -15,6 +15,7 @@ import {
 } from "../models/medical-history.model.js";
 import { CustomerModel, ICustomerDoc } from "../models/customer.model.js";
 import { UserModel } from "../models/user.model.js";
+import { stringToDate } from "@vet/shared";
 
 class PetClinicService {
   async syncInventory(file: Buffer): Promise<IProductDoc[]> {
@@ -42,7 +43,7 @@ class PetClinicService {
         }) as IProductDoc,
     );
 
-    await ProductModel.bulkWrite(
+    await ProductModel.collection.bulkWrite(
       inventories.map(({ _id, ...rest }) => ({
         updateOne: {
           filter: { "product.petClinicId": rest.product.petClinicId },
@@ -74,7 +75,7 @@ class PetClinicService {
         }) as IServiceDoc,
     );
 
-    await ServiceModel.bulkWrite(
+    await ServiceModel.collection.bulkWrite(
       services.map(({ _id, ...rest }) => ({
         updateOne: {
           filter: { petClinicId: rest.petClinicId },
@@ -106,7 +107,17 @@ class PetClinicService {
       .replace(/\bMGG\b|\bMG\b/g, "MINGGU");
 
     // Nilai yang tidak bisa diparse
-    if (["-", "?", "TIDAK DIKETAHUI", "TIDAK TAHU", "UNKNOWN", "N/A", "0"].includes(s)) {
+    if (
+      [
+        "-",
+        "?",
+        "TIDAK DIKETAHUI",
+        "TIDAK TAHU",
+        "UNKNOWN",
+        "N/A",
+        "0",
+      ].includes(s)
+    ) {
       return undefined;
     }
 
@@ -115,7 +126,10 @@ class PetClinicService {
 
     // Konversi satu bagian ("1 TAHUN 3 BULAN", "7 BULAN", "2 MINGGU") → total bulan
     // fallbackUnit dipakai saat bagian hanya angka tanpa satuan (mis. "2" di "2-3 TAHUN")
-    const partToMonths = (part: string, fallbackUnit?: string): number | null => {
+    const partToMonths = (
+      part: string,
+      fallbackUnit?: string,
+    ): number | null => {
       const re = /(\d+(?:\.\d+)?)\s*(TAHUN|BULAN|MINGGU|HARI)/g;
       let m: RegExpExecArray | null;
       let total = 0;
@@ -163,10 +177,16 @@ class PetClinicService {
         if (low % 12 === 0 && high % 12 === 0) {
           return { value: low / 12, unit: "year", range: high / 12 };
         }
-        return { value: Math.round(low * 100) / 100, unit: "month", range: Math.round(high * 100) / 100 };
+        return {
+          value: Math.round(low * 100) / 100,
+          unit: "month",
+          range: Math.round(high * 100) / 100,
+        };
       }
-      if (a !== null) return { value: Math.round(a * 100) / 100, unit: "month" };
-      if (b !== null) return { value: Math.round(b * 100) / 100, unit: "month" };
+      if (a !== null)
+        return { value: Math.round(a * 100) / 100, unit: "month" };
+      if (b !== null)
+        return { value: Math.round(b * 100) / 100, unit: "month" };
       return undefined;
     }
 
@@ -191,11 +211,21 @@ class PetClinicService {
         continue;
       }
       const ownerName = patient.owner_name;
-      const ownerFromDB = await CustomerModel.findOne({
-        fromPetClinic: true,
-        name: ownerName,
-      });
-      const owner = ownerFromDB || owners[ownerName];
+
+      let owner: ICustomerDoc = owners[ownerName];
+
+      if (!owner) {
+        const result = await CustomerModel.findOne({
+          fromPetClinic: true,
+          name: ownerName,
+        }).lean();
+
+        if (result) {
+          owner = result;
+          owners[ownerName] = result;
+        }
+      }
+
       if (!owner) {
         owners[ownerName] = {
           _id: new mongoose.Types.ObjectId(),
@@ -211,8 +241,8 @@ class PetClinicService {
 
       patients.push({
         _id: new mongoose.Types.ObjectId(),
-        createdAt: patient.created_at,
-        customerId: owners[ownerName]._id,
+        createdAt: stringToDate(patient.created_at)!,
+        customerId: owner._id,
         gender: patient.gender,
         kind: patient.species,
         name: patient.name,
@@ -226,7 +256,8 @@ class PetClinicService {
         syncAt: new Date(),
       });
     }
-    await CustomerModel.bulkWrite(
+
+    await CustomerModel.collection.bulkWrite(
       Object.values(owners).map(({ _id, ...rest }) => ({
         updateOne: {
           filter: { name: rest.name, fromPetClinic: true },
@@ -236,15 +267,26 @@ class PetClinicService {
       })),
     );
 
-    await PetModel.bulkWrite(
-      patients.map(({ _id, ...rest }) => ({
-        updateOne: {
-          filter: { petClinicId: rest.petClinicId },
-          update: { $set: rest, $setOnInsert: { _id } },
-          upsert: true,
-        },
-      })),
+    const debugId = "7881";
+
+    await PetModel.collection.bulkWrite(
+      patients.map(({ _id, ...rest }) => {
+        if (rest.petClinicId === debugId) {
+          console.log("updateData", JSON.stringify(rest));
+        }
+        return {
+          updateOne: {
+            filter: { petClinicId: rest.petClinicId },
+            update: { $set: rest, $setOnInsert: { _id } },
+            upsert: true,
+          },
+        };
+      }),
     );
+
+    const result = await PetModel.findOne({ petClinicId: debugId }).lean();
+
+    console.log("result update", JSON.stringify(result));
 
     return patients;
   }
@@ -273,12 +315,6 @@ class PetClinicService {
       // Baris tanpa tanggal kunjungan (date/created_at kosong) tidak bisa disimpan
       // (visitDate required) — skip, jangan gagalkan seluruh sync.
       const visitDate = history.date ?? history.created_at;
-      if (!visitDate) {
-        console.warn(
-          `Skip medical history ${history.id}: no date/created_at`,
-        );
-        continue;
-      }
 
       medicalHistories.push({
         _id: new mongoose.Types.ObjectId(),
@@ -308,7 +344,7 @@ class PetClinicService {
       });
     }
 
-    await MedicalHistoryModel.bulkWrite(
+    await MedicalHistoryModel.collection.bulkWrite(
       medicalHistories.map(({ _id, ...rest }) => ({
         updateOne: {
           filter: { petClinicId: rest.petClinicId },

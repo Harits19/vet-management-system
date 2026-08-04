@@ -46,7 +46,7 @@ export interface IPrescriptionSubDoc {
 export interface IMedicalHistoryDoc {
   _id: mongoose.Types.ObjectId;
   petId: mongoose.Types.ObjectId;
-  visitDate: Date;
+  visitDate?: Date;
   soap?: ISoapSubDoc; // optional utk toleransi data lama
   diagnosis: string;
   doctorId: mongoose.Types.ObjectId;

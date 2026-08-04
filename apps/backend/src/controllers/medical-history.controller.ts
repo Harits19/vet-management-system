@@ -7,7 +7,6 @@ import {
   updateMedicalHistory,
   deleteMedicalHistory,
   getMedicalHistorySummary,
-  listDistinctDiagnoses,
 } from "../services/medical-history.service.js";
 import { medicalHistoryCreateSchema, medicalHistoryUpdateSchema, medicalHistoryFilterSchema } from "@vet/shared";
 import { UserModel } from "../models/index.js";
@@ -59,14 +58,6 @@ export async function remove(req: AuthRequest, res: Response, next: NextFunction
 export async function getByPet(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const data = await getMedicalHistorySummary(req.params.petId as string);
-    res.json({ success: true, data });
-  } catch (err) { next(err); }
-}
-
-export async function getDiagnoses(req: AuthRequest, res: Response, next: NextFunction) {
-  try {
-    const search = typeof req.query.search === "string" ? req.query.search : undefined;
-    const data = await listDistinctDiagnoses(search);
     res.json({ success: true, data });
   } catch (err) { next(err); }
 }

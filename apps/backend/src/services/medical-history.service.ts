@@ -8,22 +8,6 @@ import {
 import mongoose from "mongoose";
 
 // ──────────────────────────────────────────
-// Distinct diagnoses — untuk dropdown autocomplete
-// ──────────────────────────────────────────
-// Nilai unik diagnosis untuk autocomplete
-export async function listDistinctDiagnoses(search?: string) {
-  const match: any = { diagnosis: { $ne: "" } };
-  if (search) match.diagnosis = { $regex: search, $options: "i" };
-  const results = await MedicalHistoryModel.aggregate([
-    { $match: match },
-    { $group: { _id: { $trim: { input: "$diagnosis" } } } },
-    { $sort: { _id: 1 } },
-    { $limit: 50 },
-  ]);
-  return results.map((r) => r._id).filter(Boolean);
-}
-
-// ──────────────────────────────────────────
 // List
 // ──────────────────────────────────────────
 export async function listMedicalHistories(filter: MedicalHistoryFilter) {

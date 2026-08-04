@@ -15,6 +15,7 @@ interface MedicalRecord {
   _id: string;
   visitDate: string;
   diagnosis: string;
+  complaint?: string;
   doctorId: { _id: string; name: string };
   treatments: any[];
   prescriptions: any[];
@@ -64,6 +65,12 @@ export default function PetDetailPage() {
   const mhColumns = [
     { title: "Tanggal", dataIndex: "visitDate", render: (v: string) => dayjs(v).format("DD/MM/YYYY") },
     { title: "Diagnosis", dataIndex: "diagnosis" },
+    {
+      title: "Keluhan",
+      dataIndex: "complaint",
+      ellipsis: true,
+      render: (v?: string) => v || "-",
+    },
     {
       title: "BB / Suhu",
       key: "exam",

@@ -88,10 +88,95 @@ class PetClinicService {
   }
 
   parseAge(value?: string): IPetDocInitialAge | undefined {
-    // TODO handle format ini
-    // { undefined, '7 BULAN', '6 BULAN', '2 BULAN', '4 BULAN', '3 BULAN', '8 TAHUN', '2 TAHUN', '5 TAHUN', '1 TAHUN', '8 BULAN', '1 BULAN', '1,5 BULAN', 'Â± 1 Tahun', 'Â± 4 - 5 bulan', '4 Tahun', 'Â±3 TAHUN', '-', '2,5 BULAN', '5 Bulan', 'Â±4 Tahun', 'Tidak Diketahui', '2-3 TAHUN', '3 TAHUN', '1 THUN', '5 BULAN', '2-3 BULAN', '6 TAHUN', '4-5 BULAN', '5-6 BULAN', '1 TAHUN 3 BULAN', '9 TAHUN', '7-8 TAHUN', '6-7 BULAN', '2 MINGGU', '10 BULAN', '1 TAHUN 7 BULAN', '4 TAHUN', '7 TH', 'Â±2-3 TAHUN', '11 BULAN', 'Â±3 BULAN', 'Â± 3 BULAN', 'Â±3-4 BULAN', '9 BULAN', '1,5 TAHUN', '2-3 BULAN ', '6BULAN', '1 TH', '4,5 TAHUN', '6-7 TAHUN', '1 TAHUN 2 BULAN', '2 - 3 TAHUN', '3-4 BULAN', '4-6 BULAN', '8 BULAN-1 TAHUN', '- 1 TAHUN', '3,5 TAHUN', '10 TAHUN', '15 BULAN', '13 BULAN', '2,5 TAHUN', '1TAHUN', '2 MINGGU ', '4-5 TAHUN', '1-2 BULAN', '1 TAHUN 5 BULAN', '3 MINGGU', 'Â± 1 tahun', '7-8 BULAN', '?', '14 TAHUN', '2 TAHUN 3 BULAN', ' 2 TAHUN', '12 TAHUN', '4-5 MINGGU', '5 HARI' }
+    if (!value) return undefined;
 
-    return undefined;
+    // Normalisasi: uppercase, ± dihapus, koma desimal → titik, spasi rapi
+    let s = value
+      .toUpperCase()
+      .replace(/[Â±]/g, " ")
+      .replace(/,/g, ".")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!s) return undefined;
+
+    // Varian satuan → baku
+    s = s
+      .replace(/\bTHN\b|\bTHUN\b|\bTH\b/g, "TAHUN")
+      .replace(/\bBLN\b/g, "BULAN")
+      .replace(/\bMGG\b|\bMG\b/g, "MINGGU");
+
+    // Nilai yang tidak bisa diparse
+    if (["-", "?", "TIDAK DIKETAHUI", "TIDAK TAHU", "UNKNOWN", "N/A", "0"].includes(s)) {
+      return undefined;
+    }
+
+    // "- 1 TAHUN" → strip dash leading
+    s = s.replace(/^-\s*/, "");
+
+    // Konversi satu bagian ("1 TAHUN 3 BULAN", "7 BULAN", "2 MINGGU") → total bulan
+    // fallbackUnit dipakai saat bagian hanya angka tanpa satuan (mis. "2" di "2-3 TAHUN")
+    const partToMonths = (part: string, fallbackUnit?: string): number | null => {
+      const re = /(\d+(?:\.\d+)?)\s*(TAHUN|BULAN|MINGGU|HARI)/g;
+      let m: RegExpExecArray | null;
+      let total = 0;
+      let found = false;
+      while ((m = re.exec(part))) {
+        found = true;
+        const n = parseFloat(m[1]);
+        const unit = m[2];
+        if (unit === "TAHUN") total += n * 12;
+        else if (unit === "BULAN") total += n;
+        else if (unit === "MINGGU") total += n / 4;
+        else if (unit === "HARI") total += n / 30;
+      }
+      // Bagian angka tanpa satuan (sisi kiri range) → pakai satuan sisi kanan
+      if (!found && fallbackUnit) {
+        const numMatch = part.match(/(\d+(?:\.\d+)?)/);
+        if (numMatch) {
+          found = true;
+          const n = parseFloat(numMatch[1]);
+          if (fallbackUnit === "TAHUN") total = n * 12;
+          else if (fallbackUnit === "BULAN") total = n;
+          else if (fallbackUnit === "MINGGU") total = n / 4;
+          else if (fallbackUnit === "HARI") total = n / 30;
+        }
+      }
+      return found ? total : null;
+    };
+
+    // Detect range: "2-3 TAHUN", "8 BULAN-1 TAHUN", "Â± 4 - 5 bulan", "4 - 5 BULAN"
+    const rangeMatch = s.match(/^(.*?)\s*[-–]\s*(.+)$/);
+    if (rangeMatch) {
+      const unitOf = (part: string): string | undefined => {
+        const u = part.match(/(TAHUN|BULAN|MINGGU|HARI)/);
+        return u ? u[1] : undefined;
+      };
+      const unitA = unitOf(rangeMatch[1]);
+      const unitB = unitOf(rangeMatch[2]);
+      const fallback = unitA ?? unitB;
+      const a = partToMonths(rangeMatch[1], fallback);
+      const b = partToMonths(rangeMatch[2], fallback);
+      if (a !== null && b !== null) {
+        const low = Math.min(a, b);
+        const high = Math.max(a, b);
+        // Keduanya kelipatan 12 → simpan dalam tahun (lebih natural)
+        if (low % 12 === 0 && high % 12 === 0) {
+          return { value: low / 12, unit: "year", range: high / 12 };
+        }
+        return { value: Math.round(low * 100) / 100, unit: "month", range: Math.round(high * 100) / 100 };
+      }
+      if (a !== null) return { value: Math.round(a * 100) / 100, unit: "month" };
+      if (b !== null) return { value: Math.round(b * 100) / 100, unit: "month" };
+      return undefined;
+    }
+
+    // Single value
+    const months = partToMonths(s);
+    if (months === null) return undefined;
+    if (months % 12 === 0) {
+      return { value: months / 12, unit: "year" };
+    }
+    return { value: Math.round(months * 100) / 100, unit: "month" };
   }
 
   async syncPatient(file: Buffer): Promise<IPetDoc[]> {
@@ -176,7 +261,6 @@ class PetClinicService {
     }
 
     for (const history of data) {
-      
       const pet = await PetModel.findOne({
         petClinicId: history.patient_id.toString(),
       }).lean();
@@ -186,27 +270,37 @@ class PetClinicService {
         continue;
       }
 
+      // Baris tanpa tanggal kunjungan (date/created_at kosong) tidak bisa disimpan
+      // (visitDate required) — skip, jangan gagalkan seluruh sync.
+      const visitDate = history.date ?? history.created_at;
+      if (!visitDate) {
+        console.warn(
+          `Skip medical history ${history.id}: no date/created_at`,
+        );
+        continue;
+      }
+
       medicalHistories.push({
         _id: new mongoose.Types.ObjectId(),
         petClinicId: history.id.toString(),
         petId: pet?._id,
-        visitDate: history.date!,
-        diagnosis: history.diagnosis!,
+        visitDate,
+        diagnosis: history.diagnosis || "Tanpa diagnosis",
         soap: {
           objective: { physicalExam: [] },
-          subjective: { complaint: history.anamnesa!, },
+          subjective: { complaint: history.anamnesa || "" },
           assessment: {
-            physicalExamNote: history.physical_check!,
-            differentialDiagnosis: history.diagnosis!,
+            physicalExamNote: history.physical_check || "",
+            differentialDiagnosis: history.diagnosis || "Tanpa diagnosis",
           },
           plan: {
-            treatmentPlan: history.treatment!,
-            doctorNotes: history.notes!,
+            treatmentPlan: history.treatment || "",
+            doctorNotes: history.notes || "",
           },
         },
         doctorId: doctor?._id,
-        createdAt: history.created_at,
-        updatedAt: history.updated_at!,
+        createdAt: history.created_at ?? visitDate,
+        updatedAt: history.updated_at ?? visitDate,
         goods: [],
         prescriptions: [],
         treatments: [],

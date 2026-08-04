@@ -283,10 +283,22 @@ export default function NewConsultationPage() {
                   ) : (
                     <Space direction="vertical" style={{ width: "100%" }}>
                       {mhRecords.slice(0, 5).map((r: any) => (
-                        <Row key={r._id} gutter={8}>
-                          <Col span={6}><Text type="secondary">{dayjs(r.visitDate).format("DD/MM/YY")}</Text></Col>
-                          <Col span={12}><Text ellipsis>{r.diagnosis}</Text></Col>
-                          <Col span={6}><Text type="secondary">{r.treatments?.length || 0} tnd, {r.prescriptions?.length || 0} rsp, {r.goods?.length || 0} brg</Text></Col>
+                        <Row key={r._id} gutter={8} align="middle">
+                          <Col span={5}><Text type="secondary">{dayjs(r.visitDate).format("DD/MM/YY")}</Text></Col>
+                          <Col span={11}>
+                            <Text ellipsis style={{ display: "block" }}>{r.diagnosis}</Text>
+                            {r.complaint && (
+                              <Text type="secondary" ellipsis style={{ display: "block", fontSize: 12 }}>
+                                {r.complaint}
+                              </Text>
+                            )}
+                          </Col>
+                          <Col span={4}><Text type="secondary">{r.treatments?.length || 0} tnd, {r.prescriptions?.length || 0} rsp, {r.goods?.length || 0} brg</Text></Col>
+                          <Col span={4} style={{ textAlign: "right" }}>
+                            <Button size="small" onClick={() => router.push(`/dashboard/medical-histories/${r._id}`)}>
+                              Detail
+                            </Button>
+                          </Col>
                         </Row>
                       ))}
                     </Space>

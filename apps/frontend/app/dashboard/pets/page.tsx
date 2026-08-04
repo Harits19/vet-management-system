@@ -72,7 +72,13 @@ export default function PetsPage() {
   const fetchCustomers = async (q = "") => {
     const params = new URLSearchParams({ page: "1", limit: "20", search: q });
     const res = await apiFetch<{ data: any[] }>(`/api/customers?${params}`);
-    setCustomers(res.data);
+    // Pertahankan pemilik yang sedang dipilih di form agar value-nya tidak
+    // berubah jadi ObjectId saat hasil pencarian tidak memuatnya.
+    setCustomers((prev) => {
+      const curId = form.getFieldValue("customerId");
+      const cur = prev.find((c) => c._id === curId);
+      return cur && !res.data.some((c) => c._id === cur._id) ? [...res.data, cur] : res.data;
+    });
   };
 
   useEffect(() => { fetchData(); fetchCustomers(); fetchDistinct("kind"); fetchDistinct("breed"); fetchDistinct("notes"); }, []);
@@ -87,9 +93,15 @@ export default function PetsPage() {
   };
   const openEdit = (p: Pet) => {
     setEditing(p);
+    // Options pemilik hanya 20 data pertama dari server — pastikan pemilik pasien ini
+    // selalu ada di dropdown agar value-nya tidak tampil sebagai ObjectId.
+    const owner = p.customerId;
+    if (owner?._id && owner.name && !customers.some((c) => c._id === owner._id)) {
+      setCustomers((prev) => [...prev, { _id: owner._id, name: owner.name }]);
+    }
     form.setFieldsValue({
       ...p,
-      customerId: p.customerId._id,
+      customerId: owner?._id,
       birthDate: p.birthDate ? dayjs(p.birthDate) : undefined,
       ageMode: p.birthDate ? "birthDate" : "initialAge",
     });

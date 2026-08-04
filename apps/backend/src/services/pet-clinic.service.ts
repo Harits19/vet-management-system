@@ -9,8 +9,12 @@ import { ProductModel, type IProductDoc } from "../models/product.model.js";
 import { readExcelFile } from "./excel.service.js";
 import { IServiceDoc, ServiceModel } from "../models/service.model.js";
 import { IPetDoc, IPetDocInitialAge, PetModel } from "../models/pet.model.js";
-import { IMedicalHistoryDoc } from "../models/medical-history.model.js";
+import {
+  IMedicalHistoryDoc,
+  MedicalHistoryModel,
+} from "../models/medical-history.model.js";
 import { CustomerModel, ICustomerDoc } from "../models/customer.model.js";
+import { UserModel } from "../models/user.model.js";
 
 class PetClinicService {
   async syncInventory(file: Buffer): Promise<IProductDoc[]> {
@@ -102,7 +106,11 @@ class PetClinicService {
         continue;
       }
       const ownerName = patient.owner_name;
-      const owner = owners[ownerName];
+      const ownerFromDB = await CustomerModel.findOne({
+        fromPetClinic: true,
+        name: ownerName,
+      });
+      const owner = ownerFromDB || owners[ownerName];
       if (!owner) {
         owners[ownerName] = {
           _id: new mongoose.Types.ObjectId(),
@@ -160,24 +168,63 @@ class PetClinicService {
     const data = readExcelFile<PetClinicMedicalHistoryModel>(file);
     if (data.length === 0) return [];
 
-    const services = data.map(
-      (item) =>
-        ({
-          _id: new mongoose.Types.ObjectId(),
-        }) as IMedicalHistoryDoc,
+    const medicalHistories: IMedicalHistoryDoc[] = [];
+    const doctor = await UserModel.findOne({ role: "doctor" }).lean();
+
+    if (!doctor) {
+      throw new Error(`Not found role doctor in database`);
+    }
+
+    for (const history of data) {
+      
+      const pet = await PetModel.findOne({
+        petClinicId: history.patient_id.toString(),
+      }).lean();
+
+      if (!pet) {
+        console.warn(`Pet not found with petClinicId ${history.patient_id}`);
+        continue;
+      }
+
+      medicalHistories.push({
+        _id: new mongoose.Types.ObjectId(),
+        petClinicId: history.id.toString(),
+        petId: pet?._id,
+        visitDate: history.date!,
+        diagnosis: history.diagnosis!,
+        soap: {
+          objective: { physicalExam: [] },
+          subjective: { complaint: "" },
+          assessment: {
+            physicalExamNote: history.physical_check!,
+            differentialDiagnosis: history.diagnosis!,
+          },
+          plan: {
+            treatmentPlan: history.treatment!,
+            doctorNotes: history.notes!,
+          },
+        },
+        doctorId: doctor?._id,
+        createdAt: history.created_at,
+        updatedAt: history.updated_at!,
+        goods: [],
+        prescriptions: [],
+        treatments: [],
+        syncAt: new Date(),
+      });
+    }
+
+    await MedicalHistoryModel.bulkWrite(
+      medicalHistories.map(({ _id, ...rest }) => ({
+        updateOne: {
+          filter: { petClinicId: rest.petClinicId },
+          update: { $set: rest, $setOnInsert: { _id } },
+          upsert: true,
+        },
+      })),
     );
 
-    // await PetModel.bulkWrite(
-    //     services.map(({ _id, ...rest }) => ({
-    //         updateOne: {
-    //             filter: { "petClinicId": rest.petClinicId },
-    //             update: { $set: rest, $setOnInsert: { _id } },
-    //             upsert: true,
-    //         },
-    //     }))
-    // );
-
-    return services;
+    return medicalHistories;
   }
 }
 

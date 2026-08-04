@@ -17,7 +17,12 @@ export interface ISoapSubDoc {
   subjective: { complaint: string };
   objective: { physicalExam: IPhysicalExamSubDoc[]; labResult?: string };
   assessment: { differentialDiagnosis: string; physicalExamNote?: string };
-  plan: { treatmentPlan: string; doctorNotes?: string; ownerNote?: string; paramedicNote?: string };
+  plan: {
+    treatmentPlan: string;
+    doctorNotes?: string;
+    ownerNote?: string;
+    paramedicNote?: string;
+  };
 }
 
 export interface ITreatmentSubDoc {
@@ -50,6 +55,8 @@ export interface IMedicalHistoryDoc {
   goods: ITreatmentSubDoc[];
   createdAt: Date;
   updatedAt: Date;
+  petClinicId?: string;
+  syncAt?: Date;
 }
 
 const PhysicalExamSubSchema = new Schema<IPhysicalExamSubDoc>(
@@ -59,7 +66,7 @@ const PhysicalExamSubSchema = new Schema<IPhysicalExamSubDoc>(
     value: { type: Number, min: 0 },
     unit: { type: String },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const SoapSubSchema = new Schema<ISoapSubDoc>(
@@ -82,7 +89,7 @@ const SoapSubSchema = new Schema<ISoapSubDoc>(
       paramedicNote: { type: String },
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const TreatmentSubSchema = new Schema<ITreatmentSubDoc>(
@@ -93,7 +100,7 @@ const TreatmentSubSchema = new Schema<ITreatmentSubDoc>(
     price: { type: Number, required: true, min: 0 },
     notes: { type: String },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const PrescriptionSubSchema = new Schema<IPrescriptionSubDoc>(
@@ -106,12 +113,17 @@ const PrescriptionSubSchema = new Schema<IPrescriptionSubDoc>(
     usage: { type: String },
     notes: { type: String },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const MedicalHistorySchema = new Schema<IMedicalHistoryDoc>(
   {
-    petId: { type: Schema.Types.ObjectId, required: true, ref: "Pet", index: true },
+    petId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "Pet",
+      index: true,
+    },
     visitDate: { type: Date, required: true },
     soap: { type: SoapSubSchema },
     diagnosis: { type: String, required: true },
@@ -119,10 +131,16 @@ const MedicalHistorySchema = new Schema<IMedicalHistoryDoc>(
     treatments: { type: [TreatmentSubSchema], default: [] },
     prescriptions: { type: [PrescriptionSubSchema], default: [] },
     goods: { type: [TreatmentSubSchema], default: [] },
+    petClinicId: { type: String, trim: true },
+    syncAt: { type: Date },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 MedicalHistorySchema.index({ petId: 1, visitDate: -1 });
+MedicalHistorySchema.index({ petClinicId: 1 }, { sparse: true, unique: true });
 
-export const MedicalHistoryModel = mongoose.model<IMedicalHistoryDoc>("MedicalHistory", MedicalHistorySchema);
+export const MedicalHistoryModel = mongoose.model<IMedicalHistoryDoc>(
+  "MedicalHistory",
+  MedicalHistorySchema,
+);

@@ -8,8 +8,7 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import {
   authRoutes, customerRoutes, petRoutes, productRoutes, serviceRoutes,
   dashboardRoutes, medicalHistoryRoutes, transactionRoutes,
-  syncRoutes,
-  dashboardRoutes, medicalHistoryRoutes, transactionRoutes, diagnosisTemplateRoutes,
+  syncRoutes, diagnosisTemplateRoutes,
 } from "./routes/index.js";
 import { frontendOrigins } from "./config/auth.js";
 

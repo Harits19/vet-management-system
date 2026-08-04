@@ -29,9 +29,3 @@ export interface ApiResponse<T> {
     totalPages: number;
   };
 }
-
-export function stringToDate(value?: string) {
-  if (!value) return;
-  
-  return new Date(value);
-}

@@ -194,7 +194,7 @@ class PetClinicService {
         diagnosis: history.diagnosis!,
         soap: {
           objective: { physicalExam: [] },
-          subjective: { complaint: "" },
+          subjective: { complaint: history.anamnesa!, },
           assessment: {
             physicalExamNote: history.physical_check!,
             differentialDiagnosis: history.diagnosis!,

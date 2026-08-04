@@ -206,6 +206,10 @@ class PetClinicService {
     const owners: Record<string, ICustomerDoc> = {};
 
     for (const patient of data) {
+      // Baris dengan id tidak valid (bukan angka) = data sampah dari sumber — skip.
+      if (!/^\d+$/.test(String(patient.id))) {
+        continue;
+      }
       const ownerName = patient.owner_name;
 
       let owner: ICustomerDoc = owners[ownerName];

@@ -206,9 +206,6 @@ class PetClinicService {
     const owners: Record<string, ICustomerDoc> = {};
 
     for (const patient of data) {
-      if (patient.deleted_at) {
-        continue;
-      }
       const ownerName = patient.owner_name;
 
       let owner: ICustomerDoc = owners[ownerName];
@@ -246,6 +243,7 @@ class PetClinicService {
         kind: patient.species,
         name: patient.name,
         petClinicId: patient.id.toString(),
+        isActive: !patient.deleted_at,
         notes: patient.notes,
         updatedAt: new Date(),
         initialAge: petClinicService.parseAge(patient.age),

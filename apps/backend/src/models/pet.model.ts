@@ -23,6 +23,7 @@ export interface IPetDoc {
   createdAt: Date;
   updatedAt: Date;
   petClinicId: string;
+  isActive?: boolean;
 }
 
 const InitialAgeSubSchema = new Schema<IPetDocInitialAge>(
@@ -47,6 +48,7 @@ const PetSchema = new Schema<IPetDoc>(
     initialAge: { type: InitialAgeSubSchema },
     notes: { type: String, trim: true },
     petClinicId: { type: String, trim: true },
+    isActive: { type: Boolean, default: true },
     customerId: {
       type: Schema.Types.ObjectId,
       required: true,

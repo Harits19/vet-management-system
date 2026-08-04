@@ -10,6 +10,7 @@ export async function listPets(filter: PetFilter) {
   if (customerId) {
     query.customerId = customerId;
   }
+  query.isActive = { $ne: false };
   const total = await PetModel.countDocuments(query);
   const data = await PetModel.find(query)
     .populate("customerId", "name whatsapp")
@@ -44,7 +45,7 @@ export async function deletePet(id: string) {
 }
 
 export async function searchCustomerPets(customerId: string) {
-  return PetModel.find({ customerId }).select("name kind breed gender birthDate initialAge createdAt").lean();
+  return PetModel.find({ customerId, isActive: { $ne: false } }).select("name kind breed gender birthDate initialAge createdAt").lean();
 }
 
 // Nilai unik untuk autocomplete (kind, breed, notes)

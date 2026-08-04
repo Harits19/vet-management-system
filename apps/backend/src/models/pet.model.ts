@@ -12,6 +12,7 @@ export interface IPetDoc {
   customerId: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  petClinicId: string;
 }
 
 const InitialAgeSubSchema = new Schema(
@@ -31,6 +32,7 @@ const PetSchema = new Schema<IPetDoc>(
     birthDate: { type: Date },
     initialAge: { type: InitialAgeSubSchema },
     notes: { type: String, trim: true },
+    petClinicId: { type: String, sparse: true, trim: true, unique: true },
     customerId: { type: Schema.Types.ObjectId, required: true, ref: "Customer", index: true },
   },
   { timestamps: true, versionKey: false }
@@ -38,5 +40,6 @@ const PetSchema = new Schema<IPetDoc>(
 
 PetSchema.index({ name: 1 });
 PetSchema.index({ customerId: 1, name: 1 });
+PetSchema.index({ petClinicId: 1 }, { sparse: true, unique: true, })
 
 export const PetModel = mongoose.model<IPetDoc>("Pet", PetSchema);

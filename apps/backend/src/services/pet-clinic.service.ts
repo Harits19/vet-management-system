@@ -1,10 +1,13 @@
 import mongoose, { Types } from "mongoose";
-import type { PetClinicInventoryModel, PetClinicServiceModel } from "../models/pet-clinic.model.js";
+import type { PetClinicInventoryModel, PetClinicMedicalHistoryModel, PetClinicPatientModel, PetClinicServiceModel } from "../models/pet-clinic.model.js";
 import { ProductModel, type IProductDoc } from "../models/product.model.js";
 import { readExcelFile } from "./excel.service.js";
 import { IServiceDoc, ServiceModel } from "../models/service.model.js";
+import { IPetDoc, PetModel } from "../models/pet.model.js";
+import { IMedicalHistoryDoc } from "../models/medical-history.model.js";
 
 class PetClinicService {
+
     async syncInventory(file: Buffer): Promise<IProductDoc[]> {
         const data = readExcelFile<PetClinicInventoryModel>(file);
         if (data.length === 0) return [];
@@ -68,6 +71,49 @@ class PetClinicService {
 
         return services;
 
+    }
+
+    async syncPatient(file: Buffer): Promise<IPetDoc[]> {
+        const data = readExcelFile<PetClinicPatientModel>(file);
+        if (data.length === 0) return [];
+
+        const services = data.map((item) => ({
+            _id: new mongoose.Types.ObjectId(),
+        } as IPetDoc))
+
+        // await PetModel.bulkWrite(
+        //     services.map(({ _id, ...rest }) => ({
+        //         updateOne: {
+        //             filter: { "petClinicId": rest.petClinicId },
+        //             update: { $set: rest, $setOnInsert: { _id } },
+        //             upsert: true,
+        //         },
+        //     }))
+        // );
+
+        return services;
+
+    }
+
+    async syncMedicalHistory(file: Buffer): Promise<IMedicalHistoryDoc[]> {
+        const data = readExcelFile<PetClinicMedicalHistoryModel>(file);
+        if (data.length === 0) return [];
+
+        const services = data.map((item) => ({
+            _id: new mongoose.Types.ObjectId(),
+        } as IMedicalHistoryDoc))
+
+        // await PetModel.bulkWrite(
+        //     services.map(({ _id, ...rest }) => ({
+        //         updateOne: {
+        //             filter: { "petClinicId": rest.petClinicId },
+        //             update: { $set: rest, $setOnInsert: { _id } },
+        //             upsert: true,
+        //         },
+        //     }))
+        // );
+
+        return services;
     }
 }
 

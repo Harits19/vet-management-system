@@ -5,5 +5,6 @@ export function readExcelFile<T>(file: Buffer) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data: T[] = XLSX.utils.sheet_to_json(sheet);
 
+    console.log('readExcelFile', JSON.stringify(data));
     return data;
 }

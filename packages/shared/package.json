@@ -13,6 +13,7 @@
     }
   },
   "scripts": {
+    "dev": "tsc -p tsconfig.json --watch",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

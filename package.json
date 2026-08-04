@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "concurrently -n backend,frontend -c green,blue \"npm run dev --workspace @vet/backend\" \"npm run dev --workspace @vet/frontend\"",
-    "predev": "node mongo-init.js",
+    "predev": "npm run build --workspace @vet/shared && node mongo-init.js",
     "build": "npm run build --workspace @vet/shared && npm run build --workspace @vet/backend && npm run build --workspace @vet/frontend",
     "dev:frontend": "npm run dev --workspace @vet/frontend",
     "dev:backend": "npm run dev --workspace @vet/backend",

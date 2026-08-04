@@ -223,7 +223,7 @@ class PetClinicService {
       }
 
       if (!owner) {
-        owners[ownerName] = {
+        owner = owners[ownerName] = {
           _id: new mongoose.Types.ObjectId(),
           createdAt: new Date(),
           name: ownerName,

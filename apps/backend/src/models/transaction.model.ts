@@ -48,13 +48,18 @@ const TxnItemSubSchema = new Schema<ITransactionItemDoc>(
     dosage: { type: String },
     stockDelta: { type: Number, min: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const TransactionSchema = new Schema<ITransactionDoc>(
   {
-    type: { type: String, enum: ["shop", "vet"], required: true, default: "shop" },
-    receiptNumber: { type: String, required: true, unique: true },
+    type: {
+      type: String,
+      enum: ["shop", "vet"],
+      required: true,
+      default: "shop",
+    },
+    receiptNumber: { type: String, required: true },
     timestamp: { type: Date, required: true, default: Date.now },
     customer: {
       _id: { type: Schema.Types.ObjectId, ref: "Customer" },
@@ -70,21 +75,32 @@ const TransactionSchema = new Schema<ITransactionDoc>(
       _id: { type: Schema.Types.ObjectId, required: true, ref: "User" },
       name: { type: String, required: true },
     },
-    items: { type: [TxnItemSubSchema], required: true, validate: [(v: ITransactionItemDoc[]) => v.length > 0, "Min 1 item"] },
+    items: {
+      type: [TxnItemSubSchema],
+      required: true,
+      validate: [(v: ITransactionItemDoc[]) => v.length > 0, "Min 1 item"],
+    },
     summary: {
       total: { type: Number, default: 0 },
       profit: { type: Number, default: 0 },
       cost: { type: Number, default: 0 },
       paid: { type: Number, default: 0 },
     },
-    paymentStatus: { type: String, enum: ["paid", "debt", "dp"], required: true },
+    paymentStatus: {
+      type: String,
+      enum: ["paid", "debt", "dp"],
+      required: true,
+    },
     paymentMethod: { type: String, required: true },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 TransactionSchema.index({ type: 1, timestamp: -1 });
 TransactionSchema.index({ receiptNumber: 1 });
 TransactionSchema.index({ "customer._id": 1 });
 
-export const TransactionModel = mongoose.model<ITransactionDoc>("Transaction", TransactionSchema);
+export const TransactionModel = mongoose.model<ITransactionDoc>(
+  "Transaction",
+  TransactionSchema,
+);

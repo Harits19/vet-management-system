@@ -25,3 +25,7 @@ export interface PetClinicServiceModel {
     "created_at": Date,
     "updated_at": Date
 }
+
+export interface PetClinicPatientModel { }
+
+export interface PetClinicMedicalHistoryModel { }

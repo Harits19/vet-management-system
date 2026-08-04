@@ -412,20 +412,21 @@ export async function getDashboardSummary() {
 
   const [todaySales, weekSales, monthSales] = await Promise.all([
     TransactionModel.aggregate([
-      { $match: { timestamp: { $gte: startOfDay } } },
+      { $match: { type: "vet", timestamp: { $gte: startOfDay } } },
       { $group: { _id: null, total: { $sum: "$summary.total" }, count: { $sum: 1 } } },
     ]),
     TransactionModel.aggregate([
-      { $match: { timestamp: { $gte: startOfWeek } } },
+      { $match: { type: "vet", timestamp: { $gte: startOfWeek } } },
       { $group: { _id: null, total: { $sum: "$summary.total" }, count: { $sum: 1 } } },
     ]),
     TransactionModel.aggregate([
-      { $match: { timestamp: { $gte: startOfMonth } } },
+      { $match: { type: "vet", timestamp: { $gte: startOfMonth } } },
       { $group: { _id: null, total: { $sum: "$summary.total" }, count: { $sum: 1 } } },
     ]),
   ]);
 
-  const lowStock = await ProductModel.find({ type: "physical", isActive: true, "inventory.quantity": { $lte: 5 } })
+  // lowStock: ProductModel memakai productType ("medicine" | "good"), bukan "type" (field item transaksi)
+  const lowStock = await ProductModel.find({ productType: { $in: ["medicine", "good"] }, isActive: true, "inventory.quantity": { $lte: 5 } })
     .select("product.name inventory.quantity pricing.selling")
     .sort({ "inventory.quantity": 1 })
     .limit(10)

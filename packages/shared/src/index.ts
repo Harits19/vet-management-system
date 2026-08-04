@@ -6,3 +6,4 @@ export * from "./product.js";
 export * from "./service.js";
 export * from "./transaction.js";
 export * from "./medical-history.js";
+export * from "./diagnosis-template.js";

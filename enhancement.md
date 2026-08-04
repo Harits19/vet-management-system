@@ -549,3 +549,10 @@ modal.confirm({ title: "...", onOk: ... });
 - `apps/backend/src/services/medical-history.service.ts` + `medical-history.route.ts` — hapus endpoint distinct diagnosis (`/api/medical-histories/diagnoses`), sudah digantikan master list
 
 **Status:** ✅ Selesai (implementasi server; typecheck/build diverifikasi dari laptop)
+
+
+## Belum Selesai
+
+### 28. saya sudah melakukan syncronisasi data pet clinic id ke project ini yang dilakukan lewat api route @file:apps/backend/src/routes/sync.route.ts, tampilkan lebih detail isi dari medical history di halaman detail maupun halaman konsultasi, terdapat button untuk mengarahkan ke detail medical history
+
+### 28. Parse initial age dari data pet clinic id di file pet-clinic.service.ts, parse date sesuai dengan contoh yang ada

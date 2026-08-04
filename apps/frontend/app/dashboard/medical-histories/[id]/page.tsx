@@ -20,6 +20,7 @@ interface MHDetail {
     name: string;
     kind: string;
     breed?: string;
+    furColor?: string;
     gender?: string;
     birthDate?: string;
     initialAge?: { value: number; unit: "month" | "year" };
@@ -93,6 +94,7 @@ export default function MedicalHistoryDetailPage() {
           <Descriptions.Item label="Pemilik">{pet?.customerId?.name || "-"}</Descriptions.Item>
           <Descriptions.Item label="Jenis Hewan">{pet?.kind || "-"}</Descriptions.Item>
           <Descriptions.Item label="Ras">{pet?.breed || "-"}</Descriptions.Item>
+          <Descriptions.Item label="Warna Bulu">{pet?.furColor || "-"}</Descriptions.Item>
           <Descriptions.Item label="Umur">{petAge ? <Tag color="green">{petAge.label}</Tag> : "-"}</Descriptions.Item>
           <Descriptions.Item label="Tanggal Kunjungan">{dayjs(record.visitDate).format("DD/MM/YYYY HH:mm")}</Descriptions.Item>
           <Descriptions.Item label="Berat Badan (kunjungan ini)">{showExamValue("weight")}</Descriptions.Item>

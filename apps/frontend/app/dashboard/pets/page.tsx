@@ -17,6 +17,7 @@ interface Pet {
   name: string;
   kind: string;
   breed?: string;
+  furColor?: string;
   gender: "male" | "female";
   birthDate?: string;
   initialAge?: { value: number; unit: "month" | "year" };
@@ -105,6 +106,7 @@ export default function PetsPage() {
         name: values.name,
         kind: values.kind,
         breed: values.breed,
+        furColor: values.furColor,
         gender: values.gender,
         customerId: values.customerId,
         notes: values.notes,
@@ -144,6 +146,7 @@ export default function PetsPage() {
     { title: "Nama", dataIndex: "name", key: "name" },
     { title: "Jenis", dataIndex: "kind", key: "kind" },
     { title: "Ras", dataIndex: "breed", key: "breed", render: (v?: string) => v || "-" },
+    { title: "Warna Bulu", dataIndex: "furColor", key: "furColor", render: (v?: string) => v || "-" },
     { title: "Umur", key: "age", render: (_: any, r: Pet) => computePetAge(r)?.label || "-" },
     { title: "Gender", dataIndex: "gender", key: "gender", render: (v: string) => v === "male" ? "Jantan" : "Betina" },
     { title: "Pemilik", key: "owner", render: (_: any, r: Pet) => r.customerId?.name || "-" },
@@ -197,6 +200,9 @@ export default function PetsPage() {
               placeholder="Pilih atau ketik ras (Persian, Labrador...)"
               filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
             />
+          </Form.Item>
+          <Form.Item name="furColor" label="Warna Bulu">
+            <Input placeholder="Warna bulu, contoh: Oren, Putih (opsional)" />
           </Form.Item>
           <Form.Item name="gender" label="Jenis Kelamin" rules={[{ required: true, message: "Wajib" }]}>
             <Select options={[{ value: "male", label: "Jantan" }, { value: "female", label: "Betina" }]} />

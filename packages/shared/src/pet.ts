@@ -9,6 +9,7 @@ export interface IPet {
   name: string;
   kind: string;
   breed?: string;
+  furColor?: string;
   gender: "male" | "female";
   birthDate?: Date;
   initialAge?: { value: number; unit: "month" | "year" };
@@ -29,6 +30,7 @@ export const petCreateSchema = z.object({
   name: stringRequired,
   kind: stringRequired,
   breed: z.string().trim().optional(),
+  furColor: z.string().trim().optional(),
   gender: z.enum(["male", "female"]),
   birthDate: z.coerce.date().optional(),
   initialAge: initialAgeSchema,

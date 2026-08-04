@@ -28,6 +28,7 @@ interface PetDetail {
   name: string;
   kind: string;
   breed?: string;
+  furColor?: string;
   gender: string;
   birthDate?: string;
   initialAge?: { value: number; unit: "month" | "year" };
@@ -103,6 +104,7 @@ export default function PetDetailPage() {
           <Descriptions.Item label="Nama">{pet.name}</Descriptions.Item>
           <Descriptions.Item label="Jenis">{pet.kind}</Descriptions.Item>
           <Descriptions.Item label="Ras">{pet.breed || "-"}</Descriptions.Item>
+          <Descriptions.Item label="Warna Bulu">{pet.furColor || "-"}</Descriptions.Item>
           <Descriptions.Item label="Gender">{pet.gender === "male" ? "Jantan" : "Betina"}</Descriptions.Item>
           <Descriptions.Item label="Umur">
             {petAge ? <Tag color="green">{petAge.label}</Tag> : "-"}

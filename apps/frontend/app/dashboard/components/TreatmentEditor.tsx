@@ -19,6 +19,7 @@ interface TreatmentEditorProps {
   onChange: (items: TreatmentLine[]) => void;
   options: { _id: string; name: string; selling: number }[];
   loading?: boolean;
+  onSearch?: (q: string) => void; // server-side search (opsional)
 }
 
 function formatPrice(n: number) {
@@ -28,7 +29,7 @@ function formatPrice(n: number) {
 // ──────────────────────────────────────────
 // Editor Tindakan (jasa dokter) — multiple item dari Master Tindakan
 // ──────────────────────────────────────────
-export default function TreatmentEditor({ items, onChange, options, loading }: TreatmentEditorProps) {
+export default function TreatmentEditor({ items, onChange, options, loading, onSearch }: TreatmentEditorProps) {
   const addLine = () => {
     onChange([...items, { productId: "", name: "", quantity: 1, price: 0, _key: `t-${Date.now()}-${items.length}` }]);
   };
@@ -51,7 +52,9 @@ export default function TreatmentEditor({ items, onChange, options, loading }: T
         style={{ width: "100%" }}
         placeholder="Pilih tindakan..."
         value={line.productId || undefined}
-        filterOption={(input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
+        onSearch={onSearch}
+        onFocus={onSearch ? () => onSearch("") : undefined}
+        filterOption={onSearch ? false : (input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
         options={options.map((o) => ({ value: o._id, label: `${o.name} - ${formatPrice(o.selling)}` }))}
         loading={loading}
         onChange={(val) => {

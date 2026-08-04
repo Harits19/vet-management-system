@@ -11,7 +11,6 @@
     "build": "npm run build --workspace @vet/shared && npm run build --workspace @vet/backend && npm run build --workspace @vet/frontend",
     "dev:frontend": "npm run dev --workspace @vet/frontend",
     "dev:backend": "npm run dev --workspace @vet/backend",
-    "seed:diagnosis": "node scripts/seed-diagnosis-templates.mjs",
     "typecheck": "npm run typecheck --workspace @vet/shared && npm run typecheck --workspace @vet/backend",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",

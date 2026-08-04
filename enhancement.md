@@ -551,8 +551,29 @@ modal.confirm({ title: "...", onOk: ... });
 **Status:** ✅ Selesai (implementasi server; typecheck/build diverifikasi dari laptop)
 
 
-## Belum Selesai
+### 28. Detail Rekam Medis Hasil Sync Pet Clinic + Parse Initial Age — ✅ Selesai
 
-### 28. saya sudah melakukan syncronisasi data pet clinic id ke project ini yang dilakukan lewat api route @file:apps/backend/src/routes/sync.route.ts, tampilkan lebih detail isi dari medical history di halaman detail maupun halaman konsultasi, terdapat button untuk mengarahkan ke detail medical history
+**Masalah:**
+- Rekam medis hasil sync pet-clinic (`/api/pet-clinic/medical-history`) hanya tampil ringkas; di halaman konsultasi tidak ada tombol untuk membuka detail rekam medis
+- Kolom `anamnesa` dari Excel tidak dipetakan ke rekam medis (keluhan hilang)
+- `parseAge()` di `pet-clinic.service.ts` masih TODO — umur pasien (`7 BULAN`, `1 TAHUN 3 BULAN`, `2-3 TAHUN`, `Â± 4 - 5 bulan`, `2 MINGGU`, `5 HARI`, dst — 76 format unik di data asli) tidak ter-parse
+- Baris rekam medis tanpa `date`/`diagnosis` (21 + 13 baris di data asli) membuat sync berpotensi gagal (field required)
 
-### 28. Parse initial age dari data pet clinic id di file pet-clinic.service.ts, parse date sesuai dengan contoh yang ada
+**Solusi:**
+
+1. **Backend — sync anamnesa:** `syncMedicalHistory` memetakan `anamnesa` → `soap.subjective.complaint` (commit user `d7d70dd`), keluhan tidak hilang lagi
+2. **Backend — sync robust:** baris tanpa tanggal kunjungan (`date`/`created_at` kosong) di-skip dengan warning, bukan menggagalkan seluruh sync; `diagnosis` kosong → fallback `"Tanpa diagnosis"`; field opsional lain fallback `""`; `createdAt/updatedAt` fallback ke `visitDate`
+3. **Backend — `parseAge()`:** parser semua format umur pet-clinic → `{ value, unit: "month"|"year", range? }`:
+   - `7 BULAN` → `{ value: 7, unit: "month" }`; `8 TAHUN` → `{ value: 8, unit: "year" }`
+   - `1 TAHUN 3 BULAN` → `{ value: 15, unit: "month" }` (total bulan); `2-3 TAHUN` → `{ value: 2, unit: "year", range: 3 }`
+   - `1,5 BULAN` → `{ value: 1.5, unit: "month" }`; `2 MINGGU` → `{ value: 0.5, unit: "month" }`; `5 HARI` → `{ value: 0.17, unit: "month" }`
+   - `Tidak Diketahui` / `-` / `?` → `undefined` (tidak disimpan)
+   - Tanggal dari Excel (serial number) sudah di-convert jadi `Date` oleh `readExcelFile` (`cellDates: true`)
+4. **Frontend — halaman konsultasi:** baris riwayat rekam medis menampilkan keluhan singkat (di bawah diagnosis) + tombol **"Detail"** → `/dashboard/medical-histories/:id`
+5. **Frontend — detail pasien:** tabel Riwayat Medis mendapat kolom **Keluhan** (di samping tombol Detail yang sudah ada)
+
+**File diubah:**
+- `apps/backend/src/services/pet-clinic.service.ts` — `parseAge()` + sync robust (skip baris tanpa tanggal, fallback diagnosis)
+- `apps/backend/src/services/medical-history.service.ts` — summary `by-pet` menyertakan `complaint`
+- `apps/frontend/app/dashboard/consultations/new/page.tsx` — tombol Detail + keluhan singkat di riwayat
+- `apps/frontend/app/dashboard/pets/[id]/page.tsx` — kolom Keluhan di tabel riwayat

@@ -225,6 +225,7 @@ export async function getMedicalHistorySummary(petId: string) {
       _id: r._id,
       visitDate: r.visitDate,
       diagnosis: r.diagnosis,
+      complaint: r.soap?.subjective?.complaint,
       doctorId: r.doctorId,
       treatments: r.treatments,
       prescriptions: r.prescriptions,

@@ -43,4 +43,18 @@ export interface PetClinicPatientModel {
   code: string;
 }
 
-export interface PetClinicMedicalHistoryModel {}
+export interface PetClinicMedicalHistoryModel {
+  id: number;
+  patient_id: number;
+  diagnosis?: string;
+  anamnesa?: string;
+  physical_check?: string;
+  treatment?: string;
+  notes?: string;
+  date?: Date; // ISO 8601
+  vet_id?: number;
+  created_at: Date; // ISO 8601
+  updated_at?: Date; // ISO 8601
+  branch_id?: number;
+  queue_id?: number;
+}

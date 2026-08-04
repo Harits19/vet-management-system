@@ -22,7 +22,7 @@ export async function listMedicalHistories(filter: MedicalHistoryFilter) {
   }
   const total = await MedicalHistoryModel.countDocuments(query);
   const data = await MedicalHistoryModel.find(query)
-    .populate("petId", "name kind breed")
+    .populate("petId", "name kind breed furColor")
     .populate("doctorId", "name")
     .sort({ [sortBy]: order === "asc" ? 1 : -1 })
     .skip((page - 1) * limit)
@@ -38,7 +38,7 @@ export async function getMedicalHistory(id: string) {
   const record = await MedicalHistoryModel.findById(id)
     .populate({
       path: "petId",
-      select: "name kind breed gender birthDate initialAge customerId createdAt",
+      select: "name kind breed furColor gender birthDate initialAge customerId createdAt",
       populate: { path: "customerId", select: "name whatsapp address" },
     })
     .populate("doctorId", "name")

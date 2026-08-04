@@ -83,6 +83,20 @@ export default function DiagnosesPage() {
       .catch(console.error);
   }, []);
 
+  // Server-side search (backend bisa punya >100 data, search client-side tidak cukup)
+  const searchServices = async (q = "") => {
+    const res = await apiFetch<{ data: SvcOpt[] }>(`/api/services?search=${encodeURIComponent(q)}&limit=100`);
+    setServices(res.data);
+  };
+  const searchMedicines = async (q = "") => {
+    const res = await apiFetch<{ data: ProdOpt[] }>(`/api/products?productType=medicine&search=${encodeURIComponent(q)}&limit=100`);
+    setMedicines(res.data);
+  };
+  const searchGoods = async (q = "") => {
+    const res = await apiFetch<{ data: ProdOpt[] }>(`/api/products?productType=good&search=${encodeURIComponent(q)}&limit=100`);
+    setGoods(res.data);
+  };
+
   const handleSearch = () => { setPage(1); fetchData(1, search); };
 
   const svcOpts = services.map((s) => ({ value: s._id, label: `${s.name} — ${fmt(s.price)}` }));
@@ -159,7 +173,8 @@ export default function DiagnosesPage() {
     getName: (id: string) => string,
     placeholder: string,
     prefix: string,
-    showDosage = false
+    showDosage = false,
+    onSearch?: (q: string) => void
   ) => (
     <Space direction="vertical" style={{ width: "100%" }}>
       {lines.map((line) => (
@@ -170,7 +185,9 @@ export default function DiagnosesPage() {
               style={{ width: "100%" }}
               placeholder={placeholder}
               value={line.productId || undefined}
-              filterOption={(input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
+              onSearch={onSearch}
+              onFocus={onSearch ? () => onSearch("") : undefined}
+              filterOption={onSearch ? false : (input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
               options={options}
               onChange={(val) => setLines(lines.map((l) => (l._key === line._key ? { ...l, productId: val, name: getName(val) } : l)))}
             />
@@ -233,17 +250,17 @@ export default function DiagnosesPage() {
 
         <Card size="small" title="Template Jasa (Tindakan)" style={{ marginBottom: 12 }}>
           <Text type="secondary" style={{ display: "block", marginBottom: 8 }}>Diambil dari Master Tindakan. Produk stok 0 tetap bisa dipilih.</Text>
-          {renderEditor(treatments, setTreatments, svcOpts, svcName, "Pilih jasa...", "t")}
+          {renderEditor(treatments, setTreatments, svcOpts, svcName, "Pilih jasa...", "t", false, searchServices)}
         </Card>
 
         <Card size="small" title="Template Obat (Resep)" style={{ marginBottom: 12 }}>
           <Text type="secondary" style={{ display: "block", marginBottom: 8 }}>Diambil dari Master Obat. Produk stok 0 tetap bisa dipilih.</Text>
-          {renderEditor(prescriptions, setPrescriptions, medOpts, medName, "Pilih obat...", "p", true)}
+          {renderEditor(prescriptions, setPrescriptions, medOpts, medName, "Pilih obat...", "p", true, searchMedicines)}
         </Card>
 
         <Card size="small" title="Template Barang">
           <Text type="secondary" style={{ display: "block", marginBottom: 8 }}>Diambil dari Master Barang. Produk stok 0 tetap bisa dipilih.</Text>
-          {renderEditor(goodsLines, setGoodsLines, goodOpts, goodName, "Pilih barang...", "g")}
+          {renderEditor(goodsLines, setGoodsLines, goodOpts, goodName, "Pilih barang...", "g", false, searchGoods)}
         </Card>
       </Modal>
     </div>

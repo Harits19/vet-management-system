@@ -40,6 +40,16 @@ export default function CreateShopPage() {
     }).catch(console.error);
   }, []);
 
+  // Server-side search (backend bisa punya >100 data, search client-side tidak cukup)
+  const searchCustomers = async (q = "") => {
+    const res = await apiFetch<{ data: any[] }>(`/api/customers?search=${encodeURIComponent(q)}&limit=100`);
+    setCustomers(res.data);
+  };
+  const searchProducts = async (q = "") => {
+    const res = await apiFetch<{ data: any[] }>(`/api/products?search=${encodeURIComponent(q)}&limit=100`);
+    setProducts(res.data);
+  };
+
   const addToCart = (productId: string) => {
     const prod = products.find((p) => p._id === productId);
     if (!prod) return;
@@ -94,7 +104,9 @@ export default function CreateShopPage() {
             <Col span={12}>
               <Form.Item name="customerId" label="Klien (opsional)">
                 <Select showSearch placeholder="Cari klien..." allowClear
-                  filterOption={(input, option) => (option?.label as string || "").toLowerCase().includes(input.toLowerCase())}
+                  onSearch={searchCustomers}
+                  onFocus={() => searchCustomers()}
+                  filterOption={false}
                   options={customers.map((c) => ({ value: c._id, label: c.name }))} />
               </Form.Item>
             </Col>
@@ -116,7 +128,9 @@ export default function CreateShopPage() {
       <Card title="Item" style={{ marginTop: 16 }}>
         <Space direction="vertical" style={{ width: "100%" }}>
           <Select showSearch placeholder="Tambah produk..." style={{ width: "100%" }}
-            filterOption={(input, option) => (option?.label as string || "").toLowerCase().includes(input.toLowerCase())}
+            onSearch={searchProducts}
+            onFocus={() => searchProducts()}
+            filterOption={false}
             options={products.map((p) => ({ value: p._id, label: `${p.product.name} - ${formatPrice(p.pricing.selling)}  (stok: ${p.inventory?.quantity ?? 0})` }))}
             onChange={(val) => { if (val) addToCart(val as string); }}
           />

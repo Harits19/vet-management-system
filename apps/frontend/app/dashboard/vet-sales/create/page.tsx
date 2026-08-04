@@ -71,6 +71,12 @@ export default function CreateVetSalePage() {
     setPets(res.data);
   };
 
+  // Server-side search (backend bisa punya >100 data, search client-side tidak cukup)
+  const searchCustomers = async (q = "") => {
+    const res = await apiFetch<{ data: any[] }>(`/api/customers?search=${encodeURIComponent(q)}&limit=100`);
+    setCustomers(res.data);
+  };
+
   const loadMedicalHistory = async (petId: string) => {
     if (!petId) { setMhRecords([]); return; }
     setMhLoading(true);
@@ -153,7 +159,7 @@ export default function CreateVetSalePage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="customerId" label="Pemilik" rules={[{ required: true }]}>
-                <Select showSearch placeholder="Cari pemilik..." filterOption={(input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
+                <Select showSearch placeholder="Cari pemilik..." onSearch={searchCustomers} onFocus={() => searchCustomers()} filterOption={false}
                   options={customers.map((c) => ({ value: c._id, label: c.name }))}
                   onChange={(val) => { setSelectedCustomer(val); setSelectedPet(""); form.setFieldsValue({ petId: undefined }); loadPets(val); }} />
               </Form.Item>

@@ -21,6 +21,7 @@ interface PrescriptionEditorProps {
   onChange: (items: PrescriptionLine[]) => void;
   options: { _id: string; name: string; selling: number }[];
   loading?: boolean;
+  onSearch?: (q: string) => void; // server-side search (opsional)
 }
 
 function formatPrice(n: number) {
@@ -30,7 +31,7 @@ function formatPrice(n: number) {
 // ──────────────────────────────────────────
 // Editor Resep Obat — multiple item dari Master Obat
 // ──────────────────────────────────────────
-export default function PrescriptionEditor({ items, onChange, options, loading }: PrescriptionEditorProps) {
+export default function PrescriptionEditor({ items, onChange, options, loading, onSearch }: PrescriptionEditorProps) {
   const addLine = () => {
     onChange([...items, { productId: "", name: "", quantity: 1, price: 0, _key: `p-${Date.now()}-${items.length}` }]);
   };
@@ -54,7 +55,9 @@ export default function PrescriptionEditor({ items, onChange, options, loading }
                 style={{ width: "100%" }}
                 placeholder="Pilih obat..."
                 value={line.productId || undefined}
-                filterOption={(input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
+                onSearch={onSearch}
+                onFocus={onSearch ? () => onSearch("") : undefined}
+                filterOption={onSearch ? false : (input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
                 options={options.map((o) => ({ value: o._id, label: `${o.name} - ${formatPrice(o.selling)}` }))}
                 loading={loading}
                 onChange={(val) => {

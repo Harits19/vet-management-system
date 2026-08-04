@@ -138,6 +138,24 @@ export default function NewConsultationPage() {
     setPets(res.data);
   };
 
+  // Server-side search pemilik (backend punya >100 customer, search client-side tidak cukup)
+  const searchCustomers = async (q = "") => {
+    const res = await apiFetch<{ data: any[] }>(`/api/customers?search=${encodeURIComponent(q)}&limit=100`);
+    setCustomers(res.data);
+  };
+  const searchServices = async (q = "") => {
+    const res = await apiFetch<{ data: any[] }>(`/api/services?search=${encodeURIComponent(q)}&limit=100`);
+    setServices(res.data);
+  };
+  const searchMedicines = async (q = "") => {
+    const res = await apiFetch<{ data: any[] }>(`/api/products?productType=medicine&search=${encodeURIComponent(q)}&limit=100`);
+    setMedicines(res.data);
+  };
+  const searchGoods = async (q = "") => {
+    const res = await apiFetch<{ data: any[] }>(`/api/products?productType=good&search=${encodeURIComponent(q)}&limit=100`);
+    setGoods(res.data);
+  };
+
   const loadPetDetail = async (petId: string) => {
     setPetLoading(true);
     try {
@@ -233,7 +251,9 @@ export default function NewConsultationPage() {
                   <Select
                     showSearch
                     placeholder="Cari pemilik..."
-                    filterOption={(input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
+                    onSearch={searchCustomers}
+                    onFocus={() => searchCustomers()}
+                    filterOption={false}
                     options={customers.map((c) => ({ value: c._id, label: c.name }))}
                     onChange={(val) => {
                       form.setFieldsValue({ petId: undefined });
@@ -369,6 +389,7 @@ export default function NewConsultationPage() {
                     onChange={setTreatments}
                     options={services.map((s) => ({ _id: s._id, name: s.name, selling: s.price }))}
                     loading={mastersLoading}
+                    onSearch={searchServices}
                   />
                 </div>
               </Card>
@@ -381,6 +402,7 @@ export default function NewConsultationPage() {
                     onChange={setPrescriptions}
                     options={medicines.map((m) => ({ _id: m._id, name: m.product?.name, selling: m.pricing?.selling }))}
                     loading={mastersLoading}
+                    onSearch={searchMedicines}
                   />
                 </div>
               </Card>
@@ -393,6 +415,7 @@ export default function NewConsultationPage() {
                     onChange={setGoodsLines}
                     options={goods.map((g) => ({ _id: g._id, name: g.product?.name, selling: g.pricing?.selling }))}
                     loading={mastersLoading}
+                    onSearch={searchGoods}
                   />
                 </div>
               </Card>

@@ -3,7 +3,7 @@ set -euo pipefail
 
 echo "========================================"
 echo "  Vet Management System — Deploy"
-echo "  Domain: http://wedi-animal-care.ahlabs.my.id"
+echo "  Domain: $FRONTEND_URL (atur di .env)"
 echo "========================================"
 
 # 1. Copy .env
@@ -27,7 +27,7 @@ docker compose up -d
 
 echo ""
 echo "✅ Deploy selesai!"
-echo "   Frontend: http://wedi-animal-care.ahlabs.my.id"
-echo "   API:      http://wedi-animal-care.ahlabs.my.id/api"
+echo "   Frontend: ${NEXT_PUBLIC_API_URL:-http://localhost}"
+echo "   API:      ${NEXT_PUBLIC_API_URL:-http://localhost}/api"
 echo ""
 echo "📋 Logs: docker compose logs -f"

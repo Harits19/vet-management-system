@@ -372,7 +372,6 @@ export default function NewConsultationPage() {
                 onSearch={loadDiagnoses}
                 onFocus={() => loadDiagnoses()}
                 onSelect={(val, option) => applyTemplate((option as any)?.id, val)}
-                filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
                 placeholder="Ketik diagnosis baru atau pilih dari daftar... (template otomatis terisi bila ada)"
               />
             </Form.Item>

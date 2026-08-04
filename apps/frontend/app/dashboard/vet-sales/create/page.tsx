@@ -76,6 +76,14 @@ export default function CreateVetSalePage() {
     const res = await apiFetch<{ data: any[] }>(`/api/customers?search=${encodeURIComponent(q)}&limit=100`);
     setCustomers(res.data);
   };
+  const searchServices = async (q = "") => {
+    const res = await apiFetch<{ data: any[] }>(`/api/services?search=${encodeURIComponent(q)}&limit=100`);
+    setServices(res.data.map((x: any) => ({ _id: x._id, name: x.name, price: x.price, cost: x.cost ?? 0, type: "service" })));
+  };
+  const searchMedicines = async (q = "") => {
+    const res = await apiFetch<{ data: any[] }>(`/api/products?search=${encodeURIComponent(q)}&limit=100`);
+    setMedicines(res.data.map((x: any) => ({ _id: x._id, name: x.product?.name, price: x.pricing?.selling ?? 0, cost: x.pricing?.cost ?? 0, type: "physical" })));
+  };
 
   const loadMedicalHistory = async (petId: string) => {
     if (!petId) { setMhRecords([]); return; }
@@ -215,12 +223,16 @@ export default function CreateVetSalePage() {
       <Card title="Item Transaksi" style={{ marginTop: 16 }}>
         <Space direction="vertical" style={{ width: "100%" }}>
           <Select showSearch placeholder="Tambah jasa dokter..." style={{ width: "100%" }}
-            filterOption={(input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
-            options={services.map((s) => ({ value: s._id, label: `${s.product.name} - ${formatPrice(s.pricing.selling)}` }))}
+            onSearch={searchServices}
+            onFocus={() => searchServices()}
+            filterOption={false}
+            options={services.map((s) => ({ value: s._id, label: `${s.name} - ${formatPrice(s.price)}` }))}
             onChange={(val) => addToCart(val, "service")} />
           <Select showSearch placeholder="Tambah obat..." style={{ width: "100%" }}
-            filterOption={(input, o) => (o?.label as string || "").toLowerCase().includes(input.toLowerCase())}
-            options={medicines.map((m) => ({ value: m._id, label: `${m.product.name} - ${formatPrice(m.pricing.selling)}` }))}
+            onSearch={searchMedicines}
+            onFocus={() => searchMedicines()}
+            filterOption={false}
+            options={medicines.map((m) => ({ value: m._id, label: `${m.name} - ${formatPrice(m.price)}` }))}
             onChange={(val) => addToCart(val, "physical")} />
           {cart.map((item) => (
             <Row key={item.product._id} gutter={8} align="middle" style={{ marginTop: 4 }}>

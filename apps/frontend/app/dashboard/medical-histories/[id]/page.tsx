@@ -23,6 +23,7 @@ interface MHDetail {
     gender?: string;
     birthDate?: string;
     initialAge?: { value: number; unit: "month" | "year" };
+    createdAt?: string;
     customerId?: { _id: string; name: string; whatsapp?: string };
   };
   visitDate: string;

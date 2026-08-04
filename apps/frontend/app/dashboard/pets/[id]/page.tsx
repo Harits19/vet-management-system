@@ -31,6 +31,7 @@ interface PetDetail {
   gender: string;
   birthDate?: string;
   initialAge?: { value: number; unit: "month" | "year" };
+  createdAt?: string;
   notes?: string;
   customerId: { _id: string; name: string };
 }

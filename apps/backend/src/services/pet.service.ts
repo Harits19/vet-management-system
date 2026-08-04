@@ -44,7 +44,7 @@ export async function deletePet(id: string) {
 }
 
 export async function searchCustomerPets(customerId: string) {
-  return PetModel.find({ customerId }).select("name kind breed gender birthDate initialAge").lean();
+  return PetModel.find({ customerId }).select("name kind breed gender birthDate initialAge createdAt").lean();
 }
 
 // Nilai unik untuk autocomplete (kind, breed, notes)

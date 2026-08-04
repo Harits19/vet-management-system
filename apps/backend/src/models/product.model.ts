@@ -9,6 +9,8 @@ export interface IProductDoc {
     code?: string;
     name: string;
     weight?: number;
+    supplier?: string;
+    petClinicId?: string;
   };
   pricing: {
     cost?: number;
@@ -22,16 +24,24 @@ export interface IProductDoc {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  syncAt?: Date;
 }
 
 const ProductSchema = new Schema<IProductDoc>(
   {
-    productType: { type: String, enum: ["medicine", "good"], required: true, default: "good" },
+    productType: {
+      type: String,
+      enum: ["medicine", "good"],
+      required: true,
+      default: "good",
+    },
     category: { type: String, required: true, trim: true },
     product: {
       code: { type: String, trim: true, sparse: true },
       name: { type: String, required: true, trim: true },
       weight: { type: Number, min: 0 },
+      supplier: { type: String },
+      petClinicId: { type: String, trim: true },
     },
     pricing: {
       cost: { type: Number, min: 0 },
@@ -43,12 +53,20 @@ const ProductSchema = new Schema<IProductDoc>(
     },
     unit: { type: String, trim: true },
     isActive: { type: Boolean, default: true },
+    syncAt: { type: Date },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 ProductSchema.index({ "product.name": 1 });
 ProductSchema.index({ category: 1 });
 ProductSchema.index({ productType: 1 });
+ProductSchema.index(
+  { "product.petClinicId": 1 },
+  { unique: true, sparse: true },
+);
 
-export const ProductModel = mongoose.model<IProductDoc>("Product", ProductSchema);
+export const ProductModel = mongoose.model<IProductDoc>(
+  "Product",
+  ProductSchema,
+);

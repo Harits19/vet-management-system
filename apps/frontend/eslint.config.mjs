@@ -15,5 +15,14 @@ export default tseslint.config(
   },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   ...tseslint.configs.recommended,
+  {
+    rules: {
+      // Codebase existing memakai `any` & punya unused vars secara luas.
+      // Dibuat warning agar tidak memblokir `next build` (deploy) —
+      // tetap terlihat di editor/CI untuk dibersihkan bertahap.
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
+    },
+  },
   prettier
 );

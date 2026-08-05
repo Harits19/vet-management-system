@@ -409,8 +409,9 @@ export async function getDashboardSummary() {
   const startOfWeek = new Date(startOfDay);
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-  const [todaySales, weekSales, monthSales] = await Promise.all([
+  const [todaySales, weekSales, monthSales, patientCounts, lowStockGroups, diagnoses, customers] = await Promise.all([
     TransactionModel.aggregate([
       { $match: { type: "vet", timestamp: { $gte: startOfDay } } },
       { $group: { _id: null, total: { $sum: "$summary.total" }, count: { $sum: 1 } } },
@@ -423,20 +424,74 @@ export async function getDashboardSummary() {
       { $match: { type: "vet", timestamp: { $gte: startOfMonth } } },
       { $group: { _id: null, total: { $sum: "$summary.total" }, count: { $sum: 1 } } },
     ]),
+    // Total Pasien — hewan terdaftar (isActive) sejak awal tahun / bulan / hari
+    Promise.all([
+      PetModel.countDocuments({ isActive: true, createdAt: { $gte: startOfYear } }),
+      PetModel.countDocuments({ isActive: true, createdAt: { $gte: startOfMonth } }),
+      PetModel.countDocuments({ isActive: true, createdAt: { $gte: startOfDay } }),
+    ]),
+    // Low stock 3 grup: Obat (medicine) | Petshop (good + kategori mengandung "petshop") | Barang Habis Pakai (good lainnya)
+    (async () => {
+      const base: any = { isActive: true, "inventory.quantity": { $lte: 5 } };
+      const select = "product.name category productType inventory.quantity pricing.selling unit";
+      const sort = { "inventory.quantity": 1 } as const;
+      const [medicine, petshop, consumable] = await Promise.all([
+        ProductModel.find({ ...base, productType: "medicine" }).select(select).sort(sort).limit(10).lean(),
+        ProductModel.find({ ...base, productType: "good", category: /petshop/i }).select(select).sort(sort).limit(10).lean(),
+        ProductModel.find({ ...base, productType: "good", category: { $not: /petshop/i } }).select(select).sort(sort).limit(10).lean(),
+      ]);
+      return { medicine, petshop, consumable };
+    })(),
+    // List Diagnosa — frekuensi diagnosis dari rekam medis (buang nilai sampah)
+    MedicalHistoryModel.aggregate([
+      { $match: { diagnosis: { $nin: ["", "-", "Tanpa diagnosis"] } } },
+      { $group: { _id: "$diagnosis", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ]),
+    // List Klien — jumlah hewan + jumlah kedatangan (rekam medis)
+    CustomerModel.aggregate([
+      {
+        $lookup: {
+          from: "pets",
+          let: { cid: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$customerId", "$$cid"] }, isActive: true } },
+            { $project: { _id: 1 } },
+          ],
+          as: "pets",
+        },
+      },
+      {
+        $lookup: {
+          from: "medicalhistories",
+          let: { petIds: "$pets._id" },
+          pipeline: [
+            { $match: { $expr: { $in: ["$petId", "$$petIds"] } } },
+            { $project: { _id: 1 } },
+          ],
+          as: "visits",
+        },
+      },
+      { $project: { name: 1, whatsapp: 1, petCount: { $size: "$pets" }, visitCount: { $size: "$visits" } } },
+      { $match: { $or: [{ petCount: { $gt: 0 } }, { visitCount: { $gt: 0 } }] } },
+      { $sort: { visitCount: -1, petCount: -1 } },
+      { $limit: 10 },
+    ]),
   ]);
-
-  // lowStock: ProductModel memakai productType ("medicine" | "good"), bukan "type" (field item transaksi)
-  const lowStock = await ProductModel.find({ productType: { $in: ["medicine", "good"] }, isActive: true, "inventory.quantity": { $lte: 5 } })
-    .select("product.name inventory.quantity pricing.selling")
-    .sort({ "inventory.quantity": 1 })
-    .limit(10)
-    .lean();
 
   return {
     today: { total: todaySales[0]?.total ?? 0, count: todaySales[0]?.count ?? 0 },
     week: { total: weekSales[0]?.total ?? 0, count: weekSales[0]?.count ?? 0 },
     month: { total: monthSales[0]?.total ?? 0, count: monthSales[0]?.count ?? 0 },
-    lowStock: lowStock as any[],
+    patients: { year: patientCounts[0], month: patientCounts[1], day: patientCounts[2] },
+    lowStock: {
+      medicine: lowStockGroups.medicine as any[],
+      petshop: lowStockGroups.petshop as any[],
+      consumable: lowStockGroups.consumable as any[],
+    },
+    diagnoses: diagnoses.map((d) => ({ name: d._id, count: d.count })),
+    customers: customers as any[],
   };
 }
 

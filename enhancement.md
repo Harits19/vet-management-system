@@ -577,3 +577,30 @@ modal.confirm({ title: "...", onOk: ... });
 - `apps/backend/src/services/medical-history.service.ts` — summary `by-pet` menyertakan `complaint`
 - `apps/frontend/app/dashboard/consultations/new/page.tsx` — tombol Detail + keluhan singkat di riwayat
 - `apps/frontend/app/dashboard/pets/[id]/page.tsx` — kolom Keluhan di tabel riwayat
+
+---
+
+### 29. Dashboard — Total Pasien, Low Stock 3 Grup, List Diagnosa & List Klien — ✅ Selesai
+
+**Masalah:** Dashboard hanya menampilkan ringkasan penjualan (hari/minggu/bulan) + stok menipis flat. Belum ada info jumlah pasien, low stock per kelompok, diagnosa terpopuler, dan performa klien.
+
+**Solusi:** Perluas `GET /api/dashboard/summary` (satu endpoint, satu fetch):
+
+1. **Total Pasien (Tahunan/Bulanan/Harian)** — `patients: { year, month, day }` — hitung `PetModel` aktif (`isActive: true`) dengan `createdAt >=` awal tahun / awal bulan / awal hari. 3 kartu Statistic baru di dashboard.
+
+2. **Low Stock 3 Grup** — `lowStock: { medicine, petshop, consumable }` (masing-masing limit 10, urut stok naik):
+   - **Obat** = `productType: "medicine"`
+   - **Petshop** = `productType: "good"` + `category` mengandung "petshop" (case-insensitive)
+   - **Barang Habis Pakai** = `productType: "good"` lainnya
+   - Catatan: schema produk tidak diubah (`productType` tetap `medicine | good`); pemisah petshop vs habis pakai lewat kategori. Produk `isActive: false` tidak dihitung.
+   - Tampilan: Card "Stok Menipis" berubah jadi Tabs (Obat / Petshop / Barang Habis Pakai) dengan jumlah item di label tab.
+
+3. **List Diagnosa** — `diagnoses: [{ name, count }]` — agregasi `MedicalHistoryModel` group by `diagnosis`, sort count desc, limit 10; nilai sampah (`""`, `"-"`, `"Tanpa diagnosis"`) dibuang.
+
+4. **List Klien** — `customers: [{ _id, name, whatsapp?, petCount, visitCount }]` — agregasi `CustomerModel` + `$lookup` pets (aktif) + `$lookup` medicalhistories via petId; hanya klien dengan hewan/kedatangan > 0, sort kedatangan desc, limit 10.
+
+**File diubah:**
+- `apps/backend/src/services/transaction.service.ts` — `getDashboardSummary()` diperluas (query paralel dalam satu `Promise.all`)
+- `apps/frontend/app/dashboard/page.tsx` — 2 baris kartu Statistic baru, Tabs stok menipis, 2 tabel (List Diagnosa & List Klien) sejajar
+
+**Catatan:** Query dashboard diverifikasi langsung ke DB produksi (read-only): diagnosa & klien menghasilkan data; low stock live saat ini Obat 2 item, Petshop/Habis Pakai 0 (produk good satunya nonaktif).

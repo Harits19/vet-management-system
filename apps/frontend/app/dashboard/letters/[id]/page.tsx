@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, Space, Typography, Skeleton, Tag, Card } from "antd";
 import { ArrowLeft, Printer } from "lucide-react";
-import { apiFetch } from "../../context/auth";
+import { apiFetch } from "../../../context/auth";
 import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { LETTER_TYPE_META, LETTER_BODY, letterTypeLabel, letterTypeColor } from "../constants";

@@ -24,7 +24,6 @@ function SidebarMenu({ role }: { role: string }) {
     { key: "/dashboard/customers", icon: <Users size={18} />, label: <Link href="/dashboard/customers">Klien</Link> },
     { key: "/dashboard/pets", icon: <Dog size={18} />, label: <Link href="/dashboard/pets">Pasien Baru</Link> },
     { key: "/dashboard/services", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/services">Jasa</Link> },
-    { key: "/dashboard/obat", icon: <Package size={18} />, label: <Link href="/dashboard/obat">Obat</Link> },
     { key: "/dashboard/products", icon: <Package size={18} />, label: <Link href="/dashboard/products">Barang</Link> },
     { key: "/dashboard/transactions", icon: <ShoppingCart size={18} />, label: <Link href="/dashboard/transactions">Transaksi</Link> },
   ];

@@ -12,7 +12,9 @@ const { Title } = Typography;
 interface Product {
   _id: string;
   productType: "medicine" | "good";
+  goodType?: "petshop" | "bmhp";
   category: string;
+  subcategory?: string;
   product: { code?: string; name: string; weight?: number };
   pricing: { cost?: number; selling: number; online?: number };
   inventory: { quantity?: number };
@@ -22,10 +24,11 @@ interface Product {
 
 interface ProductManagerProps {
   productTypeFilter?: "medicine" | "good";
+  goodTypeFilter?: "petshop" | "bmhp";
   title?: string;
 }
 
-export default function ProductManager({ productTypeFilter = "good", title }: ProductManagerProps) {
+export default function ProductManager({ productTypeFilter = "good", goodTypeFilter, title }: ProductManagerProps) {
   const [data, setData] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -38,18 +41,21 @@ export default function ProductManager({ productTypeFilter = "good", title }: Pr
   const modal = useAntdModal();
 
   const [categoryOptions, setCategoryOptions] = useState<{ value: string }[]>([]);
+  const [subcategoryOptions, setSubcategoryOptions] = useState<{ value: string }[]>([]);
   const [unitOptions, setUnitOptions] = useState<{ value: string }[]>([]);
 
   const label = title || "Barang";
   const isMedicine = productTypeFilter === "medicine";
 
-  const loadDistinct = async (field: "category" | "unit") => {
+  const loadDistinct = async (field: "category" | "subcategory" | "unit") => {
     try {
       const params = new URLSearchParams({ field });
       if (productTypeFilter) params.set("productType", productTypeFilter);
+      if (goodTypeFilter) params.set("goodType", goodTypeFilter);
       const res = await apiFetch<{ data: string[] }>(`/api/products/distinct?${params}`);
       const opts = res.data.map((v) => ({ value: v }));
       if (field === "category") setCategoryOptions(opts);
+      else if (field === "subcategory") setSubcategoryOptions(opts);
       else setUnitOptions(opts);
     } catch { /* ignore */ }
   };
@@ -59,6 +65,7 @@ export default function ProductManager({ productTypeFilter = "good", title }: Pr
     try {
       const params = new URLSearchParams({ page: String(p), limit: "10", search: s });
       if (productTypeFilter) params.set("productType", productTypeFilter);
+      if (goodTypeFilter) params.set("goodType", goodTypeFilter);
       const res = await apiFetch<{ data: Product[]; meta: { total: number } }>(`/api/products?${params}`);
       setData(res.data);
       setTotal(res.meta.total);
@@ -69,14 +76,14 @@ export default function ProductManager({ productTypeFilter = "good", title }: Pr
     }
   };
 
-  useEffect(() => { fetchData(); loadDistinct("category"); loadDistinct("unit"); }, []);
+  useEffect(() => { fetchData(); loadDistinct("category"); loadDistinct("subcategory"); loadDistinct("unit"); }, []);
 
   const handleSearch = () => { setPage(1); fetchData(1, search); };
 
   const openCreate = () => {
     setEditing(null);
     form.resetFields();
-    form.setFieldsValue({ productType: productTypeFilter || "good" });
+    form.setFieldsValue({ productType: productTypeFilter || "good", goodType: goodTypeFilter });
     setModalOpen(true);
   };
   const openEdit = (p: Product) => { setEditing(p); form.setFieldsValue(p); setModalOpen(true); };
@@ -84,7 +91,11 @@ export default function ProductManager({ productTypeFilter = "good", title }: Pr
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const payload = { ...values, productType: values.productType || productTypeFilter || "good" };
+      const payload = {
+        ...values,
+        productType: values.productType || productTypeFilter || "good",
+        goodType: values.goodType || goodTypeFilter,
+      };
       if (editing) {
         await apiFetch(`/api/products/${editing._id}`, { method: "PUT", body: JSON.stringify(payload) });
         msg.success(`${label} diupdate`);
@@ -95,6 +106,7 @@ export default function ProductManager({ productTypeFilter = "good", title }: Pr
       setModalOpen(false);
       fetchData();
       loadDistinct("category");
+      loadDistinct("subcategory");
       loadDistinct("unit");
     } catch (err: any) {
       if (err.message) msg.error(err.message);
@@ -118,9 +130,17 @@ export default function ProductManager({ productTypeFilter = "good", title }: Pr
 
   const fmt = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
 
+  const catPlaceholder = isMedicine ? "Obat Injeksi, Obat Oral" : goodTypeFilter === "bmhp" ? "Medis" : "Pakan, Aksesoris";
+  const subcatPlaceholder = isMedicine
+    ? "Antibiotik, Vitamin, Anti Radang"
+    : goodTypeFilter === "bmhp"
+      ? "Botol Infus, Spuit, Kateter"
+      : "Pakan Kucing, Aksesoris Kucing";
+
   const columns = [
     { title: "Nama", key: "name", render: (_: any, r: Product) => r.product?.name },
     { title: "Kategori", dataIndex: "category", key: "category" },
+    { title: "Subkategori", key: "subcategory", render: (_: any, r: Product) => r.subcategory || "-" },
     { title: "Kode", key: "code", render: (_: any, r: Product) => r.product?.code || "-" },
     { title: "Harga Jual", key: "selling", render: (_: any, r: Product) => fmt(r.pricing.selling) },
     { title: "Stok", key: "qty", render: (_: any, r: Product) => <Tag color={(r.inventory?.quantity ?? 0) <= 0 ? "red" : "green"}>{r.inventory?.quantity ?? 0}</Tag> },
@@ -154,10 +174,18 @@ export default function ProductManager({ productTypeFilter = "good", title }: Pr
       <Modal title={editing ? `Edit ${label}` : `Tambah ${label}`} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={600}>
         <Form form={form} layout="vertical">
           <Form.Item name="productType" hidden><Input /></Form.Item>
+          <Form.Item name="goodType" hidden><Input /></Form.Item>
           <Form.Item name="category" label="Kategori" rules={[{ required: true, message: "Wajib" }]}>
             <AutoComplete
               options={categoryOptions}
-              placeholder={isMedicine ? "Contoh: Obat, Vitamin, Suplemen" : "Contoh: Makanan, Aksesoris, Perawatan"}
+              placeholder={catPlaceholder}
+              filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
+            />
+          </Form.Item>
+          <Form.Item name="subcategory" label="Subkategori">
+            <AutoComplete
+              options={subcategoryOptions}
+              placeholder={subcatPlaceholder}
               filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
             />
           </Form.Item>

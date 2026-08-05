@@ -54,7 +54,8 @@ export async function distinct(req: AuthRequest, res: Response, next: NextFuncti
   try {
     const field = req.query.field as string;
     const productType = req.query.productType as string | undefined;
-    const data = await getDistinctProductValues(field, productType);
+    const goodType = req.query.goodType as string | undefined;
+    const data = await getDistinctProductValues(field, productType, goodType);
     res.json({ success: true, data });
   } catch (err) { next(err); }
 }

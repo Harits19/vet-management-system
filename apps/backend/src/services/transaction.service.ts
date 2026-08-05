@@ -488,8 +488,12 @@ export async function getDashboardSummary(opts: { diagnosesPage?: number; custom
       PetModel.countDocuments({ isActive: true, createdAt: { $gte: startOfDay } }),
     ]),
     // Low stock 3 grup: Obat (medicine) | Petshop (good + goodType petshop) | Barang Habis Pakai (good lainnya)
+    // Catatan: stok kosong/tidak diisi (= 0) juga termasuk menipis
     (async () => {
-      const base: any = { isActive: true, "inventory.quantity": { $lte: 5 } };
+      const base: any = {
+        isActive: true,
+        $or: [{ "inventory.quantity": { $lte: 5 } }, { "inventory.quantity": { $exists: false } }],
+      };
       const select = "product.name category subcategory goodType productType inventory.quantity pricing.selling unit";
       const sort = { "inventory.quantity": 1 } as const;
       const [medicine, petshop, consumable] = await Promise.all([

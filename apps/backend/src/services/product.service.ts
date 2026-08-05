@@ -30,11 +30,14 @@ export async function getProduct(id: string) {
 }
 
 export async function createProduct(input: ProductCreateRequest) {
-  // Non-obat wajib punya goodType — default petshop kalau tidak dikirim
-  const payload =
-    input.productType === "good" && !input.goodType
-      ? { ...input, goodType: "petshop" as const }
-      : input;
+  // Normalisasi: non-obat wajib punya goodType (default petshop);
+  // stok tidak diisi = 0 (biar muncul di low stock, bukan field hilang)
+  const payload: any = { ...input };
+  if (payload.productType === "good" && !payload.goodType) payload.goodType = "petshop";
+  const qty = payload.inventory?.quantity;
+  if (qty === undefined || qty === null || qty === "") {
+    payload.inventory = { ...(payload.inventory || {}), quantity: 0 };
+  }
   const product = await ProductModel.create(payload);
   return product.toObject() as any;
 }

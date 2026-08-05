@@ -8,14 +8,14 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import {
   authRoutes, customerRoutes, petRoutes, productRoutes, serviceRoutes,
   dashboardRoutes, medicalHistoryRoutes, transactionRoutes,
-  syncRoutes, diagnosisTemplateRoutes,
+  syncRoutes, diagnosisTemplateRoutes, letterRoutes,
 } from "./routes/index.js";
 import { frontendOrigins } from "./config/auth.js";
 
 const app = express();
 
 app.use(cors({ origin: frontendOrigins, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: "1mb" })); // cukup besar utk tanda tangan digital (data URL PNG)
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
@@ -28,6 +28,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/medical-histories", medicalHistoryRoutes);
 app.use("/api/sync", syncRoutes);
 app.use("/api/diagnosis-templates", diagnosisTemplateRoutes);
+app.use("/api/letters", letterRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ success: true, message: "OK" }));

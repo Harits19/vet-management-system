@@ -22,8 +22,8 @@ interface DashboardData {
   month: { total: number; count: number };
   patients: { year: number; month: number; day: number };
   lowStock: { medicine: LowStockItem[]; petshop: LowStockItem[]; consumable: LowStockItem[] };
-  diagnoses: { name: string; count: number }[];
-  customers: { _id: string; name: string; whatsapp?: string; petCount: number; visitCount: number }[];
+  diagnoses: { data: { name: string; count: number }[]; total: number };
+  customers: { data: { _id: string; name: string; whatsapp?: string; petCount: number; visitCount: number }[]; total: number };
 }
 
 function formatPrice(n: number) {
@@ -40,13 +40,19 @@ const lowStockColumns = [
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [diagnosesPage, setDiagnosesPage] = useState(1);
+  const [customersPage, setCustomersPage] = useState(1);
 
-  useEffect(() => {
-    apiFetch<{ data: DashboardData }>("/api/dashboard/summary")
+  const fetchData = (dp: number, cp: number) => {
+    setLoading(true);
+    const params = new URLSearchParams({ diagnosesPage: String(dp), customersPage: String(cp) });
+    apiFetch<{ data: DashboardData }>(`/api/dashboard/summary?${params}`)
       .then((res) => setData(res.data))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchData(1, 1); }, []);
 
   const stockTabs = [
     {
@@ -113,29 +119,41 @@ export default function DashboardPage() {
         <Col xs={24} lg={12}>
           <Card title="List Diagnosa" loading={loading}>
             <Table
-              dataSource={data?.diagnoses ?? []}
+              dataSource={data?.diagnoses?.data ?? []}
               columns={[
                 { title: "Diagnosa", dataIndex: "name", key: "name" },
                 { title: "Jumlah Pasien", dataIndex: "count", key: "count", render: (n: number) => <Tag color="blue">{n}</Tag> },
               ]}
               rowKey="name"
-              pagination={false}
               size="small"
+              pagination={{
+                current: diagnosesPage,
+                pageSize: 10,
+                total: data?.diagnoses?.total ?? 0,
+                showSizeChanger: false,
+                onChange: (p) => { setDiagnosesPage(p); fetchData(p, customersPage); },
+              }}
             />
           </Card>
         </Col>
         <Col xs={24} lg={12}>
           <Card title="List Klien" loading={loading}>
             <Table
-              dataSource={data?.customers ?? []}
+              dataSource={data?.customers?.data ?? []}
               columns={[
                 { title: "Klien", dataIndex: "name", key: "name" },
                 { title: "Jumlah Hewan", dataIndex: "petCount", key: "petCount" },
                 { title: "Jumlah Kedatangan", dataIndex: "visitCount", key: "visitCount" },
               ]}
               rowKey="_id"
-              pagination={false}
               size="small"
+              pagination={{
+                current: customersPage,
+                pageSize: 10,
+                total: data?.customers?.total ?? 0,
+                showSizeChanger: false,
+                onChange: (p) => { setCustomersPage(p); fetchData(diagnosesPage, p); },
+              }}
             />
           </Card>
         </Col>

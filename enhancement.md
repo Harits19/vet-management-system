@@ -604,3 +604,47 @@ modal.confirm({ title: "...", onOk: ... });
 - `apps/frontend/app/dashboard/page.tsx` — 2 baris kartu Statistic baru, Tabs stok menipis, 2 tabel (List Diagnosa & List Klien) sejajar
 
 **Catatan:** Query dashboard diverifikasi langsung ke DB produksi (read-only): diagnosa & klien menghasilkan data; low stock live saat ini Obat 2 item, Petshop/Habis Pakai 0 (produk good satunya nonaktif).
+
+---
+
+### 30. Dashboard — Pagination List Diagnosa & List Klien — ✅ Selesai
+
+**Masalah:** List Diagnosa & List Klien di dashboard hanya menampilkan 10 data teratas tanpa pagination.
+
+**Solusi:** `GET /api/dashboard/summary` menerima query `diagnosesPage` & `customersPage` (default 1, pageSize 10). Response `diagnoses` dan `customers` berubah bentuk menjadi `{ data, total }`. Tabel di dashboard pakai pagination server-side (`onChange` → refetch dengan page baru).
+
+**File diubah:**
+- `apps/backend/src/services/transaction.service.ts` — agregasi diagnosa & klien dipisah ke `diagnosesAgg`/`customersAgg` dengan `$skip`/`$limit` + `total`
+- `apps/backend/src/controllers/transaction.controller.ts` — `dashboard` meneruskan query param
+- `apps/frontend/app/dashboard/page.tsx` — state `diagnosesPage`/`customersPage`, fetch dengan params, `Table pagination`
+
+---
+
+### 31. Surat Klinik (6 Jenis) + Tanda Tangan Digital — ✅ Selesai
+
+**Fitur:** Surat-surat klinik dengan tanda tangan digital pemilik (canvas draw, tanpa dependency baru):
+1. Surat Persetujuan Operasi
+2. Surat Persetujuan Pembiusan
+3. Surat Persetujuan Rawat Inap
+4. Surat Rujukan
+5. Surat Persetujuan Penitipan Hewan
+6. Surat Persetujuan Euthanasia
+
+**Backend:**
+- Model baru `Letter` — `{ letterType (enum 6), letterNumber (auto: SPO/2026/001), date, petId, customerId (auto dari pasien), doctorId (user login), subject, notes, ownerSignature (data URL PNG), ownerSignedName, signedAt }`
+- Service + controller + route — CRUD `/api/letters` (`?letterType=`, `?search=`); tulis (POST/PUT/DELETE) khusus role `admin/superadmin/doctor`
+- `express.json({ limit: "1mb" })` di `index.ts` — cukup untuk data URL tanda tangan
+
+**Frontend:**
+- Komponen baru `SignaturePad.tsx` — canvas pointer events (mouse + touch), output PNG putih, tombol Bersihkan
+- Halaman `/dashboard/letters` — list + filter jenis + search + hapus
+- Halaman `/dashboard/letters/create` — form dinamis (label per jenis: Jenis Operasi / Tujuan Rujukan / dll), pilih pasien → pemilik auto-fill, tanda tangan wajib
+- Halaman `/dashboard/letters/[id]` — dokumen A4 (kop "WEDI ANIMAL CARE"), tanda tangan tampil, tombol Cetak/Print (CSS @media print sembunyikan sidebar/header)
+- Menu sidebar "Surat" (role admin/superadmin/doctor)
+
+**File:**
+- Baru: `apps/backend/src/models/letter.model.ts`, `letter.service.ts`, `letter.controller.ts`, `letter.route.ts`
+- Baru: `apps/frontend/app/dashboard/letters/{page.tsx, create/page.tsx, [id]/page.tsx, constants.ts}`, `app/dashboard/components/SignaturePad.tsx`
+- Diubah: `apps/backend/src/models/index.ts`, `routes/index.ts`, `index.ts`; `apps/frontend/app/dashboard/layout.tsx`
+
+**Catatan:** Backend & frontend berjalan dari image build (tanpa volume source) — perubahan butuh `npm run deploy` (rebuild) yang waktunya dikontrol user.

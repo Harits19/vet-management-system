@@ -8,3 +8,4 @@ export { default as medicalHistoryRoutes } from "./medical-history.route.js";
 export { default as transactionRoutes } from "./transaction.route.js";
 export { default as syncRoutes } from "./sync.route.js";
 export { default as diagnosisTemplateRoutes } from "./diagnosis-template.route.js";
+export { default as letterRoutes } from "./letter.route.js";

@@ -403,13 +403,70 @@ export async function payTransaction(id: string, input: { paidAmount: number; pa
 // ──────────────────────────────────────────
 // Dashboard
 // ──────────────────────────────────────────
-export async function getDashboardSummary() {
+export async function getDashboardSummary(opts: { diagnosesPage?: number; customersPage?: number } = {}) {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(startOfDay);
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const diagnosesPage = Math.max(1, opts.diagnosesPage ?? 1);
+  const customersPage = Math.max(1, opts.customersPage ?? 1);
+  const pageSize = 10;
+
+  // List Diagnosa — frekuensi diagnosis dari rekam medis (buang nilai sampah), pagination
+  const diagnosesAgg = (async () => {
+    const match = { diagnosis: { $nin: ["", "-", "Tanpa diagnosis"] } };
+    const total = await MedicalHistoryModel.countDocuments(match);
+    const rows = await MedicalHistoryModel.aggregate([
+      { $match: match },
+      { $group: { _id: "$diagnosis", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $skip: (diagnosesPage - 1) * pageSize },
+      { $limit: pageSize },
+    ]);
+    return { total, data: rows.map((d: any) => ({ name: d._id, count: d.count })) };
+  })();
+
+  // List Klien — jumlah hewan + jumlah kedatangan (rekam medis), pagination
+  const customersAgg = (async () => {
+    const prefix: any[] = [
+      {
+        $lookup: {
+          from: "pets",
+          let: { cid: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$customerId", "$$cid"] }, isActive: true } },
+            { $project: { _id: 1 } },
+          ],
+          as: "pets",
+        },
+      },
+      {
+        $lookup: {
+          from: "medicalhistories",
+          let: { petIds: "$pets._id" },
+          pipeline: [
+            { $match: { $expr: { $in: ["$petId", "$$petIds"] } } },
+            { $project: { _id: 1 } },
+          ],
+          as: "visits",
+        },
+      },
+      { $project: { name: 1, whatsapp: 1, petCount: { $size: "$pets" }, visitCount: { $size: "$visits" } } },
+      { $match: { $or: [{ petCount: { $gt: 0 } }, { visitCount: { $gt: 0 } }] } },
+    ];
+    const [countRows, rows] = await Promise.all([
+      CustomerModel.aggregate([...prefix, { $count: "n" }]),
+      CustomerModel.aggregate([
+        ...prefix,
+        { $sort: { visitCount: -1, petCount: -1 } },
+        { $skip: (customersPage - 1) * pageSize },
+        { $limit: pageSize },
+      ]),
+    ]);
+    return { total: countRows[0]?.n ?? 0, data: rows as any[] };
+  })();
 
   const [todaySales, weekSales, monthSales, patientCounts, lowStockGroups, diagnoses, customers] = await Promise.all([
     TransactionModel.aggregate([
@@ -442,42 +499,8 @@ export async function getDashboardSummary() {
       ]);
       return { medicine, petshop, consumable };
     })(),
-    // List Diagnosa — frekuensi diagnosis dari rekam medis (buang nilai sampah)
-    MedicalHistoryModel.aggregate([
-      { $match: { diagnosis: { $nin: ["", "-", "Tanpa diagnosis"] } } },
-      { $group: { _id: "$diagnosis", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 },
-    ]),
-    // List Klien — jumlah hewan + jumlah kedatangan (rekam medis)
-    CustomerModel.aggregate([
-      {
-        $lookup: {
-          from: "pets",
-          let: { cid: "$_id" },
-          pipeline: [
-            { $match: { $expr: { $eq: ["$customerId", "$$cid"] }, isActive: true } },
-            { $project: { _id: 1 } },
-          ],
-          as: "pets",
-        },
-      },
-      {
-        $lookup: {
-          from: "medicalhistories",
-          let: { petIds: "$pets._id" },
-          pipeline: [
-            { $match: { $expr: { $in: ["$petId", "$$petIds"] } } },
-            { $project: { _id: 1 } },
-          ],
-          as: "visits",
-        },
-      },
-      { $project: { name: 1, whatsapp: 1, petCount: { $size: "$pets" }, visitCount: { $size: "$visits" } } },
-      { $match: { $or: [{ petCount: { $gt: 0 } }, { visitCount: { $gt: 0 } }] } },
-      { $sort: { visitCount: -1, petCount: -1 } },
-      { $limit: 10 },
-    ]),
+    diagnosesAgg,
+    customersAgg,
   ]);
 
   return {
@@ -490,8 +513,8 @@ export async function getDashboardSummary() {
       petshop: lowStockGroups.petshop as any[],
       consumable: lowStockGroups.consumable as any[],
     },
-    diagnoses: diagnoses.map((d) => ({ name: d._id, count: d.count })),
-    customers: customers as any[],
+    diagnoses,
+    customers,
   };
 }
 

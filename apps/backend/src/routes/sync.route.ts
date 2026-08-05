@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { syncController } from "../controllers/sync.controller.js";
+import { sync } from "../controllers/sync.controller.js";
 
 const router = Router();
 const petClinic = Router();

@@ -6,7 +6,7 @@ import { useAuth } from "../context/auth";
 import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space } from "antd";
 import {
   Users, Dog, Package, LayoutDashboard, PawPrint, User as UserIcon,
-  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut
+  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -34,6 +34,7 @@ function SidebarMenu({ role }: { role: string }) {
       { key: "/dashboard/consultations", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/consultations/new">Pasien Lama</Link> },
       { key: "/dashboard/medical-histories", icon: <FileText size={18} />, label: <Link href="/dashboard/medical-histories">Rekam Medis</Link> },
       { key: "/dashboard/diagnoses", icon: <ClipboardList size={18} />, label: <Link href="/dashboard/diagnoses">List Diagnosis</Link> },
+      { key: "/dashboard/letters", icon: <FileSignature size={18} />, label: <Link href="/dashboard/letters">Surat</Link> },
     );
   }
 

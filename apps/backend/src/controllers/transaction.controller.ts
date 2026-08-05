@@ -78,7 +78,10 @@ export async function pay(req: AuthRequest, res: Response, next: NextFunction) {
 // ──────────────────────────────────────────
 export async function dashboard(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const data = await getDashboardSummary();
+    const data = await getDashboardSummary({
+      diagnosesPage: Number(req.query.diagnosesPage) || 1,
+      customersPage: Number(req.query.customersPage) || 1,
+    });
     res.json({ success: true, data });
   } catch (err) { next(err); }
 }

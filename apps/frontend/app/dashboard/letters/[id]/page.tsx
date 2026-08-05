@@ -56,7 +56,10 @@ export default function LetterDetailPage() {
   const infoRows: [string, string][] = data
     ? [
         ["Nama Hewan", data.petId?.name ?? "-"],
-        ["Jenis / Ras", `${data.petId?.kind ?? "-"}${data.petId?.breed ? ` / ${data.petId.breed}` : ""}`],
+        [
+          "Jenis / Ras",
+          `${data.petId?.kind ?? "-"}${data.petId?.breed ? ` / ${data.petId.breed}` : ""}`,
+        ],
         ["Umur", formatAge(data.petId?.initialAge)],
         ["Pemilik", data.customerId?.name ?? "-"],
         ["Alamat", data.customerId?.address || "-"],
@@ -67,8 +70,12 @@ export default function LetterDetailPage() {
   return (
     <div>
       <Space style={{ marginBottom: 16 }} className="no-print">
-        <Button icon={<ArrowLeft size={16} />} onClick={() => router.push("/dashboard/letters")}>Kembali</Button>
-        <Button type="primary" icon={<Printer size={16} />} onClick={() => window.print()}>Cetak / Print</Button>
+        <Button icon={<ArrowLeft size={16} />} onClick={() => router.push("/dashboard/letters")}>
+          Kembali
+        </Button>
+        <Button type="primary" icon={<Printer size={16} />} onClick={() => window.print()}>
+          Cetak / Print
+        </Button>
       </Space>
 
       <style>{`
@@ -82,24 +89,47 @@ export default function LetterDetailPage() {
       `}</style>
 
       {loading || !data ? (
-        <Card><Skeleton active /></Card>
+        <Card>
+          <Skeleton active />
+        </Card>
       ) : (
         <div
           className="letter-doc"
           style={{
-            maxWidth: 794, margin: "0 auto", background: "#fff",
-            padding: 40, borderRadius: 8, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
-            fontFamily: "Georgia, 'Times New Roman', serif", color: "#000", fontSize: 14, lineHeight: 1.7,
+            maxWidth: 794,
+            margin: "0 auto",
+            background: "#fff",
+            padding: 40,
+            borderRadius: 8,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+            fontFamily: "Georgia, 'Times New Roman', serif",
+            color: "#000",
+            fontSize: 14,
+            lineHeight: 1.7,
           }}
         >
           {/* Kop surat */}
-          <div style={{ textAlign: "center", borderBottom: "3px double #000", paddingBottom: 12, marginBottom: 20 }}>
-            <Title level={3} style={{ margin: 0, letterSpacing: 2, fontFamily: "inherit" }}>WEDI ANIMAL CARE</Title>
-            <Text style={{ fontSize: 12, fontFamily: "inherit" }}>Klinik Hewan — Praktek Dokter Hewan</Text>
+          <div
+            style={{
+              textAlign: "center",
+              borderBottom: "3px double #000",
+              paddingBottom: 12,
+              marginBottom: 20,
+            }}
+          >
+            <Title level={3} style={{ margin: 0, letterSpacing: 2, fontFamily: "inherit" }}>
+              WEDI ANIMAL CARE
+            </Title>
+            <Text style={{ fontSize: 12, fontFamily: "inherit" }}>
+              Klinik Hewan — Praktek Dokter Hewan
+            </Text>
           </div>
 
           <div style={{ textAlign: "center", marginBottom: 16 }}>
-            <Title level={4} style={{ margin: 0, textDecoration: "underline", fontFamily: "inherit" }}>
+            <Title
+              level={4}
+              style={{ margin: 0, textDecoration: "underline", fontFamily: "inherit" }}
+            >
               {meta?.label ?? letterTypeLabel(data.letterType)}
             </Title>
             <Text style={{ fontSize: 12, fontFamily: "inherit" }}>Nomor: {data.letterNumber}</Text>
@@ -109,7 +139,9 @@ export default function LetterDetailPage() {
             <tbody>
               {infoRows.map(([label, value]) => (
                 <tr key={label}>
-                  <td style={{ padding: "4px 12px 4px 0", width: 170, verticalAlign: "top" }}>{label}</td>
+                  <td style={{ padding: "4px 12px 4px 0", width: 170, verticalAlign: "top" }}>
+                    {label}
+                  </td>
                   <td style={{ padding: "4px 0", width: 20, verticalAlign: "top" }}>:</td>
                   <td style={{ padding: "4px 0", verticalAlign: "top" }}>{value}</td>
                 </tr>
@@ -123,14 +155,18 @@ export default function LetterDetailPage() {
 
           {data.subject && (
             <div style={{ marginBottom: 16 }}>
-              <Text strong style={{ fontFamily: "inherit" }}>{meta?.subjectLabel}: </Text>
+              <Text strong style={{ fontFamily: "inherit" }}>
+                {meta?.subjectLabel}:{" "}
+              </Text>
               <Text style={{ fontFamily: "inherit" }}>{data.subject}</Text>
             </div>
           )}
 
           {data.notes && (
             <div style={{ marginBottom: 16 }}>
-              <Text strong style={{ fontFamily: "inherit" }}>Catatan / Keterangan: </Text>
+              <Text strong style={{ fontFamily: "inherit" }}>
+                Catatan / Keterangan:{" "}
+              </Text>
               <Text style={{ fontFamily: "inherit", whiteSpace: "pre-wrap" }}>{data.notes}</Text>
             </div>
           )}
@@ -144,24 +180,41 @@ export default function LetterDetailPage() {
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32 }}>
             <div style={{ textAlign: "center", width: 250 }}>
               <Text style={{ fontFamily: "inherit", fontSize: 12 }}>
-                {data.signedAt ? `Dibuat & ditandatangani, ${dayjs(data.signedAt).format("DD/MM/YYYY")}` : "Pemilik / Penanggung Jawab,"}
+                {data.signedAt
+                  ? `Dibuat & ditandatangani, ${dayjs(data.signedAt).format("DD/MM/YYYY")}`
+                  : "Pemilik / Penanggung Jawab,"}
               </Text>
               <div style={{ height: 90, marginTop: 8 }}>
                 {data.ownerSignature ? (
-                  <img src={data.ownerSignature} alt="Tanda tangan pemilik" style={{ maxHeight: 90, maxWidth: 220, borderBottom: "1px solid #000" }} />
+                  <img
+                    src={data.ownerSignature}
+                    alt="Tanda tangan pemilik"
+                    style={{ maxHeight: 90, maxWidth: 220, borderBottom: "1px solid #000" }}
+                  />
                 ) : (
-                  <div style={{ height: 90, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                  <div
+                    style={{
+                      height: 90,
+                      display: "flex",
+                      alignItems: "flex-end",
+                      justifyContent: "center",
+                    }}
+                  >
                     <div style={{ borderBottom: "1px solid #000", width: 180, paddingBottom: 4 }} />
                   </div>
                 )}
               </div>
-              <Text strong style={{ fontFamily: "inherit" }}>({data.ownerSignedName || "-"})</Text>
+              <Text strong style={{ fontFamily: "inherit" }}>
+                ({data.ownerSignedName || "-"})
+              </Text>
             </div>
 
             <div style={{ textAlign: "center", width: 250 }}>
               <Text style={{ fontFamily: "inherit", fontSize: 12 }}>Dokter Hewan,</Text>
               <div style={{ height: 90, marginTop: 8 }} />
-              <Text strong style={{ fontFamily: "inherit" }}>({data.doctorId?.name ?? "-"})</Text>
+              <Text strong style={{ fontFamily: "inherit" }}>
+                ({data.doctorId?.name ?? "-"})
+              </Text>
             </div>
           </div>
 

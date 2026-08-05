@@ -14,6 +14,7 @@ const { Title } = Typography;
 
 interface Pet {
   _id: string;
+  code?: string;
   name: string;
   kind: string;
   breed?: string;
@@ -115,6 +116,7 @@ export default function PetsPage() {
       const useBirthDate = values.ageMode !== "initialAge";
       const birthDate = useBirthDate && values.birthDate ? dayjs(values.birthDate).toISOString() : undefined;
       const payload: any = {
+        code: values.code || undefined,
         name: values.name,
         kind: values.kind,
         breed: values.breed,
@@ -155,6 +157,7 @@ export default function PetsPage() {
   };
 
   const columns = [
+    { title: "Kode", dataIndex: "code", key: "code", render: (v?: string) => v ? <Tag>{v}</Tag> : "-" },
     { title: "Nama", dataIndex: "name", key: "name" },
     { title: "Jenis", dataIndex: "kind", key: "kind" },
     { title: "Ras", dataIndex: "breed", key: "breed", render: (v?: string) => v || "-" },
@@ -194,6 +197,9 @@ export default function PetsPage() {
       <Modal title={editing ? "Edit Pasien" : "Tambah Pasien"} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={500}>
         <Form form={form} layout="vertical">
           <Typography.Title level={5} style={{ marginBottom: 8 }}>Data Pasien</Typography.Title>
+          <Form.Item name="code" label="Kode Pasien">
+            <Input placeholder="Contoh: KCG-2026-0001 (opsional)" />
+          </Form.Item>
           <Form.Item name="name" label="Nama Hewan" rules={[{ required: true, message: "Wajib" }]}>
             <Input />
           </Form.Item>

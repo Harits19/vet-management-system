@@ -5,7 +5,10 @@ export async function listPets(filter: PetFilter) {
   const { page, limit, search, customerId, sortBy, order } = filter;
   const query: any = {};
   if (search) {
-    query.name = { $regex: search, $options: "i" };
+    query.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { code: { $regex: search, $options: "i" } },
+    ];
   }
   if (customerId) {
     query.customerId = customerId;

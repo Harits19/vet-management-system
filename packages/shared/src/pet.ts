@@ -6,6 +6,7 @@ import { stringRequired } from "./common.js";
 // ──────────────────────────────────────────
 export interface IPet {
   _id: string;
+  code?: string;
   name: string;
   kind: string;
   breed?: string;
@@ -27,6 +28,7 @@ const initialAgeSchema = z
   .optional();
 
 export const petCreateSchema = z.object({
+  code: z.string().trim().optional(),
   name: stringRequired,
   kind: stringRequired,
   breed: z.string().trim().optional(),

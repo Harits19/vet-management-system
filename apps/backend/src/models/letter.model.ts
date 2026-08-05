@@ -24,6 +24,9 @@ export interface ILetterDoc {
   ownerSignature?: string;   // tanda tangan digital pemilik (data URL PNG)
   ownerSignedName?: string;  // nama pemilik yang menandatangani
   signedAt?: Date;
+  doctorSignature?: string;  // tanda tangan digital dokter (data URL PNG)
+  doctorSignedName?: string; // nama dokter yang menandatangani
+  doctorSignedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +44,9 @@ const LetterSchema = new Schema<ILetterDoc>(
     ownerSignature: { type: String },
     ownerSignedName: { type: String, trim: true },
     signedAt: { type: Date },
+    doctorSignature: { type: String },
+    doctorSignedName: { type: String, trim: true },
+    doctorSignedAt: { type: Date },
   },
   { timestamps: true, versionKey: false },
 );

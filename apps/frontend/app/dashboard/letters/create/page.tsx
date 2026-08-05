@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { Card, Form, Select, Input, DatePicker, Typography, Space, Button, Alert } from "antd";
 import { ArrowLeft, Save } from "lucide-react";
-import { apiFetch } from "../../context/auth";
-import { useAntdMessage } from "../../hooks/useAntdMessage";
+import { apiFetch, useAuth } from "../../../context/auth";
+import { useAntdMessage } from "../../../hooks/useAntdMessage";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import SignaturePad from "../../components/SignaturePad";
@@ -23,9 +23,11 @@ interface PetOpt {
 export default function CreateLetterPage() {
   const router = useRouter();
   const msg = useAntdMessage();
+  const { user } = useAuth();
   const [form] = Form.useForm();
   const [pets, setPets] = useState<PetOpt[]>([]);
   const [signature, setSignature] = useState<string | null>(null);
+  const [doctorSignature, setDoctorSignature] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const letterType = Form.useWatch("letterType", form);
   const petId = Form.useWatch("petId", form);
@@ -46,8 +48,14 @@ export default function CreateLetterPage() {
     }
   }, [petId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-fill nama dokter penandatangan dari user yang login
+  useEffect(() => {
+    if (user?.name) form.setFieldValue("doctorSignedName", user.name);
+  }, [user?.name]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSubmit = async () => {
     if (!signature) { msg.warning("Pemilik harus menandatangani dulu"); return; }
+    if (!doctorSignature) { msg.warning("Dokter harus menandatangani dulu"); return; }
     try {
       const values = await form.validateFields();
       setSubmitting(true);
@@ -61,6 +69,8 @@ export default function CreateLetterPage() {
           notes: values.notes || undefined,
           ownerSignedName: values.ownerSignedName || undefined,
           ownerSignature: signature,
+          doctorSignedName: values.doctorSignedName || undefined,
+          doctorSignature: doctorSignature,
         }),
       });
       msg.success("Surat dibuat");
@@ -126,6 +136,17 @@ export default function CreateLetterPage() {
 
           <Form.Item name="ownerSignedName" label="Nama Penandatangan" rules={[{ required: true, message: "Nama penandatangan wajib" }]}>
             <Input placeholder="Nama pemilik yang menandatangani" />
+          </Form.Item>
+
+          <Form.Item label="Tanda Tangan Dokter" required style={{ marginTop: 24 }}>
+            <SignaturePad onChange={(d) => setDoctorSignature(d)} />
+            <Text type="secondary" style={{ display: "block", marginTop: 8 }}>
+              Dokter yang membuat surat menandatangani di atas (mouse / jari).
+            </Text>
+          </Form.Item>
+
+          <Form.Item name="doctorSignedName" label="Nama Dokter" rules={[{ required: true, message: "Nama dokter wajib" }]}>
+            <Input placeholder="Nama dokter yang menandatangani" />
           </Form.Item>
 
           <Button type="primary" icon={<Save size={16} />} loading={submitting} onClick={handleSubmit}>

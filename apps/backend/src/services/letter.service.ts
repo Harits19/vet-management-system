@@ -64,6 +64,7 @@ export async function createLetter(input: any) {
     customerId,
     letterNumber,
     signedAt: input.ownerSignature ? new Date() : undefined,
+    doctorSignedAt: input.doctorSignature ? new Date() : undefined,
   });
   return letter.toObject() as any;
 }
@@ -72,6 +73,9 @@ export async function updateLetter(id: string, input: any) {
   const patch: any = { ...input };
   if (input.ownerSignature !== undefined) {
     patch.signedAt = input.ownerSignature ? new Date() : undefined;
+  }
+  if (input.doctorSignature !== undefined) {
+    patch.doctorSignedAt = input.doctorSignature ? new Date() : undefined;
   }
   const letter = await LetterModel.findByIdAndUpdate(id, { $set: patch }, { new: true, runValidators: true }).lean();
   if (!letter) throw Object.assign(new Error("Surat tidak ditemukan"), { status: 404 });

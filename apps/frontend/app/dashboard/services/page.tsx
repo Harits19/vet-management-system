@@ -51,7 +51,7 @@ export default function ServicesPage() {
   const handleSearch = () => { setPage(1); fetchData(1, search); };
 
   const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
-  const openEdit = (s: Service) => { setEditing(s); form.setFieldsValue(s); setModalOpen(true); };
+  const openEdit = (s: Service) => { setEditing(s); form.resetFields(); form.setFieldsValue(s); setModalOpen(true); };
 
   const handleSubmit = async () => {
     try {

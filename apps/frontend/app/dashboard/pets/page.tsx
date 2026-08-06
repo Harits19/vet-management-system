@@ -96,6 +96,7 @@ export default function PetsPage() {
   };
   const openEdit = (p: Pet) => {
     setEditing(p);
+    form.resetFields(); // buang state form dari edit sebelumnya (field yang tidak ada di record baru tidak ikut terbawa)
     // Options pemilik hanya 20 data pertama dari server — pastikan pemilik pasien ini
     // selalu ada di dropdown agar value-nya tidak tampil sebagai ObjectId.
     const owner = p.customerId;

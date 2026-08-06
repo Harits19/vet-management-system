@@ -88,7 +88,7 @@ export default function ProductManager({ productTypeFilter = "good", goodTypeFil
     form.setFieldsValue({ productType: productTypeFilter || "good", goodType: goodTypeFilter });
     setModalOpen(true);
   };
-  const openEdit = (p: Product) => { setEditing(p); form.setFieldsValue(p); setModalOpen(true); };
+  const openEdit = (p: Product) => { setEditing(p); form.resetFields(); form.setFieldsValue(p); setModalOpen(true); };
 
   const handleSubmit = async () => {
     try {

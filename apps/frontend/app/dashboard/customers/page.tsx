@@ -151,6 +151,7 @@ export default function CustomersPage() {
   const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
   const openEdit = async (c: Customer) => {
     setEditing(c);
+    form.resetFields(); // buang state form dari edit sebelumnya (field yang tidak ada di record baru tidak ikut terbawa)
     form.setFieldsValue(c);
     setModalOpen(true);
     const provs = await loadProvinces();

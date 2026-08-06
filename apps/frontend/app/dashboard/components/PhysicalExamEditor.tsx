@@ -40,7 +40,7 @@ export default function PhysicalExamEditor({ value = [], onChange }: PhysicalExa
   return (
     <Row gutter={16}>
       {items.map((item) => (
-        <Col span={8} key={item.key}>
+        <Col xs={24} sm={8} key={item.key}>
           <Text strong>{item.label}</Text>
           <InputNumber
             style={{ width: "100%", marginTop: 4 }}

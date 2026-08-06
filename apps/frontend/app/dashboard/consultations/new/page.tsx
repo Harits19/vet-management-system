@@ -246,7 +246,7 @@ export default function NewConsultationPage() {
         <Form form={form} layout="vertical">
           <Card title="Data Pasien">
             <Row gutter={16}>
-              <Col span={12}>
+              <Col xs={24} sm={12}>
                 <Form.Item name="customerId" label="Pemilik" rules={[{ required: true, message: "Pilih pemilik" }]}>
                   <Select
                     showSearch
@@ -263,7 +263,7 @@ export default function NewConsultationPage() {
                   />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={12}>
                 <Form.Item name="petId" label="Pasien" rules={[{ required: true, message: "Pilih pasien" }]}>
                   <Select
                     showSearch

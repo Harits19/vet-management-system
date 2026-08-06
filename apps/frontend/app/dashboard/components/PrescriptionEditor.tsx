@@ -74,13 +74,13 @@ export default function PrescriptionEditor({ items, onChange, options, loading, 
             </Col>
           </Row>
           <Row gutter={8}>
-            <Col span={8}>
+            <Col xs={24} sm={8}>
               <Input placeholder="Dosis (mis. 1/2 tablet)" value={line.dosage} onChange={(e) => updateLine(line._key, { dosage: e.target.value })} />
             </Col>
-            <Col span={8}>
+            <Col xs={24} sm={8}>
               <Input placeholder="Aturan Pakai (mis. 2x sehari)" value={line.usage} onChange={(e) => updateLine(line._key, { usage: e.target.value })} />
             </Col>
-            <Col span={8}>
+            <Col xs={24} sm={8}>
               <Input placeholder="Catatan" value={line.notes} onChange={(e) => updateLine(line._key, { notes: e.target.value })} />
             </Col>
           </Row>

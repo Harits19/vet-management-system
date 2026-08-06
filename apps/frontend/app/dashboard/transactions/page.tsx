@@ -138,7 +138,7 @@ export default function TransactionsPage() {
       <Modal title="Detail Transaksi" open={!!detail} onCancel={() => setDetail(null)} footer={null} width={650}>
         {detail && (
           <>
-            <Descriptions column={2} bordered size="small">
+            <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
               <Descriptions.Item label="No. Struk">{detail.receiptNumber}</Descriptions.Item>
               <Descriptions.Item label="Tanggal">{dayjs(detail.timestamp).format("DD/MM/YY HH:mm")}</Descriptions.Item>
               <Descriptions.Item label="Customer">{detail.customer?.name || "-"}</Descriptions.Item>

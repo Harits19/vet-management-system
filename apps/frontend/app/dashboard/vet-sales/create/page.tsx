@@ -165,14 +165,14 @@ export default function CreateVetSalePage() {
       <Card>
         <Form form={form} layout="vertical">
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item name="customerId" label="Pemilik" rules={[{ required: true }]}>
                 <Select showSearch placeholder="Cari pemilik..." onSearch={searchCustomers} onFocus={() => searchCustomers()} filterOption={false}
                   options={customers.map((c) => ({ value: c._id, label: c.name }))}
                   onChange={(val) => { setSelectedCustomer(val); setSelectedPet(""); form.setFieldsValue({ petId: undefined }); loadPets(val); }} />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item name="petId" label="Pasien" rules={[{ required: true, message: "Pilih pasien" }]}>
                 <Select showSearch placeholder="Pilih pasien..." allowClear disabled={!selectedCustomer}
                   options={pets.map((p) => ({ value: p._id, label: `${p.name} (${p.kind})` }))}
@@ -189,7 +189,7 @@ export default function CreateVetSalePage() {
                   {mhRecords.slice(0, 3).map((r: any) => (
                     <Row key={r._id} gutter={8}>
                       <Col span={6}><Text type="secondary">{dayjs(r.visitDate).format("DD/MM/YY")}</Text></Col>
-                      <Col span={12}><Text ellipsis>{r.diagnosis}</Text></Col>
+                      <Col xs={24} sm={12}><Text ellipsis>{r.diagnosis}</Text></Col>
                       <Col span={6}><Text type="secondary">{r.treatments?.length || 0} tnd, {r.prescriptions?.length || 0} rsp</Text></Col>
                     </Row>
                   ))}
@@ -206,12 +206,12 @@ export default function CreateVetSalePage() {
           </Form.Item>
 
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item name="paymentMethod" label="Metode Bayar" rules={[{ required: true }]}>
                 <Select options={[{ value: "Tunai", label: "Tunai" }, { value: "Transfer", label: "Transfer" }, { value: "QRIS", label: "QRIS" }, { value: "Debit", label: "Debit" }]} />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item name="paidAmount" label="Dibayar" rules={[{ required: true }]}>
                 <Input type="number" onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)} />
               </Form.Item>

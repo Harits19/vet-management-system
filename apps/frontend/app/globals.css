@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================
+   Responsive — smartphone & tablet
+   ============================================ */
+
+/* Tablet portrait & ke bawah: konten utama lebih rapat */
+@media (max-width: 991px) {
+  .ant-layout-content {
+    padding: 12px !important;
+  }
+}
+
+/* Smartphone: tabel lebar scroll horizontal di dalam kartu,
+   bukan mendorong halaman melebar */
+@media (max-width: 768px) {
+  .ant-table-content {
+    overflow-x: auto;
+  }
+
+  /* Dokumen surat (letters) — padding rapat, kolom label lebih ramping */
+  .letter-doc {
+    padding: 16px !important;
+  }
+  .letter-doc table td:first-child {
+    width: 110px !important;
+  }
+}

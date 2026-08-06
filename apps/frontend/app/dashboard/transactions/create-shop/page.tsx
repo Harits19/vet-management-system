@@ -101,7 +101,7 @@ export default function CreateShopPage() {
       <Card>
         <Form form={form} layout="vertical">
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item name="customerId" label="Klien (opsional)">
                 <Select showSearch placeholder="Cari klien..." allowClear
                   onSearch={searchCustomers}
@@ -110,7 +110,7 @@ export default function CreateShopPage() {
                   options={customers.map((c) => ({ value: c._id, label: c.name }))} />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item name="paymentMethod" label="Metode Bayar" rules={[{ required: true, message: "Pilih metode" }]}>
                 <Select options={[
                   { value: "Tunai", label: "Tunai" },
@@ -158,7 +158,7 @@ export default function CreateShopPage() {
 
       <Card style={{ marginTop: 16 }}>
         <Row gutter={16}>
-          <Col span={12}>
+          <Col xs={24} sm={12}>
             <Form.Item label="Jumlah Dibayar">
               <Input type="number" onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)} placeholder="Masukkan nominal" />
             </Form.Item>

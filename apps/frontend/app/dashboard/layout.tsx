@@ -3,18 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/auth";
-import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space } from "antd";
+import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space, Grid, Drawer } from "antd";
 import {
   Users, Dog, Package, LayoutDashboard, PawPrint, User as UserIcon,
-  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature
+  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature, Menu as MenuIcon
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
-function SidebarMenu({ role }: { role: string }) {
+function SidebarMenu({ role, onNavigate }: { role: string; onNavigate?: () => void }) {
   const pathname = usePathname();
 
   const isActive = (item: { key: string }) =>
@@ -38,12 +39,16 @@ function SidebarMenu({ role }: { role: string }) {
     );
   }
 
-  return <Menu mode="inline" selectedKeys={[items.find(isActive)?.key || ""]} items={items} style={{ borderInlineEnd: "none" }} />;
+  return <Menu mode="inline" selectedKeys={[items.find(isActive)?.key || ""]} items={items} style={{ borderInlineEnd: "none" }} onClick={onNavigate} />;
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const screens = useBreakpoint();
+  // Layar besar (>= lg / 992px): sider tetap. Di bawah itu: drawer + tombol hamburger.
+  const isDesktop = !!screens.lg;
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -51,19 +56,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading || !user) return null;
 
+  const logo = (
+    <div style={{ padding: "16px", textAlign: "center", borderBottom: "1px solid #f0f0f0" }}>
+      <Space>
+        <PawPrint size={24} style={{ color: "#1677ff" }} />
+        <Text strong>Vet System</Text>
+      </Space>
+    </div>
+  );
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider theme="light" width={220} style={{ borderRight: "1px solid #f0f0f0" }}>
-        <div style={{ padding: "16px", textAlign: "center", borderBottom: "1px solid #f0f0f0" }}>
-          <Space>
-            <PawPrint size={24} style={{ color: "#1677ff" }} />
-            <Text strong>Vet System</Text>
-          </Space>
-        </div>
-        <SidebarMenu role={user.role} />
-      </Sider>
+      {isDesktop && (
+        <Sider theme="light" width={220} style={{ borderRight: "1px solid #f0f0f0" }}>
+          {logo}
+          <SidebarMenu role={user.role} />
+        </Sider>
+      )}
+      <Drawer
+        placement="left"
+        width={220}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        closable={false}
+        styles={{ body: { padding: 0 } }}
+      >
+        {logo}
+        <SidebarMenu role={user.role} onNavigate={() => setDrawerOpen(false)} />
+      </Drawer>
       <Layout>
-        <Header style={{ background: "#fff", padding: "0 24px", display: "flex", justifyContent: "flex-end", alignItems: "center", borderBottom: "1px solid #f0f0f0" }}>
+        <Header style={{ background: "#fff", padding: "0 16px", display: "flex", justifyContent: "flex-end", alignItems: "center", borderBottom: "1px solid #f0f0f0" }}>
+          {!isDesktop && (
+            <Button type="text" icon={<MenuIcon size={18} />} onClick={() => setDrawerOpen(true)} style={{ marginRight: "auto" }} aria-label="Buka menu" />
+          )}
           <Dropdown menu={{
             items: [
               { key: "profile", label: `${user.name} (${user.role})`, disabled: true },

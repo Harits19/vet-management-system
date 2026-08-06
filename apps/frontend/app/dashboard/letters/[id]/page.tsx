@@ -186,7 +186,7 @@ export default function LetterDetailPage() {
             </Text>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginTop: 32 }}>
             <div style={{ textAlign: "center", width: 250 }}>
               <Text style={{ fontFamily: "inherit", fontSize: 12 }}>
                 {data.signedAt

@@ -89,7 +89,7 @@ export default function MedicalHistoryDetailPage() {
     <div>
       <Title level={4}>Detail Rekam Medis</Title>
       <Card loading={loading} title="Informasi Pasien">
-        <Descriptions column={2} bordered size="small">
+        <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
           <Descriptions.Item label="Nama Hewan">{pet?.name || "-"}</Descriptions.Item>
           <Descriptions.Item label="Pemilik">{pet?.customerId?.name || "-"}</Descriptions.Item>
           <Descriptions.Item label="Jenis Hewan">{pet?.kind || "-"}</Descriptions.Item>

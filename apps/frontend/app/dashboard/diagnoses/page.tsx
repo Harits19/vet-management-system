@@ -178,7 +178,7 @@ export default function DiagnosesPage() {
   ) => (
     <Space direction="vertical" style={{ width: "100%" }}>
       {lines.map((line) => (
-        <Row key={line._key} gutter={8} align="middle">
+        <Row key={line._key} gutter={8} align="middle" wrap>
           <Col flex="auto">
             <Select
               showSearch

@@ -55,7 +55,7 @@ export default function CustomerDetailPage() {
     <div>
       <Title level={4}>Detail Pemilik</Title>
       <Card loading={loading}>
-        <Descriptions column={2} bordered>
+        <Descriptions column={{ xs: 1, sm: 2 }} bordered>
           <Descriptions.Item label="Nama">{customer.name}</Descriptions.Item>
           <Descriptions.Item label="WhatsApp">{customer.whatsapp || "-"}</Descriptions.Item>
           <Descriptions.Item label="Alamat" span={2}>{formatAddress(customer)}</Descriptions.Item>

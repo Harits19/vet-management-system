@@ -28,13 +28,11 @@ interface Wilayah {
   name: string;
 }
 
-const WILAYAH_BASE = "https://wilayah.id/api";
-
 async function fetchWilayah(path: string): Promise<Wilayah[]> {
-  const res = await fetch(`${WILAYAH_BASE}/${path}`);
+  const res = await fetch(`/wilayah/${path}`);
   if (!res.ok) throw new Error("Gagal memuat data wilayah");
   const json = await res.json();
-  return json.data ?? [];
+  return json.data ?? json;
 }
 
 export function formatAddress(c: { address?: string; hamlet?: string; village?: string; district?: string; regency?: string; province?: string }) {
@@ -61,10 +59,17 @@ export default function CustomersPage() {
   const [editing, setEditing] = useState<Customer | null>(null);
   const [form] = Form.useForm();
   const [provinces, setProvinces] = useState<Wilayah[]>([]);
-  const [regencies, setRegencies] = useState<Wilayah[]>([]);
-  const [districts, setDistricts] = useState<Wilayah[]>([]);
-  const [villages, setVillages] = useState<Wilayah[]>([]);
+  const [regencies, setRegencies] = useState<Wilayah[]>([]); // semua kabupaten (difilter client-side)
+  const [districts, setDistricts] = useState<Wilayah[]>([]); // semua kecamatan (difilter client-side)
+  const [villages, setVillages] = useState<Wilayah[]>([]);   // desa kecamatan terpilih
+  const [villageCache, setVillageCache] = useState<Record<string, Wilayah[]>>({}); // cache desa per provinsi
   const [dusunOptions, setDusunOptions] = useState<{ value: string }[]>([]);
+  const provinceName = Form.useWatch("province", form);
+  const regencyName = Form.useWatch("regency", form);
+  const provinceCode = provinces.find((x) => x.name === provinceName)?.code ?? "";
+  const regencyCode = regencies.find((x) => x.name === regencyName)?.code ?? "";
+  const regencyOptions = provinceCode ? regencies.filter((r) => r.code.startsWith(provinceCode)) : [];
+  const districtOptions = regencyCode ? districts.filter((d) => d.code.startsWith(regencyCode)) : [];
   const router = useRouter();
   const msg = useAntdMessage();
   const modal = useAntdModal();
@@ -96,9 +101,10 @@ export default function CustomersPage() {
       return [];
     }
   };
-  const loadRegencies = async (code: string): Promise<Wilayah[]> => {
+  const loadAllRegencies = async (): Promise<Wilayah[]> => {
+    if (regencies.length) return regencies;
     try {
-      const list = await fetchWilayah(`regencies/${code}.json`);
+      const list = await fetchWilayah("regencies.json");
       setRegencies(list);
       return list;
     } catch {
@@ -106,9 +112,10 @@ export default function CustomersPage() {
       return [];
     }
   };
-  const loadDistricts = async (code: string): Promise<Wilayah[]> => {
+  const loadAllDistricts = async (): Promise<Wilayah[]> => {
+    if (districts.length) return districts;
     try {
-      const list = await fetchWilayah(`districts/${code}.json`);
+      const list = await fetchWilayah("districts.json");
       setDistricts(list);
       return list;
     } catch {
@@ -116,15 +123,19 @@ export default function CustomersPage() {
       return [];
     }
   };
-  const loadVillages = async (code: string): Promise<Wilayah[]> => {
-    try {
-      const list = await fetchWilayah(`villages/${code}.json`);
-      setVillages(list);
-      return list;
-    } catch {
-      msg.warning("Gagal memuat desa/kelurahan");
-      return [];
+  const loadVillages = async (districtCode: string) => {
+    const provinceCode = districtCode.split(".")[0];
+    let all = villageCache[provinceCode];
+    if (!all) {
+      try {
+        all = await fetchWilayah(`villages/${provinceCode}.json`);
+        setVillageCache((prev) => ({ ...prev, [provinceCode]: all }));
+      } catch {
+        msg.warning("Gagal memuat desa/kelurahan");
+        all = [];
+      }
     }
+    setVillages(all.filter((v) => v.code.startsWith(districtCode)));
   };
   const loadDusunOptions = async () => {
     try {
@@ -145,10 +156,10 @@ export default function CustomersPage() {
     const provs = await loadProvinces();
     const p = provs.find((x) => x.name === c.province);
     if (p) {
-      const regs = await loadRegencies(p.code);
+      const regs = await loadAllRegencies();
       const rg = regs.find((x) => x.name === c.regency);
       if (rg) {
-        const dists = await loadDistricts(rg.code);
+        const dists = await loadAllDistricts();
         const d = dists.find((x) => x.name === c.district);
         if (d) await loadVillages(d.code);
       }
@@ -239,11 +250,10 @@ export default function CustomersPage() {
               placeholder="Pilih provinsi"
               optionFilterProp="label"
               options={provinces.map((p) => ({ value: p.name, label: p.name }))}
-              onChange={(v) => {
+              onChange={() => {
                 form.setFieldsValue({ regency: undefined, district: undefined, village: undefined });
-                setRegencies([]); setDistricts([]); setVillages([]);
-                const p = provinces.find((x) => x.name === v);
-                if (p) loadRegencies(p.code);
+                setVillages([]);
+                loadAllRegencies();
               }}
             />
           </Form.Item>
@@ -252,12 +262,11 @@ export default function CustomersPage() {
               showSearch
               placeholder="Pilih kabupaten/kota"
               optionFilterProp="label"
-              options={regencies.map((r) => ({ value: r.name, label: r.name }))}
-              onChange={(v) => {
+              options={regencyOptions.map((r) => ({ value: r.name, label: r.name }))}
+              onChange={() => {
                 form.setFieldsValue({ district: undefined, village: undefined });
-                setDistricts([]); setVillages([]);
-                const r = regencies.find((x) => x.name === v);
-                if (r) loadDistricts(r.code);
+                setVillages([]);
+                loadAllDistricts();
               }}
             />
           </Form.Item>
@@ -266,7 +275,7 @@ export default function CustomersPage() {
               showSearch
               placeholder="Pilih kecamatan"
               optionFilterProp="label"
-              options={districts.map((d) => ({ value: d.name, label: d.name }))}
+              options={districtOptions.map((d) => ({ value: d.name, label: d.name }))}
               onChange={(v) => {
                 form.setFieldsValue({ village: undefined });
                 setVillages([]);

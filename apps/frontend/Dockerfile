@@ -42,6 +42,8 @@ RUN tar xf /tmp/node_modules.tar -C /app && \
 # Frontend built artifacts
 COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/next.config.js ./next.config.js
+# Public assets (data wilayah offline public/wilayah, dll) — wajib, next start serve dari ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/public ./public
 
 USER nextjs
 

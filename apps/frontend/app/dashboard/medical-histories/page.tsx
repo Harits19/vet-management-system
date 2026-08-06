@@ -70,7 +70,7 @@ export default function MedicalHistoriesPage() {
             <Input.Search placeholder="Cari..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={() => fetchData(1)} enterButton />
           </Col>
         </Row>
-        <Table dataSource={data} columns={columns} rowKey="_id" loading={loading}
+        <Table dataSource={data} columns={columns} rowKey="_id" loading={loading} scroll={{ x: 900 }}
           onChange={(_, __, sorter) => {
             const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
             const sb = s?.order ? String(s.field) : "visitDate";

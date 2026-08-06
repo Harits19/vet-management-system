@@ -231,13 +231,13 @@ export default function DiagnosesPage() {
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">
-            <Input.Search placeholder="Cari diagnosis..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={handleSearch} enterButton style={{ width: 250 }} />
+            <Input.Search placeholder="Cari diagnosis..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={handleSearch} enterButton />
           </Col>
           <Col>
             <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>Tambah Diagnosis</Button>
           </Col>
         </Row>
-        <Table dataSource={data} columns={columns} rowKey="_id" loading={loading}
+        <Table dataSource={data} columns={columns} rowKey="_id" loading={loading} scroll={{ x: 900 }}
           pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
       </Card>
 

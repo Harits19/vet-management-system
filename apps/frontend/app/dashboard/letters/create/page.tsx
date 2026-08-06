@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Form, Select, Input, DatePicker, Typography, Space, Button, Alert, Radio, Checkbox } from "antd";
+import { Card, Form, Select, Input, DatePicker, Typography, Space, Button, Alert, Radio, Checkbox, theme as antdTheme } from "antd";
 import { ArrowLeft, Save } from "lucide-react";
 import { apiFetch, useAuth } from "../../../context/auth";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
@@ -24,6 +24,7 @@ export default function CreateLetterPage() {
   const router = useRouter();
   const msg = useAntdMessage();
   const { user } = useAuth();
+  const { token } = antdTheme.useToken();
   const [form] = Form.useForm();
   const [pets, setPets] = useState<PetOpt[]>([]);
   const [signature, setSignature] = useState<string | null>(null);
@@ -174,7 +175,7 @@ export default function CreateLetterPage() {
                   <img
                     src={savedDoctorSig}
                     alt="Tanda tangan dokter tersimpan"
-                    style={{ display: "block", marginTop: 8, height: 100, border: "1px solid #d9d9d9", borderRadius: 8, background: "#fff", padding: 8 }}
+                    style={{ display: "block", marginTop: 8, height: 100, border: `1px solid ${token.colorBorder}`, borderRadius: 8, background: "#fff", padding: 8 }}
                   />
                 )}
               </div>

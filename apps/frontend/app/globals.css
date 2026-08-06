@@ -3,6 +3,20 @@
 @tailwind utilities;
 
 /* ============================================
+   Dark mode
+   ============================================ */
+/* Body di luar area antd (background token colorBgLayout = #000 di dark) */
+[data-theme="dark"] body {
+  background: #000;
+}
+
+/* Dokumen surat tetap tampil sebagai "kertas putih" di dark mode —
+   teks antd Typography di dalamnya dipaksa gelap supaya terbaca. */
+[data-theme="dark"] .letter-doc .ant-typography {
+  color: rgba(0, 0, 0, 0.88) !important;
+}
+
+/* ============================================
    Responsive — smartphone & tablet
    ============================================ */
 

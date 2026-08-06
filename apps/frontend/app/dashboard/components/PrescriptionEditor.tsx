@@ -1,6 +1,6 @@
 "use client";
 
-import { Row, Col, Select, InputNumber, Input, Button, Typography, Empty, Space, Tag } from "antd";
+import { Row, Col, Select, InputNumber, Input, Button, Typography, Empty, Space, Tag, theme as antdTheme } from "antd";
 import { Plus, Trash2 } from "lucide-react";
 
 const { Text } = Typography;
@@ -32,6 +32,7 @@ function formatPrice(n: number) {
 // Editor Resep Obat — multiple item dari Master Obat
 // ──────────────────────────────────────────
 export default function PrescriptionEditor({ items, onChange, options, loading, onSearch }: PrescriptionEditorProps) {
+  const { token } = antdTheme.useToken();
   const addLine = () => {
     onChange([...items, { productId: "", name: "", quantity: 1, price: 0, _key: `p-${Date.now()}-${items.length}` }]);
   };
@@ -47,7 +48,7 @@ export default function PrescriptionEditor({ items, onChange, options, loading, 
   return (
     <Space direction="vertical" style={{ width: "100%" }}>
       {items.map((line) => (
-        <Space key={line._key} direction="vertical" style={{ width: "100%", border: "1px solid #f0f0f0", borderRadius: 8, padding: 8 }}>
+        <Space key={line._key} direction="vertical" style={{ width: "100%", border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 8, padding: 8 }}>
           <Row gutter={8} align="middle">
             <Col flex="auto">
               <Select

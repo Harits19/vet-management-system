@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Form, Input, Button, Card, Typography } from "antd";
-import { Lock, User, PawPrint } from "lucide-react";
+import { Form, Input, Button, Card, Typography, theme as antdTheme } from "antd";
+import { Lock, User, PawPrint, Sun, Moon } from "lucide-react";
 import { useAuth } from "../context/auth";
+import { useTheme } from "../context/theme";
 import { useAntdMessage } from "../hooks/useAntdMessage";
 import { useRouter } from "next/navigation";
 
@@ -11,6 +12,8 @@ const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const { login, user, loading: authLoading } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
+  const { token } = antdTheme.useToken();
   const [loading, setLoading] = useState(false);
   const msg = useAntdMessage();
   const router = useRouter();
@@ -38,7 +41,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f0f2f5", padding: 16 }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: token.colorBgLayout, padding: 16, position: "relative" }}>
+      <Button
+        type="text"
+        aria-label="Ganti tema"
+        icon={isDark ? <Sun size={18} /> : <Moon size={18} />}
+        onClick={toggleTheme}
+        style={{ position: "absolute", top: 16, right: 16 }}
+      />
       <Card style={{ width: "100%", maxWidth: 400, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <PawPrint size={48} style={{ color: "#1677ff" }} />

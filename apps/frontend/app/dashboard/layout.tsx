@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/auth";
-import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space, Grid, Drawer } from "antd";
+import { useTheme } from "../context/theme";
+import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space, Grid, Drawer, Tooltip, theme as antdTheme } from "antd";
 import {
   Users, Dog, Package, LayoutDashboard, PawPrint, User as UserIcon,
-  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature, Menu as MenuIcon
+  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature, Menu as MenuIcon, Sun, Moon
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,6 +45,8 @@ function SidebarMenu({ role, onNavigate }: { role: string; onNavigate?: () => vo
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
+  const { token } = antdTheme.useToken();
   const router = useRouter();
   const screens = useBreakpoint();
   // Layar besar (>= lg / 992px): sider tetap. Di bawah itu: drawer + tombol hamburger.
@@ -57,18 +60,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (loading || !user) return null;
 
   const logo = (
-    <div style={{ padding: "16px", textAlign: "center", borderBottom: "1px solid #f0f0f0" }}>
+    <div style={{ padding: "16px", textAlign: "center", borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
       <Space>
-        <PawPrint size={24} style={{ color: "#1677ff" }} />
+        <PawPrint size={24} style={{ color: token.colorPrimary }} />
         <Text strong>Vet System</Text>
       </Space>
     </div>
   );
 
+  const themeToggle = (
+    <Tooltip title={isDark ? "Mode terang" : "Mode gelap"}>
+      <Button
+        type="text"
+        aria-label="Ganti tema"
+        icon={isDark ? <Sun size={18} /> : <Moon size={18} />}
+        onClick={toggleTheme}
+      />
+    </Tooltip>
+  );
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       {isDesktop && (
-        <Sider theme="light" width={220} style={{ borderRight: "1px solid #f0f0f0" }}>
+        <Sider width={220} style={{ background: token.colorBgContainer, borderRight: `1px solid ${token.colorBorderSecondary}` }}>
           {logo}
           <SidebarMenu role={user.role} />
         </Sider>
@@ -85,10 +99,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <SidebarMenu role={user.role} onNavigate={() => setDrawerOpen(false)} />
       </Drawer>
       <Layout>
-        <Header style={{ background: "#fff", padding: "0 16px", display: "flex", justifyContent: "flex-end", alignItems: "center", borderBottom: "1px solid #f0f0f0" }}>
+        <Header style={{ background: token.colorBgContainer, padding: "0 16px", display: "flex", justifyContent: "flex-end", alignItems: "center", borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
           {!isDesktop && (
             <Button type="text" icon={<MenuIcon size={18} />} onClick={() => setDrawerOpen(true)} style={{ marginRight: "auto" }} aria-label="Buka menu" />
           )}
+          {themeToggle}
           <Dropdown menu={{
             items: [
               { key: "profile", label: `${user.name} (${user.role})`, disabled: true },
@@ -104,7 +119,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Button>
           </Dropdown>
         </Header>
-        <Content style={{ padding: 24, background: "#f5f5f5" }}>
+        <Content style={{ padding: 24, background: token.colorBgLayout }}>
           {children}
         </Content>
       </Layout>

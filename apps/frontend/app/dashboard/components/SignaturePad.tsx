@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button } from "antd";
+import { Button, theme as antdTheme } from "antd";
 import { Eraser } from "lucide-react";
 
 interface SignaturePadProps {
@@ -15,6 +15,7 @@ export default function SignaturePad({ onChange, height = 180 }: SignaturePadPro
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const [hasInk, setHasInk] = useState(false);
+  const { token } = antdTheme.useToken();
 
   const setupCanvas = () => {
     const canvas = canvasRef.current;
@@ -83,7 +84,7 @@ export default function SignaturePad({ onChange, height = 180 }: SignaturePadPro
         onPointerMove={move}
         onPointerUp={end}
         onPointerLeave={end}
-        style={{ width: "100%", height, border: "1px dashed #d9d9d9", borderRadius: 8, background: "#fff", touchAction: "none", cursor: "crosshair" }}
+        style={{ width: "100%", height, border: `1px dashed ${token.colorBorder}`, borderRadius: 8, background: "#fff", touchAction: "none", cursor: "crosshair" }}
       />
       <Button size="small" icon={<Eraser size={14} />} onClick={clear} disabled={!hasInk} style={{ marginTop: 8 }}>
         Bersihkan

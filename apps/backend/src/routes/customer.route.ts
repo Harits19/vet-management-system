@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { getAll, getOne, create, update, remove } from "../controllers/customer.controller.js";
+import { getAll, getOne, create, update, remove, distinct } from "../controllers/customer.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 router.use(authenticate);
 
 router.get("/", getAll);
+router.get("/distinct", distinct);
 router.get("/:id", getOne);
 router.post("/", create);
 router.put("/:id", update);

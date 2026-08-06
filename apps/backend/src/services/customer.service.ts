@@ -38,3 +38,10 @@ export async function deleteCustomer(id: string) {
   if (!customer) throw Object.assign(new Error("Customer not found"), { status: 404 });
   return customer as any;
 }
+
+export async function getDistinctCustomerValues(field: string) {
+  const allowed = ["hamlet"];
+  if (!allowed.includes(field)) throw Object.assign(new Error("Field tidak valid"), { status: 400 });
+  const values = await CustomerModel.distinct(field, { [field]: { $ne: "" } });
+  return (values as string[]).filter(Boolean).sort((a, b) => a.localeCompare(b));
+}

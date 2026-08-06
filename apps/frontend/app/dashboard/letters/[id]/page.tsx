@@ -27,7 +27,7 @@ interface LetterDetail {
     gender?: string;
     initialAge?: { value: number; unit: "month" | "year" };
   };
-  customerId?: { name: string; whatsapp?: string; address?: string };
+  customerId?: { name: string; whatsapp?: string; address?: string; province?: string; regency?: string; district?: string; village?: string; hamlet?: string };
   doctorId?: { name: string };
 }
 
@@ -36,6 +36,12 @@ function formatAge(age?: { value: number; unit: "month" | "year" }) {
   const v = age.value;
   const u = age.unit === "year" ? "tahun" : "bulan";
   return `${v} ${u}`;
+}
+
+function formatAddress(c?: { address?: string; hamlet?: string; village?: string; district?: string; regency?: string; province?: string }) {
+  if (!c) return "-";
+  const parts = [c.address, c.hamlet ? `Dusun ${c.hamlet}` : "", c.village, c.district, c.regency, c.province].filter(Boolean);
+  return parts.join(", ") || "-";
 }
 
 export default function LetterDetailPage() {
@@ -62,7 +68,7 @@ export default function LetterDetailPage() {
         ],
         ["Umur", formatAge(data.petId?.initialAge)],
         ["Pemilik", data.customerId?.name ?? "-"],
-        ["Alamat", data.customerId?.address || "-"],
+        ["Alamat", formatAddress(data.customerId)],
         ["No. WhatsApp", data.customerId?.whatsapp || "-"],
       ]
     : [];

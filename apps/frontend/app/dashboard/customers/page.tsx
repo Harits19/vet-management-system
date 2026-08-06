@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Table, Button, Input, Space, Modal, Form, Tag, Typography, Row, Col } from "antd";
+import { Card, Table, Button, Input, Space, Modal, Form, Tag, Typography, Row, Col, Select, AutoComplete } from "antd";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
@@ -15,7 +15,38 @@ interface Customer {
   name: string;
   whatsapp?: string;
   address?: string;
+  province?: string;
+  regency?: string;
+  district?: string;
+  village?: string;
+  hamlet?: string;
   createdAt: string;
+}
+
+interface Wilayah {
+  code: string;
+  name: string;
+}
+
+const WILAYAH_BASE = "https://wilayah.id/api";
+
+async function fetchWilayah(path: string): Promise<Wilayah[]> {
+  const res = await fetch(`${WILAYAH_BASE}/${path}`);
+  if (!res.ok) throw new Error("Gagal memuat data wilayah");
+  const json = await res.json();
+  return json.data ?? [];
+}
+
+export function formatAddress(c: { address?: string; hamlet?: string; village?: string; district?: string; regency?: string; province?: string }) {
+  const parts = [
+    c.address,
+    c.hamlet ? `Dusun ${c.hamlet}` : "",
+    c.village,
+    c.district,
+    c.regency,
+    c.province,
+  ].filter(Boolean);
+  return parts.join(", ") || "-";
 }
 
 export default function CustomersPage() {
@@ -29,6 +60,11 @@ export default function CustomersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
   const [form] = Form.useForm();
+  const [provinces, setProvinces] = useState<Wilayah[]>([]);
+  const [regencies, setRegencies] = useState<Wilayah[]>([]);
+  const [districts, setDistricts] = useState<Wilayah[]>([]);
+  const [villages, setVillages] = useState<Wilayah[]>([]);
+  const [dusunOptions, setDusunOptions] = useState<{ value: string }[]>([]);
   const router = useRouter();
   const msg = useAntdMessage();
   const modal = useAntdModal();
@@ -49,10 +85,75 @@ export default function CustomersPage() {
 
   useEffect(() => { fetchData(); }, []);
 
+  const loadProvinces = async (): Promise<Wilayah[]> => {
+    if (provinces.length) return provinces;
+    try {
+      const list = await fetchWilayah("provinces.json");
+      setProvinces(list);
+      return list;
+    } catch {
+      msg.warning("Gagal memuat daftar provinsi");
+      return [];
+    }
+  };
+  const loadRegencies = async (code: string): Promise<Wilayah[]> => {
+    try {
+      const list = await fetchWilayah(`regencies/${code}.json`);
+      setRegencies(list);
+      return list;
+    } catch {
+      msg.warning("Gagal memuat kabupaten/kota");
+      return [];
+    }
+  };
+  const loadDistricts = async (code: string): Promise<Wilayah[]> => {
+    try {
+      const list = await fetchWilayah(`districts/${code}.json`);
+      setDistricts(list);
+      return list;
+    } catch {
+      msg.warning("Gagal memuat kecamatan");
+      return [];
+    }
+  };
+  const loadVillages = async (code: string): Promise<Wilayah[]> => {
+    try {
+      const list = await fetchWilayah(`villages/${code}.json`);
+      setVillages(list);
+      return list;
+    } catch {
+      msg.warning("Gagal memuat desa/kelurahan");
+      return [];
+    }
+  };
+  const loadDusunOptions = async () => {
+    try {
+      const res = await apiFetch<{ data: string[] }>("/api/customers/distinct?field=hamlet");
+      setDusunOptions(res.data.map((v) => ({ value: v })));
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => { loadProvinces(); loadDusunOptions(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSearch = () => { setPage(1); fetchData(1, search); };
 
   const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
-  const openEdit = (c: Customer) => { setEditing(c); form.setFieldsValue(c); setModalOpen(true); };
+  const openEdit = async (c: Customer) => {
+    setEditing(c);
+    form.setFieldsValue(c);
+    setModalOpen(true);
+    const provs = await loadProvinces();
+    const p = provs.find((x) => x.name === c.province);
+    if (p) {
+      const regs = await loadRegencies(p.code);
+      const rg = regs.find((x) => x.name === c.regency);
+      if (rg) {
+        const dists = await loadDistricts(rg.code);
+        const d = dists.find((x) => x.name === c.district);
+        if (d) await loadVillages(d.code);
+      }
+    }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -89,7 +190,7 @@ export default function CustomersPage() {
   const columns = [
     { title: "Nama", dataIndex: "name", key: "name", sorter: true },
     { title: "WhatsApp", dataIndex: "whatsapp", key: "whatsapp", render: (v?: string) => v || "-" },
-    { title: "Alamat", dataIndex: "address", key: "address", render: (v?: string) => v || "-" },
+    { title: "Alamat", key: "address", render: (_: any, r: Customer) => formatAddress(r) },
     {
       title: "Aksi", key: "action",
       render: (_: any, record: Customer) => (
@@ -132,8 +233,65 @@ export default function CustomersPage() {
           <Form.Item name="whatsapp" label="WhatsApp">
             <Input />
           </Form.Item>
-          <Form.Item name="address" label="Alamat">
-            <Input.TextArea rows={2} />
+          <Form.Item name="province" label="Provinsi">
+            <Select
+              showSearch
+              placeholder="Pilih provinsi"
+              optionFilterProp="label"
+              options={provinces.map((p) => ({ value: p.name, label: p.name }))}
+              onChange={(v) => {
+                form.setFieldsValue({ regency: undefined, district: undefined, village: undefined });
+                setRegencies([]); setDistricts([]); setVillages([]);
+                const p = provinces.find((x) => x.name === v);
+                if (p) loadRegencies(p.code);
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="regency" label="Kabupaten / Kota">
+            <Select
+              showSearch
+              placeholder="Pilih kabupaten/kota"
+              optionFilterProp="label"
+              options={regencies.map((r) => ({ value: r.name, label: r.name }))}
+              onChange={(v) => {
+                form.setFieldsValue({ district: undefined, village: undefined });
+                setDistricts([]); setVillages([]);
+                const r = regencies.find((x) => x.name === v);
+                if (r) loadDistricts(r.code);
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="district" label="Kecamatan">
+            <Select
+              showSearch
+              placeholder="Pilih kecamatan"
+              optionFilterProp="label"
+              options={districts.map((d) => ({ value: d.name, label: d.name }))}
+              onChange={(v) => {
+                form.setFieldsValue({ village: undefined });
+                setVillages([]);
+                const d = districts.find((x) => x.name === v);
+                if (d) loadVillages(d.code);
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="village" label="Desa / Kelurahan">
+            <Select
+              showSearch
+              placeholder="Pilih desa/kelurahan"
+              optionFilterProp="label"
+              options={villages.map((v) => ({ value: v.name, label: v.name }))}
+            />
+          </Form.Item>
+          <Form.Item name="hamlet" label="Dusun">
+            <AutoComplete
+              options={dusunOptions}
+              placeholder="Pilih dusun yang pernah diisi atau ketik baru"
+              filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
+            />
+          </Form.Item>
+          <Form.Item name="address" label="Detail Alamat">
+            <Input.TextArea rows={2} placeholder="Jalan, RT/RW, nomor rumah (opsional)" />
           </Form.Item>
         </Form>
       </Modal>

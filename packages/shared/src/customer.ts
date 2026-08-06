@@ -9,6 +9,11 @@ export interface ICustomer {
   name: string;
   whatsapp?: string;
   address?: string;
+  province?: string;
+  regency?: string;
+  district?: string;
+  village?: string;
+  hamlet?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +22,11 @@ export const customerCreateSchema = z.object({
   name: stringRequired,
   whatsapp: z.string().trim().optional(),
   address: z.string().trim().optional(),
+  province: z.string().trim().optional(),
+  regency: z.string().trim().optional(),
+  district: z.string().trim().optional(),
+  village: z.string().trim().optional(),
+  hamlet: z.string().trim().optional(),
 });
 export type CustomerCreateRequest = z.infer<typeof customerCreateSchema>;
 

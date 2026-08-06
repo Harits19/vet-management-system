@@ -12,7 +12,17 @@ interface CustomerDetail {
   name: string;
   whatsapp?: string;
   address?: string;
+  province?: string;
+  regency?: string;
+  district?: string;
+  village?: string;
+  hamlet?: string;
   createdAt: string;
+}
+
+function formatAddress(c: CustomerDetail) {
+  const parts = [c.address, c.hamlet ? `Dusun ${c.hamlet}` : "", c.village, c.district, c.regency, c.province].filter(Boolean);
+  return parts.join(", ") || "-";
 }
 
 export default function CustomerDetailPage() {
@@ -48,7 +58,7 @@ export default function CustomerDetailPage() {
         <Descriptions column={2} bordered>
           <Descriptions.Item label="Nama">{customer.name}</Descriptions.Item>
           <Descriptions.Item label="WhatsApp">{customer.whatsapp || "-"}</Descriptions.Item>
-          <Descriptions.Item label="Alamat" span={2}>{customer.address || "-"}</Descriptions.Item>
+          <Descriptions.Item label="Alamat" span={2}>{formatAddress(customer)}</Descriptions.Item>
         </Descriptions>
       </Card>
       <Card title="Hewan Peliharaan" style={{ marginTop: 16 }}>

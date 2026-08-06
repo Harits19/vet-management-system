@@ -39,7 +39,7 @@ export async function listLetters(filter: { page?: number; limit?: number; lette
 export async function getLetter(id: string) {
   const letter = await LetterModel.findById(id)
     .populate("petId", "name kind breed gender furColor initialAge birthDate")
-    .populate("customerId", "name whatsapp address")
+    .populate("customerId", "name whatsapp address province regency district village hamlet")
     .populate("doctorId", "name")
     .lean();
   if (!letter) throw Object.assign(new Error("Surat tidak ditemukan"), { status: 404 });

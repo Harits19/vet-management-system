@@ -2,9 +2,10 @@ import { ProductModel } from "../models/index.js";
 import type { ProductCreateRequest, ProductUpdateRequest, ProductFilter } from "@vet/shared";
 
 export async function listProducts(filter: ProductFilter) {
-  const { page, limit, search, productType, category, sortBy, order } = filter;
+  const { page, limit, search, productType, goodType, category, sortBy, order } = filter;
   const query: any = { isActive: true };
   if (productType) query.productType = productType;
+  if (goodType) query.goodType = goodType;
   if (category) query.category = category;
   if (search) {
     query.$or = [
@@ -29,7 +30,15 @@ export async function getProduct(id: string) {
 }
 
 export async function createProduct(input: ProductCreateRequest) {
-  const product = await ProductModel.create(input);
+  // Normalisasi: non-obat wajib punya goodType (default petshop);
+  // stok tidak diisi = 0 (biar muncul di low stock, bukan field hilang)
+  const payload: any = { ...input };
+  if (payload.productType === "good" && !payload.goodType) payload.goodType = "petshop";
+  const qty = payload.inventory?.quantity;
+  if (qty === undefined || qty === null || qty === "") {
+    payload.inventory = { ...(payload.inventory || {}), quantity: 0 };
+  }
+  const product = await ProductModel.create(payload);
   return product.toObject() as any;
 }
 
@@ -49,13 +58,14 @@ export async function searchProductsByCode(code: string) {
   return ProductModel.find({ "product.code": { $regex: code, $options: "i" }, isActive: true }).limit(10).lean();
 }
 
-// Nilai unik untuk autocomplete (category, unit, product.name, dll)
-export async function getDistinctProductValues(field: string, productType?: string) {
-  const allowed = new Set(["category", "unit", "product.name", "productType"]);
+// Nilai unik untuk autocomplete (category, subcategory, unit, product.name, dll)
+export async function getDistinctProductValues(field: string, productType?: string, goodType?: string) {
+  const allowed = new Set(["category", "subcategory", "unit", "product.name", "productType"]);
   if (!allowed.has(field)) throw Object.assign(new Error("Field tidak didukung"), { status: 400 });
 
   const query: any = { isActive: true };
   if (productType) query.productType = productType;
+  if (goodType) query.goodType = goodType;
 
   const values = await ProductModel.distinct(field, query);
   return values.filter((v: unknown) => typeof v === "string" && (v as string).trim() !== "");

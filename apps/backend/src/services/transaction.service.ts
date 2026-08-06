@@ -487,15 +487,19 @@ export async function getDashboardSummary(opts: { diagnosesPage?: number; custom
       PetModel.countDocuments({ isActive: true, createdAt: { $gte: startOfMonth } }),
       PetModel.countDocuments({ isActive: true, createdAt: { $gte: startOfDay } }),
     ]),
-    // Low stock 3 grup: Obat (medicine) | Petshop (good + kategori mengandung "petshop") | Barang Habis Pakai (good lainnya)
+    // Low stock 3 grup: Obat (medicine) | Petshop (good + goodType petshop) | Barang Habis Pakai (good lainnya)
+    // Catatan: stok kosong/tidak diisi (= 0) juga termasuk menipis
     (async () => {
-      const base: any = { isActive: true, "inventory.quantity": { $lte: 5 } };
-      const select = "product.name category productType inventory.quantity pricing.selling unit";
+      const base: any = {
+        isActive: true,
+        $or: [{ "inventory.quantity": { $lte: 5 } }, { "inventory.quantity": { $exists: false } }],
+      };
+      const select = "product.name category subcategory goodType productType inventory.quantity pricing.selling unit";
       const sort = { "inventory.quantity": 1 } as const;
       const [medicine, petshop, consumable] = await Promise.all([
         ProductModel.find({ ...base, productType: "medicine" }).select(select).sort(sort).limit(10).lean(),
-        ProductModel.find({ ...base, productType: "good", category: /petshop/i }).select(select).sort(sort).limit(10).lean(),
-        ProductModel.find({ ...base, productType: "good", category: { $not: /petshop/i } }).select(select).sort(sort).limit(10).lean(),
+        ProductModel.find({ ...base, productType: "good", goodType: "petshop" }).select(select).sort(sort).limit(10).lean(),
+        ProductModel.find({ ...base, productType: "good", goodType: { $ne: "petshop" } }).select(select).sort(sort).limit(10).lean(),
       ]);
       return { medicine, petshop, consumable };
     })(),

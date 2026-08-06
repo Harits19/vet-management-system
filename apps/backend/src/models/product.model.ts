@@ -4,7 +4,9 @@ import type { ProductType } from "@vet/shared";
 export interface IProductDoc {
   _id: mongoose.Types.ObjectId;
   productType: ProductType;
+  goodType?: "petshop" | "bmhp";
   category: string;
+  subcategory?: string;
   product: {
     code?: string;
     name: string;
@@ -35,7 +37,13 @@ const ProductSchema = new Schema<IProductDoc>(
       required: true,
       default: "good",
     },
+    goodType: {
+      type: String,
+      enum: ["petshop", "bmhp"],
+      trim: true,
+    },
     category: { type: String, required: true, trim: true },
+    subcategory: { type: String, trim: true },
     product: {
       code: { type: String, trim: true, sparse: true },
       name: { type: String, required: true, trim: true },
@@ -61,6 +69,7 @@ const ProductSchema = new Schema<IProductDoc>(
 ProductSchema.index({ "product.name": 1 });
 ProductSchema.index({ category: 1 });
 ProductSchema.index({ productType: 1 });
+ProductSchema.index({ goodType: 1 });
 ProductSchema.index(
   { "product.petClinicId": 1 },
   { unique: true, sparse: true },

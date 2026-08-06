@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { syncController } from "../controllers/sync.controller.js";
+import { sync } from "../controllers/sync.controller.js";
 
 const router = Router();
 const petClinic = Router();
@@ -14,13 +14,13 @@ const upload = multer({
 
 const singleFile = upload.single("file");
 
-petClinic.post("/inventory", singleFile, syncController.sync("inventory"));
-petClinic.post("/service", singleFile, syncController.sync("service"));
-petClinic.post("/patient", singleFile, syncController.sync("patient"));
+petClinic.post("/inventory", singleFile, sync("inventory"));
+petClinic.post("/service", singleFile, sync("service"));
+petClinic.post("/patient", singleFile, sync("patient"));
 petClinic.post(
   "/medical-history",
   singleFile,
-  syncController.sync("medicalHistory"),
+  sync("medicalHistory"),
 );
 
 router.use("/pet-clinic", petClinic);

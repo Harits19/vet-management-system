@@ -60,6 +60,7 @@ const PetSchema = new Schema<IPetDoc>(
 );
 
 PetSchema.index({ name: 1 });
+PetSchema.index({ code: 1 }, { sparse: true });
 PetSchema.index({ customerId: 1, name: 1 });
 PetSchema.index({ petClinicId: 1 }, { sparse: true, unique: true });
 

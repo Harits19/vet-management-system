@@ -17,14 +17,14 @@ const { Text } = Typography;
 function SidebarMenu({ role }: { role: string }) {
   const pathname = usePathname();
 
-  const isActive = (prefix: string) => pathname.startsWith(prefix);
+  const isActive = (item: { key: string }) =>
+    item.key === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.key);
 
   const items = [
     { key: "/dashboard", icon: <LayoutDashboard size={18} />, label: <Link href="/dashboard">Dashboard</Link> },
     { key: "/dashboard/customers", icon: <Users size={18} />, label: <Link href="/dashboard/customers">Klien</Link> },
     { key: "/dashboard/pets", icon: <Dog size={18} />, label: <Link href="/dashboard/pets">Pasien Baru</Link> },
     { key: "/dashboard/services", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/services">Jasa</Link> },
-    { key: "/dashboard/obat", icon: <Package size={18} />, label: <Link href="/dashboard/obat">Obat</Link> },
     { key: "/dashboard/products", icon: <Package size={18} />, label: <Link href="/dashboard/products">Barang</Link> },
     { key: "/dashboard/transactions", icon: <ShoppingCart size={18} />, label: <Link href="/dashboard/transactions">Transaksi</Link> },
   ];
@@ -38,7 +38,7 @@ function SidebarMenu({ role }: { role: string }) {
     );
   }
 
-  return <Menu mode="inline" selectedKeys={[items.find(i => isActive(i.key))?.key || ""]} items={items} style={{ borderInlineEnd: "none" }} />;
+  return <Menu mode="inline" selectedKeys={[items.find(isActive)?.key || ""]} items={items} style={{ borderInlineEnd: "none" }} />;
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

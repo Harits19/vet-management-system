@@ -4,14 +4,20 @@ import { stringRequired, numberFromString, numberOptional } from "./common.js";
 // ──────────────────────────────────────────
 // Product (Barang) — collection terpisah dari Jasa (Service)
 // productType: "medicine" (obat) | "good" (barang non-obat)
+// goodType: hanya untuk non-obat — "petshop" | "bmhp" (barang medis habis pakai)
 // ──────────────────────────────────────────
 export const productTypeEnum = z.enum(["medicine", "good"] as const);
 export type ProductType = z.infer<typeof productTypeEnum>;
 
+export const goodTypeEnum = z.enum(["petshop", "bmhp"] as const);
+export type GoodType = z.infer<typeof goodTypeEnum>;
+
 export interface IProduct {
   _id: string;
   productType: ProductType;
+  goodType?: GoodType;
   category: string;
+  subcategory?: string;
   product: {
     code?: string;
     name: string;
@@ -49,7 +55,9 @@ const inventorySubSchema = z.object({
 
 export const productCreateSchema = z.object({
   productType: productTypeEnum.default("good"),
+  goodType: goodTypeEnum.optional(),
   category: stringRequired,
+  subcategory: z.string().optional(),
   product: productSubSchema,
   pricing: pricingSubSchema,
   inventory: inventorySubSchema.default({}),
@@ -65,6 +73,7 @@ export const productFilterSchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(10),
   search: z.string().default(""),
   productType: productTypeEnum.optional(),
+  goodType: goodTypeEnum.optional(),
   category: z.string().optional(),
   sortBy: z.enum(["product.name", "pricing.selling", "inventory.quantity", "createdAt"]).default("createdAt"),
   order: z.enum(["asc", "desc"]).default("desc"),

@@ -20,6 +20,9 @@ interface LetterDetail {
   ownerSignature?: string;
   ownerSignedName?: string;
   signedAt?: string;
+  doctorSignature?: string;
+  doctorSignedName?: string;
+  doctorSignedAt?: string;
   petId?: {
     name: string;
     kind?: string;
@@ -216,10 +219,33 @@ export default function LetterDetailPage() {
             </div>
 
             <div style={{ textAlign: "center", width: 250 }}>
-              <Text style={{ fontFamily: "inherit", fontSize: 12 }}>Dokter Hewan,</Text>
-              <div style={{ height: 90, marginTop: 8 }} />
+              <Text style={{ fontFamily: "inherit", fontSize: 12 }}>
+                {data.doctorSignedAt
+                  ? `Dokter Hewan, ${dayjs(data.doctorSignedAt).format("DD/MM/YYYY")}`
+                  : "Dokter Hewan,"}
+              </Text>
+              <div style={{ height: 90, marginTop: 8 }}>
+                {data.doctorSignature ? (
+                  <img
+                    src={data.doctorSignature}
+                    alt="Tanda tangan dokter"
+                    style={{ maxHeight: 90, maxWidth: 220, borderBottom: "1px solid #000" }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      height: 90,
+                      display: "flex",
+                      alignItems: "flex-end",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <div style={{ borderBottom: "1px solid #000", width: 180, paddingBottom: 4 }} />
+                  </div>
+                )}
+              </div>
               <Text strong style={{ fontFamily: "inherit" }}>
-                ({data.doctorId?.name ?? "-"})
+                ({data.doctorSignedName || data.doctorId?.name || "-"})
               </Text>
             </div>
           </div>

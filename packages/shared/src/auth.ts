@@ -34,8 +34,33 @@ export interface AuthLoginResponse {
     _id: string;
     name: string;
     username: string;
+    email: string;
     role: UserRole;
   };
+}
+
+// Update profil user yang login (nama, username, email, dan ganti password opsional)
+export const authUpdateProfileSchema = z
+  .object({
+    name: stringRequired,
+    username: stringRequired,
+    email: z.string().trim().email("Email tidak valid"),
+    currentPassword: z.string().optional(),
+    newPassword: z.string().min(6, "Password baru minimal 6 karakter").optional(),
+  })
+  .refine((v) => !v.newPassword || v.currentPassword, {
+    message: "Password lama wajib diisi untuk mengganti password",
+    path: ["currentPassword"],
+  });
+export type AuthUpdateProfileRequest = z.infer<typeof authUpdateProfileSchema>;
+
+export interface AuthUpdateProfileResponse {
+  _id: string;
+  name: string;
+  username: string;
+  email: string;
+  role: UserRole;
+  doctorSignature?: string;
 }
 
 export interface JwtPayload {

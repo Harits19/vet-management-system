@@ -106,7 +106,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {themeToggle}
           <Dropdown menu={{
             items: [
-              { key: "profile", label: `${user.name} (${user.role})`, disabled: true },
+              { key: "userinfo", label: `${user.name} (${user.role})`, disabled: true },
+              { type: "divider" },
+              { key: "profile", label: <Link href="/dashboard/profile">Edit Profil</Link>, icon: <UserIcon size={14} /> },
               { type: "divider" },
               { key: "logout", label: "Logout", icon: <LogOut size={14} />, onClick: logout },
             ]

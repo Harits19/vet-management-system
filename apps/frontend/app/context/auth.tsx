@@ -8,6 +8,7 @@ interface User {
   _id: string;
   name: string;
   username: string;
+  email: string;
   role: UserRole;
   doctorSignature?: string;
 }
@@ -17,6 +18,7 @@ interface AuthContextType {
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -54,6 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { checkSession(); }, [checkSession]);
 
+  // Muat ulang data user dari server (dipakai setelah update profil)
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await apiFetch<{ data: User }>("/api/auth/me");
+      setUser(res.data);
+      return res.data;
+    } catch {
+      setUser(null);
+      return null;
+    }
+  }, []);
+
   const login = async (username: string, password: string) => {
     const res = await apiFetch<{ data: AuthLoginResponse }>("/api/auth/login", {
       method: "POST",
@@ -70,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

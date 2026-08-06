@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserModel } from "../models/index.js";
 import env from "../config/env.js";
-import type { JwtPayload } from "@vet/shared";
+import type { JwtPayload, AuthUpdateProfileRequest } from "@vet/shared";
 
 export async function loginUser(username: string, password: string) {
   const user = await UserModel.findOne({ username, isActive: true });
@@ -20,6 +20,7 @@ export async function loginUser(username: string, password: string) {
       _id: user._id.toString(),
       name: user.name,
       username: user.username,
+      email: user.email,
       role: user.role,
       doctorSignature: user.doctorSignature,
     },
@@ -33,8 +34,42 @@ export async function getMe(userId: string) {
     _id: user._id.toString(),
     name: user.name,
     username: user.username,
+    email: user.email,
     role: user.role,
     doctorSignature: user.doctorSignature,
+  };
+}
+
+export async function updateProfile(userId: string, input: AuthUpdateProfileRequest) {
+  const user = await UserModel.findById(userId);
+  if (!user) throw Object.assign(new Error("User tidak ditemukan"), { status: 404 });
+
+  // Username harus unik (selain dirinya sendiri)
+  const dup = await UserModel.findOne({ username: input.username, _id: { $ne: userId } });
+  if (dup) throw Object.assign(new Error("Username sudah dipakai user lain"), { status: 409 });
+
+  const update: { name: string; username: string; email: string; password?: string } = {
+    name: input.name,
+    username: input.username,
+    email: input.email,
+  };
+
+  if (input.newPassword) {
+    const valid = await bcrypt.compare(input.currentPassword!, user.password);
+    if (!valid) throw Object.assign(new Error("Password lama salah"), { status: 400 });
+    update.password = await bcrypt.hash(input.newPassword, 10);
+  }
+
+  const updated = await UserModel.findByIdAndUpdate(userId, { $set: update }, { new: true, runValidators: true }).lean();
+  if (!updated) throw Object.assign(new Error("User tidak ditemukan"), { status: 404 });
+
+  return {
+    _id: updated._id.toString(),
+    name: updated.name,
+    username: updated.username,
+    email: updated.email,
+    role: updated.role,
+    doctorSignature: updated.doctorSignature,
   };
 }
 

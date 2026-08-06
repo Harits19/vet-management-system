@@ -62,6 +62,7 @@ npm run dev                    # predev (mongo-init.js) → backend :3001 → fr
 ## Konvensi kerja (kesepakatan user)
 
 - Komunikasi dalam **Bahasa Indonesia**.
+- **Caveman mode ULTRA WAJIB aktif di setiap session** (aturan lengkap: `.clinerules/caveman-ultra.md` — dibaca otomatis oleh Cline). Ringkas ekstrem, tanpa basa-basi; istilah teknis/kode tetap persis. Pengecualian: peringatan keamanan & konfirmasi aksi destruktif.
 - Solusi minimal yang jalan ("caveman") > optimasi; root-cause fix sekecil mungkin.
 - Di server/VPS: HANYA lakukan perubahan kode. JANGAN jalankan verifikasi (typecheck/build/test) — biarkan laptop lokal yang mengecek.
 - Tanya dulu sebelum build Docker lama atau operasi destruktif (mis. reset DB).

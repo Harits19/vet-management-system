@@ -89,11 +89,12 @@ export default function LetterDetailPage() {
 
       <style>{`
         @media print {
+          html, body { height: auto !important; }
           .ant-layout-sider, .ant-layout-header { display: none !important; }
-          .ant-layout { background: #fff !important; }
-          .ant-layout-content { padding: 0 !important; margin: 0 !important; }
+          .ant-layout { background: #fff !important; min-height: 0 !important; height: auto !important; }
+          .ant-layout-content { padding: 0 !important; margin: 0 !important; min-height: 0 !important; }
           .no-print { display: none !important; }
-          .letter-doc { box-shadow: none !important; border: none !important; }
+          .letter-doc { box-shadow: none !important; border: none !important; margin: 0 !important; }
         }
       `}</style>
 

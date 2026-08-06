@@ -35,7 +35,9 @@ async function fetchWilayah(path: string): Promise<Wilayah[]> {
   return json.data ?? json;
 }
 
-export function formatAddress(c: { address?: string; hamlet?: string; village?: string; district?: string; regency?: string; province?: string }) {
+// Hanya dipakai di halaman ini — TIDAK boleh export (Next.js App Router: file page
+// hanya boleh punya default export + metadata yang diizinkan)
+function formatAddress(c: { address?: string; hamlet?: string; village?: string; district?: string; regency?: string; province?: string }) {
   const parts = [
     c.address,
     c.hamlet ? `Dusun ${c.hamlet}` : "",

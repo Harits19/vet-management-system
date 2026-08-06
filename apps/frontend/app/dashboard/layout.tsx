@@ -40,6 +40,10 @@ function SidebarMenu({ role, onNavigate }: { role: string; onNavigate?: () => vo
     );
   }
 
+  if (["superadmin", "admin"].includes(role)) {
+    items.push({ key: "/dashboard/users", icon: <UserIcon size={18} />, label: <Link href="/dashboard/users">Manajemen User</Link> });
+  }
+
   return <Menu mode="inline" selectedKeys={[items.find(isActive)?.key || ""]} items={items} style={{ borderInlineEnd: "none" }} onClick={onNavigate} />;
 }
 

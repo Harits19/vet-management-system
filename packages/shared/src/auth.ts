@@ -7,6 +7,38 @@ import { stringRequired } from "./common.js";
 export const userRoleEnum = z.enum(["superadmin", "admin", "cashier", "doctor"] as const);
 export type UserRole = z.infer<typeof userRoleEnum>;
 
+// ──────────────────────────────────────────
+// User management (CRUD akun login)
+// ──────────────────────────────────────────
+export const userCreateSchema = z.object({
+  name: stringRequired,
+  username: stringRequired,
+  email: z.string().trim().email("Email tidak valid"),
+  password: z.string().min(6, "Password minimal 6 karakter"),
+  role: userRoleEnum,
+  isActive: z.boolean().default(true),
+});
+export type UserCreateRequest = z.infer<typeof userCreateSchema>;
+
+export const userUpdateSchema = z.object({
+  name: stringRequired,
+  username: stringRequired,
+  email: z.string().trim().email("Email tidak valid"),
+  password: z.string().min(6, "Password minimal 6 karakter").optional(),
+  role: userRoleEnum,
+  isActive: z.boolean(),
+});
+export type UserUpdateRequest = z.infer<typeof userUpdateSchema>;
+
+export const userFilterSchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(10),
+  search: z.string().default(""),
+  sortBy: z.enum(["name", "username", "role", "createdAt"]).default("createdAt"),
+  order: z.enum(["asc", "desc"]).default("desc"),
+});
+export type UserFilter = z.infer<typeof userFilterSchema>;
+
 export interface IUser {
   _id: string;
   name: string;

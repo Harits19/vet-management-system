@@ -61,6 +61,14 @@ export default function CreateLetterPage() {
     if (user?.doctorSignature) setSavedDoctorSig(user.doctorSignature);
   }, [user?.doctorSignature]);
 
+  // Context user bisa basi (checkSession hanya sekali saat login) — ambil /me fresh
+  // supaya tanda tangan yang baru disimpan langsung terdeteksi tanpa reload halaman.
+  useEffect(() => {
+    apiFetch<{ data: { doctorSignature?: string } }>("/api/auth/me")
+      .then((res) => { if (res.data?.doctorSignature) setSavedDoctorSig(res.data.doctorSignature); })
+      .catch(() => { /* abaikan */ });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSubmit = async () => {
     if (!signature) { msg.warning("Pemilik harus menandatangani dulu"); return; }
     const finalDoctorSig = savedDoctorSig && useSavedDoctorSig ? savedDoctorSig : doctorSignature;

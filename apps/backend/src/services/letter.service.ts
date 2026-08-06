@@ -10,7 +10,7 @@ const TYPE_PREFIX: Record<string, string> = {
   euthanasia: "SPE",
 };
 
-export async function listLetters(filter: { page?: number; limit?: number; letterType?: string; search?: string }) {
+export async function listLetters(filter: { page?: number; limit?: number; letterType?: string; search?: string; sortBy?: string; order?: string }) {
   const page = filter.page ?? 1;
   const limit = filter.limit ?? 10;
   const query: any = {};
@@ -22,12 +22,14 @@ export async function listLetters(filter: { page?: number; limit?: number; lette
       { ownerSignedName: { $regex: filter.search, $options: "i" } },
     ];
   }
+  const sortBy = ["date", "letterNumber", "createdAt"].includes(filter.sortBy ?? "") ? filter.sortBy : "date";
+  const order = filter.order === "asc" ? 1 : -1;
   const total = await LetterModel.countDocuments(query);
   const data = await LetterModel.find(query)
     .populate("petId", "name kind breed")
     .populate("customerId", "name whatsapp")
     .populate("doctorId", "name")
-    .sort({ date: -1 })
+    .sort({ [sortBy!]: order })
     .skip((page - 1) * limit)
     .limit(limit)
     .lean();

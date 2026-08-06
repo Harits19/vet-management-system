@@ -15,6 +15,8 @@ export async function getAll(req: AuthRequest, res: Response, next: NextFunction
       limit: Number(req.query.limit) || 10,
       letterType: req.query.letterType as string | undefined,
       search: req.query.search as string | undefined,
+      sortBy: req.query.sortBy as string | undefined,
+      order: req.query.order as string | undefined,
     });
     res.json({
       success: true, data: result.data,

@@ -34,6 +34,8 @@ export default function ProductManager({ productTypeFilter = "good", goodTypeFil
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form] = Form.useForm();
@@ -60,10 +62,10 @@ export default function ProductManager({ productTypeFilter = "good", goodTypeFil
     } catch { /* ignore */ }
   };
 
-  const fetchData = async (p = page, s = search) => {
+  const fetchData = async (p = page, s = search, sb = sortBy, od = order) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search: s });
+      const params = new URLSearchParams({ page: String(p), limit: "10", search: s, sortBy: sb, order: od });
       if (productTypeFilter) params.set("productType", productTypeFilter);
       if (goodTypeFilter) params.set("goodType", goodTypeFilter);
       const res = await apiFetch<{ data: Product[]; meta: { total: number } }>(`/api/products?${params}`);
@@ -138,12 +140,12 @@ export default function ProductManager({ productTypeFilter = "good", goodTypeFil
       : "Pakan Kucing, Aksesoris Kucing";
 
   const columns = [
-    { title: "Nama", key: "name", render: (_: any, r: Product) => r.product?.name },
+    { title: "Nama", key: "name", dataIndex: "product.name", sorter: true, render: (_: any, r: Product) => r.product?.name },
     { title: "Kategori", dataIndex: "category", key: "category" },
     { title: "Subkategori", key: "subcategory", render: (_: any, r: Product) => r.subcategory || "-" },
     { title: "Kode", key: "code", render: (_: any, r: Product) => r.product?.code || "-" },
-    { title: "Harga Jual", key: "selling", render: (_: any, r: Product) => fmt(r.pricing.selling) },
-    { title: "Stok", key: "qty", render: (_: any, r: Product) => <Tag color={(r.inventory?.quantity ?? 0) <= 0 ? "red" : "green"}>{r.inventory?.quantity ?? 0}</Tag> },
+    { title: "Harga Jual", key: "selling", dataIndex: "pricing.selling", sorter: true, render: (_: any, r: Product) => fmt(r.pricing.selling) },
+    { title: "Stok", key: "qty", dataIndex: "inventory.quantity", sorter: true, render: (_: any, r: Product) => <Tag color={(r.inventory?.quantity ?? 0) <= 0 ? "red" : "green"}>{r.inventory?.quantity ?? 0}</Tag> },
     {
       title: "Aksi", key: "action",
       render: (_: any, r: Product) => (
@@ -168,6 +170,12 @@ export default function ProductManager({ productTypeFilter = "good", goodTypeFil
           </Col>
         </Row>
         <Table dataSource={data} columns={columns} rowKey="_id" loading={loading}
+          onChange={(_, __, sorter) => {
+            const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
+            const sb = s?.order ? String(s.field) : "createdAt";
+            const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
+            setSortBy(sb); setOrder(od); setPage(1); fetchData(1, search, sb, od);
+          }}
           pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
       </Card>
 

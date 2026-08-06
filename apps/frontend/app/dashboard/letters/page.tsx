@@ -33,12 +33,14 @@ export default function LettersPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("date");
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [letterType, setLetterType] = useState<string | undefined>();
 
-  const fetchData = async (p = page, s = search, t = letterType) => {
+  const fetchData = async (p = page, s = search, t = letterType, sb = sortBy, od = order) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search: s });
+      const params = new URLSearchParams({ page: String(p), limit: "10", search: s, sortBy: sb, order: od });
       if (t) params.set("letterType", t);
       const res = await apiFetch<{ data: LetterRow[]; meta: { total: number } }>(`/api/letters?${params}`);
       setData(res.data);
@@ -68,11 +70,11 @@ export default function LettersPage() {
   };
 
   const columns = [
-    { title: "Nomor Surat", dataIndex: "letterNumber", key: "letterNumber" },
+    { title: "Nomor Surat", dataIndex: "letterNumber", key: "letterNumber", sorter: true },
     { title: "Jenis", dataIndex: "letterType", key: "letterType", render: (t: string) => <Tag color={letterTypeColor(t)}>{letterTypeLabel(t)}</Tag> },
     { title: "Pasien", key: "pet", render: (_: any, r: LetterRow) => r.petId?.name || "-" },
     { title: "Pemilik", key: "customer", render: (_: any, r: LetterRow) => r.customerId?.name || "-" },
-    { title: "Tanggal", dataIndex: "date", key: "date", render: (d: string) => dayjs(d).format("DD/MM/YYYY") },
+    { title: "Tanggal", dataIndex: "date", key: "date", sorter: true, render: (d: string) => dayjs(d).format("DD/MM/YYYY") },
     { title: "Tanda Tangan", key: "signed", render: (_: any, r: LetterRow) => (r.ownerSignature ? <Tag color="green">Sudah</Tag> : <Tag color="orange">Belum</Tag>) },
     {
       title: "Aksi", key: "action",
@@ -115,6 +117,12 @@ export default function LettersPage() {
           columns={columns}
           rowKey="_id"
           loading={loading}
+          onChange={(_, __, sorter) => {
+            const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
+            const sb = s?.order ? String(s.field) : "date";
+            const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
+            setSortBy(sb); setOrder(od); setPage(1); fetchData(1, search, letterType, sb, od);
+          }}
           pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }}
         />
       </Card>

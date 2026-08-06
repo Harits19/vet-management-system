@@ -41,6 +41,8 @@ export default function TransactionsPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("timestamp");
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [detail, setDetail] = useState<Transaction | null>(null);
   const [payTxn, setPayTxn] = useState<Transaction | null>(null);
   const [paying, setPaying] = useState(false);
@@ -49,10 +51,10 @@ export default function TransactionsPage() {
   const paySisa = payTxn ? Math.max(0, payTxn.summary.total - payTxn.summary.paid) : 0;
   const payKembalian = paidInput ? (Number(paidInput) || 0) - paySisa : 0;
 
-  const fetchData = async (p = page) => {
+  const fetchData = async (p = page, s = search, sb = sortBy, od = order) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search, sortBy: "timestamp", order: "desc", type: "vet" });
+      const params = new URLSearchParams({ page: String(p), limit: "10", search: s, sortBy: sb, order: od, type: "vet" });
       const res = await apiFetch<{ data: any; meta: { total: number } }>(`/api/transactions?${params}`);
       setData(res.data);
       setTotal(res.meta.total);
@@ -87,11 +89,11 @@ export default function TransactionsPage() {
   };
 
   const columns = [
-    { title: "No. Struk", dataIndex: "receiptNumber", width: 160 },
-    { title: "Tanggal", dataIndex: "timestamp", render: (v: string) => dayjs(v).format("DD/MM/YY HH:mm"), width: 130 },
+    { title: "No. Struk", dataIndex: "receiptNumber", sorter: true, width: 160 },
+    { title: "Tanggal", dataIndex: "timestamp", sorter: true, render: (v: string) => dayjs(v).format("DD/MM/YY HH:mm"), width: 130 },
     { title: "Customer", key: "customer", render: (_: any, r: Transaction) => r.customer?.name || "-", width: 150 },
     { title: "Pasien", key: "pet", render: (_: any, r: Transaction) => r.pet ? `${r.pet.name} (${r.pet.kind})` : "-" },
-    { title: "Total", key: "total", render: (_: any, r: Transaction) => formatPrice(r.summary.total) },
+    { title: "Total", key: "total", dataIndex: "summary.total", sorter: true, render: (_: any, r: Transaction) => formatPrice(r.summary.total) },
     { title: "Status", dataIndex: "paymentStatus", render: (v: string) => <Tag color={statusColors[v]}>{statusLabels[v]}</Tag> },
     { title: "Kasir", key: "kasir", render: (_: any, r: Transaction) => r.cashier?.name },
     {
@@ -124,6 +126,12 @@ export default function TransactionsPage() {
           <Input.Search placeholder="Cari no. struk..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={handleSearch} enterButton style={{ width: 250 }} />
         </Space>
         <Table dataSource={data} columns={columns} rowKey="_id" loading={loading} scroll={{ x: 900 }}
+          onChange={(_, __, sorter) => {
+            const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
+            const sb = s?.order ? String(s.field) : "timestamp";
+            const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
+            setSortBy(sb); setOrder(od); setPage(1); fetchData(1, search, sb, od);
+          }}
           pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
       </Card>
 

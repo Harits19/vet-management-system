@@ -33,6 +33,8 @@ export default function PetsPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Pet | null>(null);
   const [customers, setCustomers] = useState<{ _id: string; name: string }[]>([]);
@@ -56,10 +58,10 @@ export default function PetsPage() {
     } catch { /* ignore */ }
   };
 
-  const fetchData = async (p = page, s = search) => {
+  const fetchData = async (p = page, s = search, sb = sortBy, od = order) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search: s });
+      const params = new URLSearchParams({ page: String(p), limit: "10", search: s, sortBy: sb, order: od });
       const res = await apiFetch<{ data: Pet[]; meta: { total: number } }>(`/api/pets?${params}`);
       setData(res.data);
       setTotal(res.meta.total);
@@ -158,8 +160,8 @@ export default function PetsPage() {
 
   const columns = [
     { title: "Kode", dataIndex: "code", key: "code", render: (v?: string) => v ? <Tag>{v}</Tag> : "-" },
-    { title: "Nama", dataIndex: "name", key: "name" },
-    { title: "Jenis", dataIndex: "kind", key: "kind" },
+    { title: "Nama", dataIndex: "name", key: "name", sorter: true },
+    { title: "Jenis", dataIndex: "kind", key: "kind", sorter: true },
     { title: "Ras", dataIndex: "breed", key: "breed", render: (v?: string) => v || "-" },
     { title: "Warna Bulu", dataIndex: "furColor", key: "furColor", render: (v?: string) => v || "-" },
     { title: "Umur", key: "age", render: (_: any, r: Pet) => computePetAge(r)?.label || "-" },
@@ -191,6 +193,12 @@ export default function PetsPage() {
           </Col>
         </Row>
         <Table dataSource={data} columns={columns} rowKey="_id" loading={loading}
+          onChange={(_, __, sorter) => {
+            const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
+            const sb = s?.order ? String(s.field) : "createdAt";
+            const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
+            setSortBy(sb); setOrder(od); setPage(1); fetchData(1, search, sb, od);
+          }}
           pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
       </Card>
 

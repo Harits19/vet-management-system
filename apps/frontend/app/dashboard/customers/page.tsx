@@ -24,6 +24,8 @@ export default function CustomersPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
   const [form] = Form.useForm();
@@ -31,10 +33,10 @@ export default function CustomersPage() {
   const msg = useAntdMessage();
   const modal = useAntdModal();
 
-  const fetchData = async (p = page, s = search) => {
+  const fetchData = async (p = page, s = search, sb = sortBy, od = order) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search: s });
+      const params = new URLSearchParams({ page: String(p), limit: "10", search: s, sortBy: sb, order: od });
       const res = await apiFetch<{ data: Customer[]; meta: { total: number } }>(`/api/customers?${params}`);
       setData(res.data);
       setTotal(res.meta.total);
@@ -85,7 +87,7 @@ export default function CustomersPage() {
   };
 
   const columns = [
-    { title: "Nama", dataIndex: "name", key: "name" },
+    { title: "Nama", dataIndex: "name", key: "name", sorter: true },
     { title: "WhatsApp", dataIndex: "whatsapp", key: "whatsapp", render: (v?: string) => v || "-" },
     { title: "Alamat", dataIndex: "address", key: "address", render: (v?: string) => v || "-" },
     {
@@ -113,6 +115,12 @@ export default function CustomersPage() {
           </Col>
         </Row>
         <Table dataSource={data} columns={columns} rowKey="_id" loading={loading}
+          onChange={(_, __, sorter) => {
+            const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
+            const sb = s?.order ? String(s.field) : "createdAt";
+            const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
+            setSortBy(sb); setOrder(od); setPage(1); fetchData(1, search, sb, od);
+          }}
           pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
       </Card>
 

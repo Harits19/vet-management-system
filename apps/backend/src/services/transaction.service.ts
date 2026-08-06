@@ -438,15 +438,18 @@ export async function getDashboardSummary(opts: {
   // List Diagnosa — frekuensi diagnosis dari rekam medis (buang nilai sampah), pagination
   const diagnosesAgg = (async () => {
     const match = { diagnosis: { $nin: ["", "-", "Tanpa diagnosis"] } };
-    const total = await MedicalHistoryModel.countDocuments(match);
-    const rows = await MedicalHistoryModel.aggregate([
-      { $match: match },
-      { $group: { _id: "$diagnosis", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $skip: (diagnosesPage - 1) * pageSize },
-      { $limit: pageSize },
+    // total = jumlah diagnosis DISTINCT (bukan jumlah rekam medis) — supaya jumlah halaman sesuai baris
+    const [totalRows, rows] = await Promise.all([
+      MedicalHistoryModel.aggregate([{ $match: match }, { $group: { _id: "$diagnosis" } }, { $count: "n" }]),
+      MedicalHistoryModel.aggregate([
+        { $match: match },
+        { $group: { _id: "$diagnosis", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $skip: (diagnosesPage - 1) * pageSize },
+        { $limit: pageSize },
+      ]),
     ]);
-    return { total, data: rows.map((d: any) => ({ name: d._id, count: d.count })) };
+    return { total: totalRows[0]?.n ?? 0, data: rows.map((d: any) => ({ name: d._id, count: d.count })) };
   })();
 
   // List Klien — jumlah hewan + jumlah kedatangan (rekam medis), pagination

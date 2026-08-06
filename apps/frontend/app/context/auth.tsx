@@ -9,6 +9,7 @@ interface User {
   name: string;
   username: string;
   role: UserRole;
+  doctorSignature?: string;
 }
 
 interface AuthContextType {

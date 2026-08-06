@@ -16,8 +16,36 @@ export async function loginUser(username: string, password: string) {
 
   return {
     token,
-    user: { _id: user._id.toString(), name: user.name, username: user.username, role: user.role },
+    user: {
+      _id: user._id.toString(),
+      name: user.name,
+      username: user.username,
+      role: user.role,
+      doctorSignature: user.doctorSignature,
+    },
   };
+}
+
+export async function getMe(userId: string) {
+  const user = await UserModel.findById(userId).lean();
+  if (!user) throw Object.assign(new Error("User tidak ditemukan"), { status: 404 });
+  return {
+    _id: user._id.toString(),
+    name: user.name,
+    username: user.username,
+    role: user.role,
+    doctorSignature: user.doctorSignature,
+  };
+}
+
+export async function saveDoctorSignature(userId: string, doctorSignature: string) {
+  const user = await UserModel.findByIdAndUpdate(
+    userId,
+    { $set: { doctorSignature } },
+    { new: true, runValidators: true }
+  ).lean();
+  if (!user) throw Object.assign(new Error("User tidak ditemukan"), { status: 404 });
+  return { _id: user._id.toString(), doctorSignature: user.doctorSignature };
 }
 
 export async function seedDefaultUsers() {

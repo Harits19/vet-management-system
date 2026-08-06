@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Form, Select, Input, DatePicker, Typography, Space, Button, Alert } from "antd";
+import { Card, Form, Select, Input, DatePicker, Typography, Space, Button, Alert, Radio, Checkbox } from "antd";
 import { ArrowLeft, Save } from "lucide-react";
 import { apiFetch, useAuth } from "../../../context/auth";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
@@ -28,6 +28,9 @@ export default function CreateLetterPage() {
   const [pets, setPets] = useState<PetOpt[]>([]);
   const [signature, setSignature] = useState<string | null>(null);
   const [doctorSignature, setDoctorSignature] = useState<string | null>(null);
+  const [savedDoctorSig, setSavedDoctorSig] = useState<string | undefined>(user?.doctorSignature);
+  const [useSavedDoctorSig, setUseSavedDoctorSig] = useState(true);
+  const [saveDoctorSig, setSaveDoctorSig] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const letterType = Form.useWatch("letterType", form);
   const petId = Form.useWatch("petId", form);
@@ -53,12 +56,26 @@ export default function CreateLetterPage() {
     if (user?.name) form.setFieldValue("doctorSignedName", user.name);
   }, [user?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sinkronkan tanda tangan tersimpan (user bisa baru selesai load / baru disimpan)
+  useEffect(() => {
+    if (user?.doctorSignature) setSavedDoctorSig(user.doctorSignature);
+  }, [user?.doctorSignature]);
+
   const handleSubmit = async () => {
     if (!signature) { msg.warning("Pemilik harus menandatangani dulu"); return; }
-    if (!doctorSignature) { msg.warning("Dokter harus menandatangani dulu"); return; }
+    const finalDoctorSig = savedDoctorSig && useSavedDoctorSig ? savedDoctorSig : doctorSignature;
+    if (!finalDoctorSig) { msg.warning("Dokter harus menandatangani dulu"); return; }
     try {
       const values = await form.validateFields();
       setSubmitting(true);
+      if (saveDoctorSig && doctorSignature) {
+        await apiFetch("/api/auth/me/signature", {
+          method: "PUT",
+          body: JSON.stringify({ doctorSignature }),
+        });
+        setSavedDoctorSig(doctorSignature);
+        setUseSavedDoctorSig(true);
+      }
       const res = await apiFetch<{ data: { _id: string } }>("/api/letters", {
         method: "POST",
         body: JSON.stringify({
@@ -70,7 +87,7 @@ export default function CreateLetterPage() {
           ownerSignedName: values.ownerSignedName || undefined,
           ownerSignature: signature,
           doctorSignedName: values.doctorSignedName || undefined,
-          doctorSignature: doctorSignature,
+          doctorSignature: finalDoctorSig,
         }),
       });
       msg.success("Surat dibuat");
@@ -139,9 +156,37 @@ export default function CreateLetterPage() {
           </Form.Item>
 
           <Form.Item label="Tanda Tangan Dokter" required style={{ marginTop: 24 }}>
-            <SignaturePad onChange={(d) => setDoctorSignature(d)} />
+            {savedDoctorSig && (
+              <div style={{ marginBottom: 8 }}>
+                <Radio.Group value={useSavedDoctorSig} onChange={(e) => setUseSavedDoctorSig(e.target.value)}>
+                  <Radio value={true}>Pakai tanda tangan tersimpan</Radio>
+                  <Radio value={false}>Gambar baru</Radio>
+                </Radio.Group>
+                {useSavedDoctorSig && (
+                  <img
+                    src={savedDoctorSig}
+                    alt="Tanda tangan dokter tersimpan"
+                    style={{ display: "block", marginTop: 8, height: 100, border: "1px solid #d9d9d9", borderRadius: 8, background: "#fff", padding: 8 }}
+                  />
+                )}
+              </div>
+            )}
+            {(!savedDoctorSig || !useSavedDoctorSig) && (
+              <>
+                <SignaturePad onChange={(d) => setDoctorSignature(d)} />
+                <Checkbox
+                  checked={saveDoctorSig}
+                  onChange={(e) => setSaveDoctorSig(e.target.checked)}
+                  style={{ marginTop: 8 }}
+                >
+                  Simpan tanda tangan ini untuk surat berikutnya
+                </Checkbox>
+              </>
+            )}
             <Text type="secondary" style={{ display: "block", marginTop: 8 }}>
-              Dokter yang membuat surat menandatangani di atas (mouse / jari).
+              {savedDoctorSig && useSavedDoctorSig
+                ? "Tanda tangan tersimpan akan dipakai pada surat ini."
+                : "Dokter yang membuat surat menandatangani di atas (mouse / jari)."}
             </Text>
           </Form.Item>
 

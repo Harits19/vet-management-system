@@ -3,7 +3,9 @@ import { IUser, type UserRole } from "@vet/shared";
 
 export const UserKey = "User";
 
-export interface IUserDoc extends Omit<IUser, "_id" | "createdAt" | "updatedAt">, Document {}
+export interface IUserDoc extends Omit<IUser, "_id" | "createdAt" | "updatedAt">, Document {
+  doctorSignature?: string; // tanda tangan digital dokter (data URL PNG) — dipakai ulang saat menandatangani surat
+}
 
 const UserSchema = new Schema<IUserDoc>(
   {
@@ -13,6 +15,7 @@ const UserSchema = new Schema<IUserDoc>(
     password: { type: String, required: true },
     role: { type: String, enum: ["superadmin", "admin", "cashier", "doctor"], default: "cashier" },
     isActive: { type: Boolean, default: true },
+    doctorSignature: { type: String },
   },
   { timestamps: true, versionKey: false }
 );

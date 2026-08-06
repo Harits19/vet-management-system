@@ -81,6 +81,9 @@ export async function dashboard(req: AuthRequest, res: Response, next: NextFunct
     const data = await getDashboardSummary({
       diagnosesPage: Number(req.query.diagnosesPage) || 1,
       customersPage: Number(req.query.customersPage) || 1,
+      patientsYear: req.query.patientsYear as string | undefined,
+      patientsMonth: req.query.patientsMonth as string | undefined,
+      patientsDate: req.query.patientsDate as string | undefined,
     });
     res.json({ success: true, data });
   } catch (err) { next(err); }

@@ -403,16 +403,37 @@ export async function payTransaction(id: string, input: { paidAmount: number; pa
 // ──────────────────────────────────────────
 // Dashboard
 // ──────────────────────────────────────────
-export async function getDashboardSummary(opts: { diagnosesPage?: number; customersPage?: number } = {}) {
+export async function getDashboardSummary(opts: {
+  diagnosesPage?: number;
+  customersPage?: number;
+  patientsYear?: string;  // "YYYY" — tahun yang dipilih (default tahun ini)
+  patientsMonth?: string; // "YYYY-MM" — bulan yang dipilih (default bulan ini)
+  patientsDate?: string;  // "YYYY-MM-DD" — tanggal yang dipilih (default hari ini)
+} = {}) {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(startOfDay);
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
   const diagnosesPage = Math.max(1, opts.diagnosesPage ?? 1);
   const customersPage = Math.max(1, opts.customersPage ?? 1);
   const pageSize = 10;
+
+  // Range pasien (tahun/bulan/tanggal) — bisa dipilih lewat query param, default hari ini
+  const py = Number(opts.patientsYear) || now.getFullYear();
+  const pmParts = (opts.patientsMonth || "").split("-").map(Number);
+  const pmYear = pmParts[0] || py;
+  const pmMonth = pmParts.length > 1 ? pmParts[1] - 1 : now.getMonth();
+  const pdParts = (opts.patientsDate || "").split("-").map(Number);
+  const pdYear = pdParts[0] || now.getFullYear();
+  const pdMonth = pdParts.length > 1 ? pdParts[1] - 1 : now.getMonth();
+  const pdDay = pdParts.length > 2 ? pdParts[2] : now.getDate();
+  const patientsStartOfYear = new Date(py, 0, 1);
+  const patientsStartOfNextYear = new Date(py + 1, 0, 1);
+  const patientsStartOfMonth = new Date(pmYear, pmMonth, 1);
+  const patientsStartOfNextMonth = new Date(pmYear, pmMonth + 1, 1);
+  const patientsStartOfDay = new Date(pdYear, pdMonth, pdDay);
+  const patientsStartOfNextDay = new Date(pdYear, pdMonth, pdDay + 1);
 
   // List Diagnosa — frekuensi diagnosis dari rekam medis (buang nilai sampah), pagination
   const diagnosesAgg = (async () => {
@@ -481,11 +502,11 @@ export async function getDashboardSummary(opts: { diagnosesPage?: number; custom
       { $match: { type: "vet", timestamp: { $gte: startOfMonth } } },
       { $group: { _id: null, total: { $sum: "$summary.total" }, count: { $sum: 1 } } },
     ]),
-    // Total Pasien — hewan terdaftar (isActive) sejak awal tahun / bulan / hari
+    // Total Pasien — hewan terdaftar (isActive) pada tahun / bulan / tanggal terpilih
     Promise.all([
-      PetModel.countDocuments({ isActive: true, createdAt: { $gte: startOfYear } }),
-      PetModel.countDocuments({ isActive: true, createdAt: { $gte: startOfMonth } }),
-      PetModel.countDocuments({ isActive: true, createdAt: { $gte: startOfDay } }),
+      PetModel.countDocuments({ isActive: true, createdAt: { $gte: patientsStartOfYear, $lt: patientsStartOfNextYear } }),
+      PetModel.countDocuments({ isActive: true, createdAt: { $gte: patientsStartOfMonth, $lt: patientsStartOfNextMonth } }),
+      PetModel.countDocuments({ isActive: true, createdAt: { $gte: patientsStartOfDay, $lt: patientsStartOfNextDay } }),
     ]),
     // Low stock 3 grup: Obat (medicine) | Petshop (good + goodType petshop) | Barang Habis Pakai (good lainnya)
     // Catatan: stok kosong/tidak diisi (= 0) juga termasuk menipis

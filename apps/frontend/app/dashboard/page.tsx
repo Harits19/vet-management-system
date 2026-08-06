@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Row, Col, Statistic, Table, Typography, Tag, Tabs } from "antd";
+import { Card, Row, Col, Statistic, Table, Typography, Tag, Tabs, Space, DatePicker } from "antd";
 import { apiFetch } from "../context/auth";
+import dayjs from "dayjs";
 
 const { Title } = Typography;
 
@@ -42,17 +43,26 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [diagnosesPage, setDiagnosesPage] = useState(1);
   const [customersPage, setCustomersPage] = useState(1);
+  const [patientsYear, setPatientsYear] = useState(dayjs());
+  const [patientsMonth, setPatientsMonth] = useState(dayjs());
+  const [patientsDate, setPatientsDate] = useState(dayjs());
 
-  const fetchData = (dp: number, cp: number) => {
+  const fetchData = (dp: number, cp: number, py: dayjs.Dayjs, pm: dayjs.Dayjs, pd: dayjs.Dayjs) => {
     setLoading(true);
-    const params = new URLSearchParams({ diagnosesPage: String(dp), customersPage: String(cp) });
+    const params = new URLSearchParams({
+      diagnosesPage: String(dp),
+      customersPage: String(cp),
+      patientsYear: py.format("YYYY"),
+      patientsMonth: pm.format("YYYY-MM"),
+      patientsDate: pd.format("YYYY-MM-DD"),
+    });
     apiFetch<{ data: DashboardData }>(`/api/dashboard/summary?${params}`)
       .then((res) => setData(res.data))
       .catch(console.error)
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchData(1, 1); }, []);
+  useEffect(() => { fetchData(1, 1, patientsYear, patientsMonth, patientsDate); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stockTabs = [
     {
@@ -96,17 +106,43 @@ export default function DashboardPage() {
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} sm={8}>
           <Card loading={loading}>
-            <Statistic title="Pasien Tahun Ini" value={data?.patients?.year ?? 0} suffix="ekor" />
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <DatePicker
+                picker="year"
+                value={patientsYear}
+                allowClear={false}
+                style={{ width: "100%" }}
+                onChange={(d) => { if (d) { setPatientsYear(d); fetchData(diagnosesPage, customersPage, d, patientsMonth, patientsDate); } }}
+              />
+              <Statistic title={`Pasien Tahun ${patientsYear.format("YYYY")}`} value={data?.patients?.year ?? 0} suffix="ekor" />
+            </Space>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card loading={loading}>
-            <Statistic title="Pasien Bulan Ini" value={data?.patients?.month ?? 0} suffix="ekor" />
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <DatePicker
+                picker="month"
+                value={patientsMonth}
+                allowClear={false}
+                style={{ width: "100%" }}
+                onChange={(d) => { if (d) { setPatientsMonth(d); fetchData(diagnosesPage, customersPage, patientsYear, d, patientsDate); } }}
+              />
+              <Statistic title={`Pasien Bulan ${patientsMonth.format("MMMM YYYY")}`} value={data?.patients?.month ?? 0} suffix="ekor" />
+            </Space>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card loading={loading}>
-            <Statistic title="Pasien Hari Ini" value={data?.patients?.day ?? 0} suffix="ekor" />
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <DatePicker
+                value={patientsDate}
+                allowClear={false}
+                style={{ width: "100%" }}
+                onChange={(d) => { if (d) { setPatientsDate(d); fetchData(diagnosesPage, customersPage, patientsYear, patientsMonth, d); } }}
+              />
+              <Statistic title={`Pasien ${patientsDate.format("DD/MM/YYYY")}`} value={data?.patients?.day ?? 0} suffix="ekor" />
+            </Space>
           </Card>
         </Col>
       </Row>
@@ -131,7 +167,7 @@ export default function DashboardPage() {
                 pageSize: 10,
                 total: data?.diagnoses?.total ?? 0,
                 showSizeChanger: false,
-                onChange: (p) => { setDiagnosesPage(p); fetchData(p, customersPage); },
+                onChange: (p) => { setDiagnosesPage(p); fetchData(p, customersPage, patientsYear, patientsMonth, patientsDate); },
               }}
             />
           </Card>
@@ -152,7 +188,7 @@ export default function DashboardPage() {
                 pageSize: 10,
                 total: data?.customers?.total ?? 0,
                 showSizeChanger: false,
-                onChange: (p) => { setCustomersPage(p); fetchData(diagnosesPage, p); },
+                onChange: (p) => { setCustomersPage(p); fetchData(diagnosesPage, p, patientsYear, patientsMonth, patientsDate); },
               }}
             />
           </Card>

@@ -3,11 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/auth";
-import { useTheme } from "../context/theme";
-import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space, Grid, Drawer, Tooltip, theme as antdTheme } from "antd";
+import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space, Grid, Drawer, theme as antdTheme } from "antd";
 import {
   Users, Dog, Package, LayoutDashboard, PawPrint, User as UserIcon,
-  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature, Menu as MenuIcon, Sun, Moon
+  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature, Menu as MenuIcon
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -49,7 +48,6 @@ function SidebarMenu({ role, onNavigate }: { role: string; onNavigate?: () => vo
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
   const { token } = antdTheme.useToken();
   const router = useRouter();
   const screens = useBreakpoint();
@@ -70,17 +68,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Text strong>Vet System</Text>
       </Space>
     </div>
-  );
-
-  const themeToggle = (
-    <Tooltip title={isDark ? "Mode terang" : "Mode gelap"}>
-      <Button
-        type="text"
-        aria-label="Ganti tema"
-        icon={isDark ? <Sun size={18} /> : <Moon size={18} />}
-        onClick={toggleTheme}
-      />
-    </Tooltip>
   );
 
   return (
@@ -107,7 +94,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {!isDesktop && (
             <Button type="text" icon={<MenuIcon size={18} />} onClick={() => setDrawerOpen(true)} style={{ marginRight: "auto" }} aria-label="Buka menu" />
           )}
-          {themeToggle}
           <Dropdown menu={{
             items: [
               { key: "userinfo", label: `${user.name} (${user.role})`, disabled: true },

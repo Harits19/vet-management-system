@@ -300,14 +300,21 @@ export default function NewConsultationPage() {
                     <Space direction="vertical" style={{ width: "100%" }}>
                       {mhRecords.slice(0, 5).map((r: any) => (
                         <Row key={r._id} gutter={8} align="middle">
-                          <Col span={5}><Text type="secondary">{dayjs(r.visitDate).format("DD/MM/YY")}</Text></Col>
-                          <Col span={11}>
+                          <Col span={4}><Text type="secondary">{dayjs(r.visitDate).format("DD/MM/YY")}</Text></Col>
+                          <Col span={8}>
                             <Text ellipsis style={{ display: "block" }}>{r.diagnosis}</Text>
                             {r.complaint && (
                               <Text type="secondary" ellipsis style={{ display: "block", fontSize: 12 }}>
                                 {r.complaint}
                               </Text>
                             )}
+                          </Col>
+                          <Col span={4}>
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              {r.weight !== undefined || r.temperature !== undefined
+                                ? `${r.weight ?? "-"} kg / ${r.temperature ?? "-"} °C`
+                                : "-"}
+                            </Text>
                           </Col>
                           <Col span={4}><Text type="secondary">{r.treatments?.length || 0} tnd, {r.prescriptions?.length || 0} rsp, {r.goods?.length || 0} brg</Text></Col>
                           <Col span={4} style={{ textAlign: "right" }}>

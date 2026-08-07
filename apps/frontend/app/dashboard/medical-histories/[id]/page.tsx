@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Descriptions, Table, Typography, Tag, Timeline } from "antd";
+import { Card, Descriptions, Table, Typography, Tag, Timeline, Button, Space } from "antd";
+import { ArrowLeft, Printer } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { computePetAge } from "@vet/shared";
 
@@ -49,6 +50,7 @@ interface HistoryItem {
 
 export default function MedicalHistoryDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const [record, setRecord] = useState<MHDetail | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -87,7 +89,23 @@ export default function MedicalHistoryDetailPage() {
 
   return (
     <div>
+      <Space style={{ marginBottom: 16 }} className="no-print">
+        <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>Kembali</Button>
+        <Button type="primary" icon={<Printer size={16} />} onClick={() => window.print()}>Cetak / Print</Button>
+      </Space>
       <Title level={4}>Detail Rekam Medis</Title>
+
+      <style>{`
+        @media print {
+          html, body { height: auto !important; }
+          .ant-layout-sider, .ant-layout-header { display: none !important; }
+          .ant-layout { background: #fff !important; min-height: 0 !important; height: auto !important; }
+          .ant-layout-content { padding: 0 !important; margin: 0 !important; min-height: 0 !important; }
+          .no-print { display: none !important; }
+          .ant-card { box-shadow: none !important; }
+        }
+      `}</style>
+
       <Card loading={loading} title="Informasi Pasien">
         <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
           <Descriptions.Item label="Nama Hewan">{pet?.name || "-"}</Descriptions.Item>

@@ -33,6 +33,19 @@ app.use("/api/letters", letterRoutes);
 // Health check
 app.get("/api/health", (_req, res) => res.json({ success: true, message: "OK" }));
 
+// Data toko/klinik untuk kop surat & rekam medis (publik, dari .env)
+app.get("/api/config/store", (_req, res) => {
+  res.json({
+    success: true,
+    data: {
+      name: env.STORE_NAME,
+      address: env.STORE_ADDRESS,
+      whatsapp: env.STORE_WHATSAPP,
+      phone: env.STORE_PHONE,
+    },
+  });
+});
+
 // Error handler
 app.use(errorHandler);
 

@@ -26,6 +26,11 @@ const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",
   DEFAULT_USER_PASSWORD: process.env.DEFAULT_USER_PASSWORD || "password123",
   ENABLE_SEED: process.env.ENABLE_SEED === "true",
+  // Data toko/klinik — dipakai kop surat & rekam medis (diambil frontend via GET /api/config/store)
+  STORE_NAME: process.env.STORE_NAME || "Wedi Animal Care",
+  STORE_ADDRESS: process.env.STORE_ADDRESS || "",
+  STORE_WHATSAPP: process.env.STORE_WHATSAPP || "",
+  STORE_PHONE: process.env.STORE_PHONE || "",
 };
 
 export default env;

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, Descriptions, Table, Typography, Tag, Timeline, Button, Space } from "antd";
 import { ArrowLeft, Printer } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
+import { useStoreInfo } from "../../../hooks/useStoreInfo";
 import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { computePetAge } from "@vet/shared";
@@ -93,6 +94,7 @@ interface HistoryItem {
 export default function MedicalHistoryDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const store = useStoreInfo();
   const id = params.id as string;
   const [record, setRecord] = useState<MHDetail | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -328,8 +330,13 @@ export default function MedicalHistoryDetailPage() {
       >
         {/* Kop surat */}
         <div style={{ textAlign: "center", borderBottom: "3px double #000", paddingBottom: 12, marginBottom: 20 }}>
-          <div style={{ fontSize: 22, fontWeight: "bold", letterSpacing: 2 }}>WEDI ANIMAL CARE</div>
+          <div style={{ fontSize: 22, fontWeight: "bold", letterSpacing: 2 }}>{store?.name || "WEDI ANIMAL CARE"}</div>
           <div style={{ fontSize: 12 }}>Klinik Hewan — Praktek Dokter Hewan</div>
+          {store && (store.address || store.whatsapp || store.phone) && (
+            <div style={{ fontSize: 11, marginTop: 4 }}>
+              {[store.address, store.whatsapp ? `WA: ${store.whatsapp}` : "", store.phone ? `Telp: ${store.phone}` : ""].filter(Boolean).join(" · ")}
+            </div>
+          )}
         </div>
 
         {/* Judul dokumen */}

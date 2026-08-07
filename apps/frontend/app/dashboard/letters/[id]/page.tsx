@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button, Space, Typography, Skeleton, Tag, Card } from "antd";
 import { ArrowLeft, Printer } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
+import { useStoreInfo } from "../../../hooks/useStoreInfo";
 import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { LETTER_TYPE_META, LETTER_BODY, letterTypeLabel, letterTypeColor } from "../constants";
@@ -52,6 +53,7 @@ export default function LetterDetailPage() {
   const router = useRouter();
   const [data, setData] = useState<LetterDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const store = useStoreInfo();
 
   useEffect(() => {
     apiFetch<{ data: LetterDetail }>(`/api/letters/${params.id}`)
@@ -130,11 +132,16 @@ export default function LetterDetailPage() {
             }}
           >
             <Title level={3} style={{ margin: 0, letterSpacing: 2, fontFamily: "inherit" }}>
-              WEDI ANIMAL CARE
+              {store?.name || "WEDI ANIMAL CARE"}
             </Title>
             <Text style={{ fontSize: 12, fontFamily: "inherit" }}>
               Klinik Hewan — Praktek Dokter Hewan
             </Text>
+            {store && (store.address || store.whatsapp || store.phone) && (
+              <Text style={{ fontSize: 11, fontFamily: "inherit", display: "block", marginTop: 4 }}>
+                {[store.address, store.whatsapp ? `WA: ${store.whatsapp}` : "", store.phone ? `Telp: ${store.phone}` : ""].filter(Boolean).join(" · ")}
+              </Text>
+            )}
           </div>
 
           <div style={{ textAlign: "center", marginBottom: 16 }}>

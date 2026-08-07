@@ -39,6 +39,10 @@ services:
       ENABLE_SEED: ${ENABLE_SEED:-true}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:-http://localhost:3002}
+      STORE_NAME: ${STORE_NAME:-Wedi Animal Care}
+      STORE_ADDRESS: ${STORE_ADDRESS:-}
+      STORE_WHATSAPP: ${STORE_WHATSAPP:-}
+      STORE_PHONE: ${STORE_PHONE:-}
     depends_on:
       - mongodb
 

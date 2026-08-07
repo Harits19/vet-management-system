@@ -90,6 +90,8 @@ export default function LetterDetailPage() {
       <style>{`
         @media print {
           html, body { height: auto !important; }
+          html { color-scheme: light !important; }
+          * { color: #000 !important; background-color: #fff !important; box-shadow: none !important; text-shadow: none !important; }
           .ant-layout-sider, .ant-layout-header { display: none !important; }
           .ant-layout { background: #fff !important; min-height: 0 !important; height: auto !important; }
           .ant-layout-content { padding: 0 !important; margin: 0 !important; min-height: 0 !important; }

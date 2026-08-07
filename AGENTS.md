@@ -31,6 +31,8 @@ Script root (`package.json`): `npm run dev` (predev + backend + frontend via con
   - `localhost` → dev native di mesin yang sama.
   - `43.157.243.138` → laptop dev yang menyambung ke DB produksi.
   - `mongodb` → otomatis di-set docker-compose untuk container backend; **nilai `MONGODB_HOST` di `.env` TIDAK dipakai docker**.
+- **Nilai .env yang mengandung spasi WAJIB dikutip** (`KEY="nilai dengan spasi"`) — `deploy.sh` me-`source` `.env` (`set -a; source .env`), tanpa kutip bash akan error "command not found" dan deploy berhenti.
+- `STORE_NAME/STORE_ADDRESS/STORE_WHATSAPP/STORE_PHONE` → data toko untuk kop surat & rekam medis (backend expose via `GET /api/config/store`, frontend pakai hook `useStoreInfo`).
 - `MONGO_PORT` hanya untuk bind port compose: `127.0.0.1:27017` (dev, localhost saja) / `0.0.0.0:27017` (prod, publik).
 - `predev` = `node mongo-init.js` — dual-mode: mongosh (via `docker-entrypoint-initdb.d`, jalan otomatis di volume mongo baru) / mongoose (via `npm run dev`). Idempotent; menjamin user aplikasi `vetapp` (role `dbOwner` di `vet-management`) ada.
 - Nilai prod di `.env`: `NODE_ENV=production`, `COOKIE_SECURE=true`, `FRONTEND_ORIGINS=https://wedi-animal-care.ahlabs.my.id`, `NEXT_PUBLIC_API_URL=https://wedi-animal-care.ahlabs.my.id`.

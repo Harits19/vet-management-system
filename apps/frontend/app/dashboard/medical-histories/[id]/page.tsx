@@ -14,6 +14,48 @@ function formatPrice(n: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
 }
 
+// ── Komponen dokumen cetak formal (kop surat, gaya seperti surat) ──
+const docCell = { padding: "6px 8px", border: "1px solid #000", verticalAlign: "top" as const };
+
+function DocSection({ title, rows }: { title: string; rows: [string, string][] }) {
+  if (rows.every(([, v]) => !v || v === "-")) return null;
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontWeight: "bold", marginBottom: 8 }}>{title}</div>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <tbody>
+          {rows.map(([label, value]) => (
+            <tr key={label}>
+              <td style={{ padding: "4px 12px 4px 0", width: 190, verticalAlign: "top" }}>{label}</td>
+              <td style={{ padding: "4px 0", width: 20, verticalAlign: "top" }}>:</td>
+              <td style={{ padding: "4px 0", verticalAlign: "top" }}>{value || "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function DocTable({ title, headers, rows }: { title: string; headers: string[]; rows: (string | number)[][] }) {
+  if (rows.length === 0) return null;
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontWeight: "bold", marginBottom: 8 }}>{title}</div>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>{headers.map((h) => <th key={h} style={{ ...docCell, textAlign: "left" }}>{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>{r.map((c, j) => <td key={j} style={docCell}>{c}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 interface MHDetail {
   _id: string;
   petId: {
@@ -87,15 +129,40 @@ export default function MedicalHistoryDetailPage() {
     return item?.value !== undefined ? `${item.value} ${item.unit || ""}`.trim() : "-";
   };
 
+  const infoRows: [string, string][] = [
+    ["Nama Hewan", pet?.name || "-"],
+    ["Jenis / Ras", `${pet?.kind || "-"}${pet?.breed ? ` / ${pet.breed}` : ""}`],
+    ["Warna Bulu", pet?.furColor || "-"],
+    ["Umur", petAge ? petAge.label : "-"],
+    ["Pemilik", pet?.customerId?.name || "-"],
+    ["Dokter", record.doctorId?.name || "-"],
+    ["Berat Badan", showExamValue("weight")],
+    ["Suhu Tubuh", showExamValue("temperature")],
+  ];
+
+  const soapRows: [string, string][] = [
+    ["S — Keluhan (Subjective)", record.soap?.subjective?.complaint || "-"],
+    ["O — Berat Badan", showExamValue("weight")],
+    ["O — Suhu Tubuh", showExamValue("temperature")],
+    ["O — Hasil Pemeriksaan Laboratorium", record.soap?.objective?.labResult || "-"],
+    ["A — Diagnosis Banding", record.soap?.assessment?.differentialDiagnosis || "-"],
+    ["A — Pemeriksaan Fisik (catatan)", record.soap?.assessment?.physicalExamNote || "-"],
+    ["P — Rencana Penanganan", record.soap?.plan?.treatmentPlan || "-"],
+    ["P — Catatan Dokter", record.soap?.plan?.doctorNotes || "-"],
+    ["P — Catatan untuk Pemilik", record.soap?.plan?.ownerNote || "-"],
+    ["P — Catatan untuk Paramedis", record.soap?.plan?.paramedicNote || "-"],
+  ];
+
   return (
     <div>
       <Space style={{ marginBottom: 16 }} className="no-print">
         <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>Kembali</Button>
         <Button type="primary" icon={<Printer size={16} />} onClick={() => window.print()}>Cetak / Print</Button>
       </Space>
-      <Title level={4}>Detail Rekam Medis</Title>
+      <Title level={4} className="no-print">Detail Rekam Medis</Title>
 
       <style>{`
+        .rm-doc { display: none; }
         @media print {
           html, body { height: auto !important; }
           html { color-scheme: light !important; }
@@ -104,9 +171,12 @@ export default function MedicalHistoryDetailPage() {
           .ant-layout { background: #fff !important; min-height: 0 !important; height: auto !important; }
           .ant-layout-content { padding: 0 !important; margin: 0 !important; min-height: 0 !important; }
           .no-print { display: none !important; }
+          .screen-only { display: none !important; }
+          .rm-doc { display: block !important; }
         }
       `}</style>
 
+      <div className="screen-only">
       <Card loading={loading} title="Informasi Pasien">
         <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
           <Descriptions.Item label="Nama Hewan">{pet?.name || "-"}</Descriptions.Item>
@@ -240,6 +310,76 @@ export default function MedicalHistoryDetailPage() {
           <Text type="secondary">Tidak ada barang</Text>
         )}
       </Card>
+      </div>
+
+      {/* ── Dokumen cetak formal (hanya tampil saat print) ── */}
+      <div
+        className="rm-doc"
+        style={{
+          maxWidth: 794,
+          margin: "0 auto",
+          background: "#fff",
+          padding: 40,
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          color: "#000",
+          fontSize: 14,
+          lineHeight: 1.7,
+        }}
+      >
+        {/* Kop surat */}
+        <div style={{ textAlign: "center", borderBottom: "3px double #000", paddingBottom: 12, marginBottom: 20 }}>
+          <div style={{ fontSize: 22, fontWeight: "bold", letterSpacing: 2 }}>WEDI ANIMAL CARE</div>
+          <div style={{ fontSize: 12 }}>Klinik Hewan — Praktek Dokter Hewan</div>
+        </div>
+
+        {/* Judul dokumen */}
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 16, fontWeight: "bold", textDecoration: "underline" }}>REKAM MEDIS</div>
+          <div style={{ fontSize: 12 }}>Tanggal: {dayjs(record.visitDate).format("DD/MM/YYYY HH:mm")}</div>
+        </div>
+
+        <DocSection title="DATA PASIEN" rows={infoRows} />
+        <DocSection title="ANAMNESA (SOAP)" rows={soapRows} />
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontWeight: "bold", marginBottom: 8 }}>DIAGNOSIS</div>
+          <div>{record.diagnosis || "-"}</div>
+        </div>
+
+        <DocTable
+          title="TINDAKAN (JASA)"
+          headers={["Nama Tindakan", "Jumlah", "Harga", "Subtotal", "Catatan"]}
+          rows={(record.treatments || []).map((t) => [t.name, t.quantity, formatPrice(t.price), formatPrice(t.price * t.quantity), t.notes || "-"])}
+        />
+
+        <DocTable
+          title="RESEP OBAT"
+          headers={["Nama Obat", "Jumlah", "Dosis", "Aturan Pakai", "Harga", "Subtotal", "Catatan"]}
+          rows={(record.prescriptions || []).map((p) => [p.name, p.quantity, p.dosage || "-", p.usage || "-", formatPrice(p.price), formatPrice(p.price * p.quantity), p.notes || "-"])}
+        />
+
+        <DocTable
+          title="BARANG (NON-OBAT)"
+          headers={["Nama Barang", "Jumlah", "Harga", "Subtotal", "Catatan"]}
+          rows={((record as any).goods || []).map((g: any) => [g.name, g.quantity, formatPrice(g.price), formatPrice(g.price * g.quantity), g.notes || "-"])}
+        />
+
+        {/* Tanda tangan */}
+        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginTop: 32 }}>
+          <div style={{ textAlign: "center", width: 250 }}>
+            <div style={{ fontSize: 12 }}>Pemilik / Penanggung Jawab,</div>
+            <div style={{ height: 80 }} />
+            <div style={{ borderBottom: "1px solid #000", width: 180, margin: "0 auto" }} />
+            <div>({pet?.customerId?.name || "-"})</div>
+          </div>
+          <div style={{ textAlign: "center", width: 250 }}>
+            <div style={{ fontSize: 12 }}>Dokter Hewan,</div>
+            <div style={{ height: 80 }} />
+            <div style={{ borderBottom: "1px solid #000", width: 180, margin: "0 auto" }} />
+            <div>({record.doctorId?.name || "-"})</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

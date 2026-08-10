@@ -82,8 +82,15 @@ export async function listMineHandler(req: AuthRequest, res: Response, next: Nex
 
 export async function listAllHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const date = typeof req.query.date === "string" ? req.query.date : undefined;
-    res.json({ success: true, data: await listAll(date) });
+    res.json({
+      success: true,
+      data: await listAll({
+        date: typeof req.query.date === "string" ? req.query.date : undefined,
+        method: typeof req.query.method === "string" ? req.query.method : undefined,
+        type: typeof req.query.type === "string" ? req.query.type : undefined,
+        search: typeof req.query.search === "string" ? req.query.search : undefined,
+      }),
+    });
   } catch (err) {
     next(err);
   }

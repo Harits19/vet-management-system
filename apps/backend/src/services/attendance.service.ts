@@ -242,9 +242,18 @@ export async function listMine(userId: string, date?: string) {
   return AttendanceModel.find(filter).sort({ timestamp: -1 }).limit(50).lean();
 }
 
-export async function listAll(date?: string) {
-  const match: Record<string, string> = {};
-  if (date) match.date = date;
+export interface ListAllFilter {
+  date?: string;
+  method?: string;
+  type?: string;
+  search?: string;
+}
+
+export async function listAll(opts: ListAllFilter = {}) {
+  const match: Record<string, unknown> = {};
+  if (opts.date) match.date = opts.date;
+  if (opts.method === "face" || opts.method === "qr") match.method = opts.method;
+  if (opts.type === "in" || opts.type === "out") match.type = opts.type;
 
   const pipeline: PipelineStage[] = [
     { $match: match },
@@ -258,21 +267,26 @@ export async function listAll(date?: string) {
       },
     },
     { $unwind: { path: "$u", preserveNullAndEmptyArrays: true } },
-    {
-      $project: {
-        _id: 1,
-        method: 1,
-        type: 1,
-        timestamp: 1,
-        date: 1,
-        location: 1,
-        faceDistance: 1,
-        livenessPassed: 1,
-        userName: "$u.name",
-        userRole: "$u.role",
-      },
-    },
   ];
+
+  if (opts.search) {
+    pipeline.push({ $match: { "u.name": { $regex: opts.search, $options: "i" } } });
+  }
+
+  pipeline.push({
+    $project: {
+      _id: 1,
+      method: 1,
+      type: 1,
+      timestamp: 1,
+      date: 1,
+      location: 1,
+      faceDistance: 1,
+      livenessPassed: 1,
+      userName: "$u.name",
+      userRole: "$u.role",
+    },
+  });
 
   return AttendanceModel.aggregate(pipeline);
 }

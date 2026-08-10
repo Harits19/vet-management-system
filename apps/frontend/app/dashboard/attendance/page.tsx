@@ -99,10 +99,10 @@ export default function AttendancePage() {
     }
   }, [loadingData, status, config, router]);
 
-  // Minta lokasi GPS — DIPANGGIL DARI TOMBOL (user gesture), supaya prompt izin lokasi
-  // muncul andal di semua browser (termasuk iOS Safari yang mengabaikan request tanpa gesture).
-  const requestLocation = useCallback(() => {
-    if (!config?.locationEnabled) return;
+  // Minta lokasi GPS OTOMATIS begitu config siap (dipakai wajah & QR saat OFFICE_LAT/LNG terisi).
+  // Kalau gagal/deny → user bisa "Deteksi Ulang Lokasi" (set idle → effect jalan lagi).
+  useEffect(() => {
+    if (!config?.locationEnabled || locState !== "idle") return;
     if (!navigator.geolocation) {
       // http://IP (bukan localhost) = non-secure context → geolocation TIDAK tersedia
       setLoc(null);
@@ -135,7 +135,7 @@ export default function AttendancePage() {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
-  }, [config]);
+  }, [config, locState]);
 
   const locationOk = !config?.locationEnabled || locState === "ok";
 
@@ -335,18 +335,6 @@ export default function AttendancePage() {
       {config.locationEnabled && (
         <Card size="small">
           <Space direction="vertical" size={8}>
-            {locState === "idle" && (
-              <Space direction="vertical" size={8}>
-                <Alert
-                  type="warning"
-                  showIcon
-                  message="Lokasi dibutuhkan untuk absen. Klik tombol untuk mengaktifkan izin lokasi browser."
-                />
-                <Button type="primary" onClick={requestLocation}>
-                  Aktifkan Lokasi
-                </Button>
-              </Space>
-            )}
             {locState === "getting" && <Text type="secondary">Mendeteksi lokasi GPS...</Text>}
             {locState === "ok" && loc && (
               <Text type="success">
@@ -366,7 +354,14 @@ export default function AttendancePage() {
                       : "Lokasi tidak terdeteksi — aktifkan GPS & izin lokasi browser, lalu coba lagi.")
                   }
                 />
-                <Button size="small" onClick={requestLocation}>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setLoc(null);
+                    setLocErrorMsg(null);
+                    setLocState("idle"); // effect auto re-run → scan ulang
+                  }}
+                >
                   Deteksi Ulang Lokasi
                 </Button>
               </Space>

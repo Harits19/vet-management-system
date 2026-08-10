@@ -29,6 +29,7 @@ app.use("/api/medical-histories", medicalHistoryRoutes);
 app.use("/api/sync", syncRoutes);
 app.use("/api/diagnosis-templates", diagnosisTemplateRoutes);
 app.use("/api/letters", letterRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
 // Health check

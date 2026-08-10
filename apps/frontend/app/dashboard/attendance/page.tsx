@@ -351,7 +351,7 @@ export default function AttendancePage() {
         )}
       </Card>
 
-      {["admin", "superadmin"].includes(user.role) && config.qrEnabled && (
+      {["superadmin"].includes(user.role) && config.qrEnabled && (
         <Card size="small">
           <Space>
             <Text type="secondary">QR statis untuk dipajang di tempat absen:</Text>

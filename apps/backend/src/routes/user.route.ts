@@ -4,8 +4,8 @@ import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 router.use(authenticate);
-// Manajemen akun login — hanya superadmin & admin
-router.use(authorize("superadmin", "admin"));
+// Manajemen akun login — hanya superadmin
+router.use(authorize("superadmin"));
 
 router.get("/", getAll);
 router.get("/:id", getOne);

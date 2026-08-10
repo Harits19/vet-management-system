@@ -7,8 +7,8 @@ router.use(authenticate);
 
 router.get("/", getAll);
 router.get("/:id", getOne);
-router.post("/", authorize("admin", "superadmin", "doctor"), create);
-router.put("/:id", authorize("admin", "superadmin", "doctor"), update);
-router.delete("/:id", authorize("admin", "superadmin", "doctor"), remove);
+router.post("/", authorize("superadmin", "doctor"), create);
+router.put("/:id", authorize("superadmin", "doctor"), update);
+router.delete("/:id", authorize("superadmin", "doctor"), remove);
 
 export default router;

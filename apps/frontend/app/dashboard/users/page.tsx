@@ -15,7 +15,7 @@ interface UserRecord {
   name: string;
   username: string;
   email: string;
-  role: "superadmin" | "admin" | "cashier" | "doctor";
+  role: "superadmin" | "cashier" | "doctor";
   isActive: boolean;
   doctorSignature?: string;
   createdAt: string;
@@ -23,14 +23,12 @@ interface UserRecord {
 
 const ROLE_LABELS: Record<UserRecord["role"], string> = {
   superadmin: "Super Admin",
-  admin: "Admin",
   cashier: "Kasir",
   doctor: "Dokter",
 };
 
 const ROLE_COLORS: Record<UserRecord["role"], string> = {
   superadmin: "red",
-  admin: "orange",
   cashier: "blue",
   doctor: "green",
 };
@@ -175,7 +173,6 @@ export default function UsersPage() {
           <Form.Item name="role" label="Role" rules={[{ required: true, message: "Pilih role" }]}>
             <Select options={[
               { value: "superadmin", label: "Super Admin" },
-              { value: "admin", label: "Admin" },
               { value: "cashier", label: "Kasir" },
               { value: "doctor", label: "Dokter" },
             ]} />

@@ -9,7 +9,7 @@ router.get("/", getAll);
 router.get("/:id", getOne);
 router.post("/shop", createShop);
 router.post("/vet", createVet);
-router.post("/:id/pay", authorize("superadmin", "admin", "cashier", "doctor"), pay);
-router.delete("/:id", authorize("superadmin", 'admin', "doctor"), remove);
+router.post("/:id/pay", authorize("superadmin", "cashier", "doctor"), pay);
+router.delete("/:id", authorize("superadmin", "doctor"), remove);
 
 export default router;

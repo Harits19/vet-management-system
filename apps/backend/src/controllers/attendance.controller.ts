@@ -8,6 +8,7 @@ import {
   listMine,
   listAll,
   generateQrPng,
+  regenerateQrSecret,
 } from "../services/attendance.service.js";
 
 export function getConfig(_req: AuthRequest, res: Response) {
@@ -57,6 +58,14 @@ export async function getQrHandler(_req: AuthRequest, res: Response, next: NextF
     res.setHeader("Content-Type", "image/png");
     res.setHeader("Cache-Control", "no-store");
     res.send(png);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function regenerateQrHandler(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    res.json({ success: true, data: await regenerateQrSecret(req.user!.userId) });
   } catch (err) {
     next(err);
   }

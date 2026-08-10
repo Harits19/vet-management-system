@@ -8,3 +8,4 @@ export { TransactionModel } from "./transaction.model.js";
 export { DiagnosisTemplateModel } from "./diagnosis-template.model.js";
 export { LetterModel } from "./letter.model.js";
 export { AttendanceModel } from "./attendance.model.js";
+export { AttendanceQrModel } from "./attendance-qr.model.js";

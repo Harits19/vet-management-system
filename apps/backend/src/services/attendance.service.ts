@@ -1,10 +1,12 @@
 import type { PipelineStage } from "mongoose";
-import QRCode from "qrcode";
-import { UserModel, AttendanceModel } from "../models/index.js";
+import { randomBytes } from "node:crypto";
+import { toBuffer as qrCodeToBuffer } from "qrcode";
+import { UserModel, AttendanceModel, AttendanceQrModel } from "../models/index.js";
 import env from "../config/env.js";
 
 export const FACE_DIM = 128;
 export const QR_PREFIX = "VET-ABSEN:";
+export const QR_CONFIG_KEY = "attendance-qr";
 
 export type AttendanceMode = "face" | "qr" | "both";
 export type AttendanceMethod = "face" | "qr";
@@ -59,13 +61,30 @@ export function localDateString(d: Date): string {
   return new Date(d.getTime() + 7 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
+/** Secret QR aktif: dari DB (bisa di-regenerate superadmin); fallback env untuk instalasi baru. */
+export async function getQrSecret(): Promise<string> {
+  const doc = await AttendanceQrModel.findOne({ key: QR_CONFIG_KEY }).lean();
+  return doc?.secret || env.ATTENDANCE_QR_SECRET;
+}
+
 /** Isi QR statis — dipajang di tempat absen, di-scan karyawan untuk absen. */
-export function qrContent(): string {
-  return `${QR_PREFIX}${env.ATTENDANCE_QR_SECRET}`;
+export async function qrContent(): Promise<string> {
+  return `${QR_PREFIX}${await getQrSecret()}`;
 }
 
 export async function generateQrPng(): Promise<Buffer> {
-  return QRCode.toBuffer(qrContent(), { type: "png", width: 512, margin: 2, errorCorrectionLevel: "M" });
+  return qrCodeToBuffer(await qrContent(), { type: "png", width: 512, margin: 2, errorCorrectionLevel: "M" });
+}
+
+/** Rotasi secret QR (superadmin only — guard di route). QR lama langsung mati. */
+export async function regenerateQrSecret(userId: string) {
+  const secret = randomBytes(32).toString("hex");
+  await AttendanceQrModel.findOneAndUpdate(
+    { key: QR_CONFIG_KEY },
+    { $set: { secret, updatedBy: userId } },
+    { upsert: true, new: true, runValidators: true }
+  );
+  return { message: "QR baru berhasil dibuat — QR lama tidak berlaku lagi" };
 }
 
 function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -178,7 +197,7 @@ export async function checkIn(userId: string, role: string, input: CheckInInput)
     livenessPassed = true;
   } else {
     // QR statis: secret dari QR + posisi GPS device (lokasi dicek kalau OFFICE_LAT/LNG terisi)
-    if (typeof input.qrSecret !== "string" || input.qrSecret !== qrContent()) {
+    if (typeof input.qrSecret !== "string" || input.qrSecret !== (await qrContent())) {
       throw Object.assign(new Error("QR tidak valid untuk tempat ini"), { status: 400 });
     }
   }

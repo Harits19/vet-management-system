@@ -30,7 +30,7 @@ function SidebarMenu({ role, onNavigate }: { role: string; onNavigate?: () => vo
     { key: "/dashboard/transactions", icon: <ShoppingCart size={18} />, label: <Link href="/dashboard/transactions">Transaksi</Link> },
   ];
 
-  if (["doctor", "superadmin", "admin"].includes(role)) {
+  if (["doctor", "superadmin"].includes(role)) {
     items.splice(3, 0,
       { key: "/dashboard/consultations", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/consultations/new">Pasien Lama</Link> },
       { key: "/dashboard/medical-histories", icon: <FileText size={18} />, label: <Link href="/dashboard/medical-histories">Rekam Medis</Link> },
@@ -44,8 +44,8 @@ function SidebarMenu({ role, onNavigate }: { role: string; onNavigate?: () => vo
     items.push({ key: "/dashboard/attendance", icon: <Clock size={18} />, label: <Link href="/dashboard/attendance">Absensi</Link> });
   }
 
-  if (["superadmin", "admin"].includes(role)) {
-    // QR absensi: superadmin tidak ikut absen, tapi tetap bisa cetak QR untuk ditempel di tempat
+  if (["superadmin"].includes(role)) {
+    // QR absensi: superadmin tidak ikut absen, tapi bisa cetak & generate ulang QR
     items.push({ key: "/dashboard/attendance/qr", icon: <QrCode size={18} />, label: <Link href="/dashboard/attendance/qr">QR Absensi</Link> });
     items.push({ key: "/dashboard/users", icon: <UserIcon size={18} />, label: <Link href="/dashboard/users">Manajemen User</Link> });
   }

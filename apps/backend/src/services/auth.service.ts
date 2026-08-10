@@ -96,7 +96,6 @@ export async function seedDefaultUsers() {
 
   const users = [
     { name: "Super Admin",  username: "superadmin", email: "super@vet.com", password, role: "superadmin" },
-    { name: "Admin Toko",   username: "admin",      email: "admin@vet.com", password, role: "admin" },
     { name: "Kasir 1",      username: "kasir1",     email: "kasir1@vet.com", password, role: "cashier" },
     { name: "Kasir 2",      username: "kasir2",     email: "kasir2@vet.com", password, role: "cashier" },
     { name: "drh. Siti",    username: "dokter",      email: "dokter@vet.com", password, role: "doctor" },

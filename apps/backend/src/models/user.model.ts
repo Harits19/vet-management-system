@@ -15,7 +15,7 @@ const UserSchema = new Schema<IUserDoc>(
     username: { type: String, required: true, unique: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ["superadmin", "admin", "cashier", "doctor"], default: "cashier" },
+    role: { type: String, enum: ["superadmin", "cashier", "doctor"], default: "cashier" },
     isActive: { type: Boolean, default: true },
     doctorSignature: { type: String },
     faceDescriptor: { type: [Number] },

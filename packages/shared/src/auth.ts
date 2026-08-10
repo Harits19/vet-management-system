@@ -4,7 +4,7 @@ import { stringRequired } from "./common.js";
 // ──────────────────────────────────────────
 // User Schema
 // ──────────────────────────────────────────
-export const userRoleEnum = z.enum(["superadmin", "admin", "cashier", "doctor"] as const);
+export const userRoleEnum = z.enum(["superadmin", "cashier", "doctor"] as const);
 export type UserRole = z.infer<typeof userRoleEnum>;
 
 // ──────────────────────────────────────────

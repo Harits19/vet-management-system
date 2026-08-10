@@ -9,6 +9,7 @@ import {
   listMineHandler,
   listAllHandler,
   getQrHandler,
+  regenerateQrHandler,
 } from "../controllers/attendance.controller.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 
@@ -29,8 +30,10 @@ router.get("/status", excludeSuperadmin, getStatusHandler);
 router.get("/me", excludeSuperadmin, listMineHandler);
 router.post("/register-face", excludeSuperadmin, registerFaceHandler);
 router.post("/check-in", excludeSuperadmin, checkInHandler);
-router.get("/list", authorize("admin", "superadmin"), listAllHandler);
-// QR statis untuk dipajang/dicetak di tempat absen — hanya admin/superadmin
-router.get("/qr", authorize("admin", "superadmin"), getQrHandler);
+router.get("/list", authorize("superadmin"), listAllHandler);
+// QR statis untuk dipajang/dicetak di tempat absen — hanya superadmin
+router.get("/qr", authorize("superadmin"), getQrHandler);
+// Rotasi secret QR — HANYA superadmin (QR lama langsung mati)
+router.post("/qr/regenerate", authorize("superadmin"), regenerateQrHandler);
 
 export default router;

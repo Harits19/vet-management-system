@@ -179,7 +179,12 @@ export default function AttendancePage() {
   if (user.role === "superadmin") {
     return (
       <Card>
-        <Alert type="info" showIcon message="Superadmin dikecualikan dari absensi." />
+        <Space direction="vertical" size="middle">
+          <Alert type="info" showIcon message="Superadmin dikecualikan dari absensi." />
+          <Button type="primary" onClick={() => router.push("/dashboard/attendance/qr")}>
+            Cetak QR Absensi
+          </Button>
+        </Space>
       </Card>
     );
   }

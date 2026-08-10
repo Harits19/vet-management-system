@@ -6,7 +6,7 @@ import { useAuth } from "../context/auth";
 import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space, Grid, Drawer, theme as antdTheme } from "antd";
 import {
   Users, Dog, Package, LayoutDashboard, PawPrint, User as UserIcon,
-  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature, Menu as MenuIcon, Clock
+  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature, Menu as MenuIcon, Clock, QrCode
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -45,6 +45,8 @@ function SidebarMenu({ role, onNavigate }: { role: string; onNavigate?: () => vo
   }
 
   if (["superadmin", "admin"].includes(role)) {
+    // QR absensi: superadmin tidak ikut absen, tapi tetap bisa cetak QR untuk ditempel di tempat
+    items.push({ key: "/dashboard/attendance/qr", icon: <QrCode size={18} />, label: <Link href="/dashboard/attendance/qr">QR Absensi</Link> });
     items.push({ key: "/dashboard/users", icon: <UserIcon size={18} />, label: <Link href="/dashboard/users">Manajemen User</Link> });
   }
 

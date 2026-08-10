@@ -101,6 +101,7 @@ export default function AttendancePage() {
   // Minta lokasi GPS begitu config siap (dipakai wajah & QR saat OFFICE_LAT/LNG terisi)
   useEffect(() => {
     if (!config?.locationEnabled || locState !== "idle") return;
+    setLoc(null); // reset lokasi lama — request fresh
     setLocState("getting");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -113,7 +114,10 @@ export default function AttendancePage() {
         setLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy, distance });
         setLocState(distance <= config.radiusMeters ? "ok" : "error");
       },
-      () => setLocState("error"),
+      () => {
+        setLoc(null); // GPS gagal (deny/timeout) — tidak ada lokasi valid
+        setLocState("error");
+      },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
   }, [config, locState]);
@@ -324,11 +328,26 @@ export default function AttendancePage() {
               </Text>
             )}
             {locState === "error" && (
-              <Alert
-                type="error"
-                showIcon
-                message="Lokasi di luar area kantor atau tidak terdeteksi — absen diblokir."
-              />
+              <Space direction="vertical" size={8}>
+                <Alert
+                  type="error"
+                  showIcon
+                  message={
+                    loc
+                      ? `Di luar area kantor (jarak ${Math.round(loc.distance)} m dari titik kantor, maks ${config.radiusMeters} m)`
+                      : "Lokasi tidak terdeteksi — aktifkan GPS & izin lokasi browser, lalu coba lagi."
+                  }
+                />
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setLoc(null);
+                    setLocState("idle");
+                  }}
+                >
+                  Deteksi Ulang Lokasi
+                </Button>
+              </Space>
             )}
           </Space>
         </Card>

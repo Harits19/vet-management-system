@@ -7,3 +7,4 @@ export { MedicalHistoryModel } from "./medical-history.model.js";
 export { TransactionModel } from "./transaction.model.js";
 export { DiagnosisTemplateModel } from "./diagnosis-template.model.js";
 export { LetterModel } from "./letter.model.js";
+export { AttendanceModel } from "./attendance.model.js";

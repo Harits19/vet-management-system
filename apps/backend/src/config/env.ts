@@ -31,6 +31,11 @@ const env = {
   STORE_ADDRESS: process.env.STORE_ADDRESS || "",
   STORE_WHATSAPP: process.env.STORE_WHATSAPP || "",
   STORE_PHONE: process.env.STORE_PHONE || "",
+  // Absensi: titik lokasi kantor (kosong = validasi lokasi dimatikan) + ambang kecocokan wajah
+  OFFICE_LAT: process.env.OFFICE_LAT || "",
+  OFFICE_LNG: process.env.OFFICE_LNG || "",
+  OFFICE_RADIUS_METERS: Number(process.env.OFFICE_RADIUS_METERS || 200),
+  ATTENDANCE_FACE_THRESHOLD: Number(process.env.ATTENDANCE_FACE_THRESHOLD || 0.6),
 };
 
 export default env;

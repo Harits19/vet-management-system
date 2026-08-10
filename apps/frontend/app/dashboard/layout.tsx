@@ -6,7 +6,7 @@ import { useAuth } from "../context/auth";
 import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space, Grid, Drawer, theme as antdTheme } from "antd";
 import {
   Users, Dog, Package, LayoutDashboard, PawPrint, User as UserIcon,
-  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature, Menu as MenuIcon
+  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature, Menu as MenuIcon, Clock
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -37,6 +37,11 @@ function SidebarMenu({ role, onNavigate }: { role: string; onNavigate?: () => vo
       { key: "/dashboard/diagnoses", icon: <ClipboardList size={18} />, label: <Link href="/dashboard/diagnoses">List Diagnosis</Link> },
       { key: "/dashboard/letters", icon: <FileSignature size={18} />, label: <Link href="/dashboard/letters">Surat</Link> },
     );
+  }
+
+  // Absensi — semua role kecuali superadmin (superadmin dikecualikan dari absensi)
+  if (!["superadmin"].includes(role)) {
+    items.push({ key: "/dashboard/attendance", icon: <Clock size={18} />, label: <Link href="/dashboard/attendance">Absensi</Link> });
   }
 
   if (["superadmin", "admin"].includes(role)) {

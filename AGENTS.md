@@ -33,6 +33,7 @@ Script root (`package.json`): `npm run dev` (predev + backend + frontend via con
   - `mongodb` → otomatis di-set docker-compose untuk container backend; **nilai `MONGODB_HOST` di `.env` TIDAK dipakai docker**.
 - **Nilai .env yang mengandung spasi WAJIB dikutip** (`KEY="nilai dengan spasi"`) — `deploy.sh` me-`source` `.env` (`set -a; source .env`), tanpa kutip bash akan error "command not found" dan deploy berhenti.
 - `STORE_NAME/STORE_ADDRESS/STORE_WHATSAPP/STORE_PHONE` → data toko untuk kop surat & rekam medis (backend expose via `GET /api/config/store`, frontend pakai hook `useStoreInfo`).
+- `OFFICE_LAT/OFFICE_LNG` → titik lokasi kantor untuk absensi berbasis lokasi (kosong = validasi lokasi dimatikan); `OFFICE_RADIUS_METERS` (default 200) & `ATTENDANCE_FACE_THRESHOLD` (default 0.6) → ambang radius & kecocokan wajah.
 - `MONGO_PORT` hanya untuk bind port compose: `127.0.0.1:27017` (dev, localhost saja) / `0.0.0.0:27017` (prod, publik).
 - `predev` = `node mongo-init.js` — dual-mode: mongosh (via `docker-entrypoint-initdb.d`, jalan otomatis di volume mongo baru) / mongoose (via `npm run dev`). Idempotent; menjamin user aplikasi `vetapp` (role `dbOwner` di `vet-management`) ada.
 - Nilai prod di `.env`: `NODE_ENV=production`, `COOKIE_SECURE=true`, `FRONTEND_ORIGINS=https://wedi-animal-care.ahlabs.my.id`, `NEXT_PUBLIC_API_URL=https://wedi-animal-care.ahlabs.my.id`.
@@ -68,3 +69,14 @@ npm run dev                    # predev (mongo-init.js) → backend :3001 → fr
 - Solusi minimal yang jalan ("caveman") > optimasi; root-cause fix sekecil mungkin.
 - Di server/VPS: HANYA lakukan perubahan kode. JANGAN jalankan verifikasi (typecheck/build/test) — biarkan laptop lokal yang mengecek.
 - Tanya dulu sebelum build Docker lama atau operasi destruktif (mis. reset DB).
+
+## Absensi wajah + lokasi (per 2026-08-10)
+
+Absensi berbasis **lokasi (GPS) + liveness (kedip) + wajah terdaftar per user**. Superadmin DIKECUALIKAN (tidak absen, menu tidak muncul; laporan `/list` tetap boleh). User non-superadmin tanpa wajah terdaftar → redirect otomatis ke `/dashboard/attendance/register`.
+
+- **Stack**: `@vladmandic/face-api` + `@tensorflow/tfjs` (client-side browser). Model weights OFFLINE di `apps/frontend/public/models/face-api/` (tiny_face_detector + face_landmark_68 + face_recognition, ±7MB, di-commit). Loader: `apps/frontend/lib/face.ts`; komponen kamera: `apps/frontend/components/FaceCamera.tsx` (deteksi tiap 180ms + overlay kotak; liveness = Eye Aspect Ratio 68 landmark, wajib ≥1 kedip).
+- **Backend**: model `Attendance` (userId, type in|out, timestamp, date YYYY-MM-DD zona WIB UTC+7 via `localDateString` — container ber-TZ UTC), `UserModel.faceDescriptor` (128-d) + `faceRegisteredAt`. Endpoint `/api/attendance`: `GET /config`, `GET /status` (hasFace + todayIn/Out), `GET /me?date=`, `POST /register-face`, `POST /check-in`, `GET /list` (admin/superadmin). Guard `excludeSuperadmin` → 403.
+- **Validasi check-in (server)**: haversine ≤ `OFFICE_RADIUS_METERS` (kalau `OFFICE_LAT/LNG` terisi; kosong = dimatikan) → euclidean descriptor ≤ `ATTENDANCE_FACE_THRESHOLD` (0.6) → `livenessPassed === true` (flag client; server tak bisa buktikan anti video-replay) → cek duplikat (in sekali/hari, out butuh in dulu).
+- **Frontend**: `/dashboard/attendance` (status hari ini + kamera liveness + tombol Absen Masuk/Pulang + riwayat), `/dashboard/attendance/register` (daftar wajah; daftar ulang = ganti). Menu "Absensi" (Clock) untuk semua role non-superadmin.
+- `.env`: `OFFICE_LAT`, `OFFICE_LNG`, `OFFICE_RADIUS_METERS` (200), `ATTENDANCE_FACE_THRESHOLD` (0.6) — diteruskan docker-compose. Browser butuh HTTPS/localhost untuk kamera & GPS (domain prod sudah HTTPS).
+- Tanpa shared schema — `@vet/shared` tidak tersentuh, tidak perlu rebuild.

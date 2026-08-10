@@ -8,7 +8,7 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import {
   authRoutes, customerRoutes, petRoutes, productRoutes, serviceRoutes,
   dashboardRoutes, medicalHistoryRoutes, transactionRoutes,
-  syncRoutes, diagnosisTemplateRoutes, letterRoutes, userRoutes,
+  syncRoutes, diagnosisTemplateRoutes, letterRoutes, userRoutes, attendanceRoutes,
 } from "./routes/index.js";
 import { frontendOrigins } from "./config/auth.js";
 
@@ -29,6 +29,7 @@ app.use("/api/medical-histories", medicalHistoryRoutes);
 app.use("/api/sync", syncRoutes);
 app.use("/api/diagnosis-templates", diagnosisTemplateRoutes);
 app.use("/api/letters", letterRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ success: true, message: "OK" }));

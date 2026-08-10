@@ -5,6 +5,8 @@ export const UserKey = "User";
 
 export interface IUserDoc extends Omit<IUser, "_id" | "createdAt" | "updatedAt">, Document {
   doctorSignature?: string; // tanda tangan digital dokter (data URL PNG) — dipakai ulang saat menandatangani surat
+  faceDescriptor?: number[]; // 128-d face embedding (face-api) — dipakai absensi wajah
+  faceRegisteredAt?: Date;
 }
 
 const UserSchema = new Schema<IUserDoc>(
@@ -16,6 +18,8 @@ const UserSchema = new Schema<IUserDoc>(
     role: { type: String, enum: ["superadmin", "admin", "cashier", "doctor"], default: "cashier" },
     isActive: { type: Boolean, default: true },
     doctorSignature: { type: String },
+    faceDescriptor: { type: [Number] },
+    faceRegisteredAt: { type: Date },
   },
   { timestamps: true, versionKey: false }
 );

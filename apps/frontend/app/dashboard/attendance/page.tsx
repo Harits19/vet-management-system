@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Space, Typography, Alert, Table, Tag, Spin, Row, Col, Statistic } from "antd";
+import {
+  Card, Button, Space, Typography, Alert, Table, Tag, Spin, Row, Col, Statistic, Tabs,
+} from "antd";
 import { useAuth, apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import FaceCamera, { type FaceInfo } from "../../../components/FaceCamera";
+import QRScanner from "../../../components/QRScanner";
 
 const { Title, Text } = Typography;
 
@@ -13,11 +16,14 @@ interface StatusData {
   hasFace: boolean;
   faceRegisteredAt: string | null;
   today: string;
-  todayIn: { type: "in"; timestamp: string } | null;
-  todayOut: { type: "out"; timestamp: string } | null;
+  todayIn: { type: "in"; method: "face" | "qr"; timestamp: string } | null;
+  todayOut: { type: "out"; method: "face" | "qr"; timestamp: string } | null;
 }
 
 interface ConfigData {
+  mode: "face" | "qr" | "both";
+  faceEnabled: boolean;
+  qrEnabled: boolean;
   locationEnabled: boolean;
   officeLat: number | null;
   officeLng: number | null;
@@ -27,6 +33,7 @@ interface ConfigData {
 
 interface AttendanceRow {
   _id: string;
+  method: "face" | "qr";
   type: "in" | "out";
   timestamp: string;
   date: string;
@@ -47,6 +54,8 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
 const fmtTime = (ts: string) =>
   new Date(ts).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
 
+const METHOD_LABEL: Record<string, string> = { face: "Wajah", qr: "QR" };
+
 export default function AttendancePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -61,6 +70,8 @@ export default function AttendancePage() {
   const [locState, setLocState] = useState<"idle" | "getting" | "ok" | "error">("idle");
   const [loc, setLoc] = useState<{ lat: number; lng: number; accuracy: number; distance: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // QR: qrPending = tombol scan ditekan, menunggu decode kamera
+  const [qrPending, setQrPending] = useState<"in" | "out" | null>(null);
 
   const fetchAll = useCallback(async () => {
     const [s, c] = await Promise.all([
@@ -80,14 +91,14 @@ export default function AttendancePage() {
     fetchAll().catch((e: any) => msg.error(e.message || "Gagal memuat data absensi"));
   }, [loading, user, fetchAll, msg]);
 
-  // User tanpa wajah terdaftar → arahkan daftar wajah dulu
+  // User tanpa wajah terdaftar (dan mode wajah aktif) → arahkan daftar wajah dulu
   useEffect(() => {
-    if (!loadingData && status && !status.hasFace) {
+    if (!loadingData && status && config && config.faceEnabled && !status.hasFace) {
       router.replace("/dashboard/attendance/register");
     }
-  }, [loadingData, status, router]);
+  }, [loadingData, status, config, router]);
 
-  // Minta lokasi GPS begitu config siap
+  // Minta lokasi GPS begitu config siap (dipakai wajah & QR saat OFFICE_LAT/LNG terisi)
   useEffect(() => {
     if (!config?.locationEnabled || locState !== "idle") return;
     setLocState("getting");
@@ -107,30 +118,13 @@ export default function AttendancePage() {
     );
   }, [config, locState]);
 
-  const doAbsen = async (type: "in" | "out") => {
-    if (!face.descriptor) return;
-    if (config?.locationEnabled && (!loc || loc.distance > config.radiusMeters)) {
-      msg.error("Lokasi di luar area kantor atau belum terdeteksi");
-      return;
-    }
-    if (!face.livenessPassed) {
-      msg.error("Verifikasi liveness belum lolos — kedipkan mata dulu");
-      return;
-    }
+  const locationOk = !config?.locationEnabled || locState === "ok";
+
+  const postCheckIn = async (body: Record<string, unknown>) => {
     setSubmitting(true);
     try {
-      await apiFetch("/api/attendance/check-in", {
-        method: "POST",
-        body: JSON.stringify({
-          type,
-          descriptor: face.descriptor,
-          livenessPassed: face.livenessPassed,
-          lat: loc?.lat,
-          lng: loc?.lng,
-          accuracy: loc?.accuracy,
-        }),
-      });
-      msg.success(type === "in" ? "Absen masuk berhasil ✓" : "Absen pulang berhasil ✓");
+      await apiFetch("/api/attendance/check-in", { method: "POST", body: JSON.stringify(body) });
+      msg.success("Absen berhasil ✓");
       setLoadingData(true);
       await fetchAll();
       setLoadingData(false);
@@ -139,6 +133,44 @@ export default function AttendancePage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const doAbsenFace = async (type: "in" | "out") => {
+    if (!face.descriptor) return;
+    if (!locationOk) {
+      msg.error("Lokasi di luar area kantor atau belum terdeteksi");
+      return;
+    }
+    if (!face.livenessPassed) {
+      msg.error("Verifikasi liveness belum lolos — kedipkan mata dulu");
+      return;
+    }
+    await postCheckIn({
+      method: "face",
+      type,
+      descriptor: face.descriptor,
+      livenessPassed: face.livenessPassed,
+      lat: loc?.lat,
+      lng: loc?.lng,
+      accuracy: loc?.accuracy,
+    });
+  };
+
+  const doAbsenQr = async (type: "in" | "out", qrSecret: string) => {
+    if (!locationOk) {
+      setQrPending(null);
+      msg.error("Lokasi di luar area kantor atau belum terdeteksi — scan diblokir");
+      return;
+    }
+    setQrPending(null);
+    await postCheckIn({
+      method: "qr",
+      type,
+      qrSecret,
+      lat: loc?.lat,
+      lng: loc?.lng,
+      accuracy: loc?.accuracy,
+    });
   };
 
   if (loading) return null;
@@ -160,9 +192,75 @@ export default function AttendancePage() {
     );
   }
 
-  const locationOk = !config.locationEnabled || locState === "ok";
-  const canAbsenIn = !status.todayIn && face.livenessPassed && locationOk && face.hasFace;
-  const canAbsenOut = !!status.todayIn && !status.todayOut && face.livenessPassed && locationOk && face.hasFace;
+  const canAbsenIn = !status.todayIn;
+  const canAbsenOut = !!status.todayIn && !status.todayOut;
+
+  const facePanel = (
+    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+      <Text type="secondary">
+        Arahkan wajah ke kamera lalu kedipkan mata. Absen hanya diproses jika wajah cocok dengan wajah terdaftar.
+      </Text>
+      <FaceCamera requireBlink onFaceChange={setFace} />
+      <Space wrap>
+        <Button
+          type="primary"
+          size="large"
+          disabled={!canAbsenIn || !face.hasFace || !face.livenessPassed || !locationOk}
+          loading={submitting}
+          onClick={() => doAbsenFace("in")}
+        >
+          Absen Masuk (Wajah)
+        </Button>
+        <Button
+          size="large"
+          disabled={!canAbsenOut || !face.hasFace || !face.livenessPassed || !locationOk}
+          loading={submitting}
+          onClick={() => doAbsenFace("out")}
+        >
+          Absen Pulang (Wajah)
+        </Button>
+        <Button size="large" onClick={() => router.push("/dashboard/attendance/register")}>
+          Daftar Ulang Wajah
+        </Button>
+      </Space>
+    </Space>
+  );
+
+  const qrPanel = (
+    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+      <Text type="secondary">
+        Scan QR statis yang ditempel di tempat absen. Lokasi device dicek terhadap titik kantor — absen hanya
+        diproses jika kamu berada di tempat.
+      </Text>
+      {!qrPending && (
+        <Space wrap>
+          <Button
+            type="primary"
+            size="large"
+            disabled={!canAbsenIn || !locationOk}
+            loading={submitting}
+            onClick={() => setQrPending("in")}
+          >
+            Scan QR — Absen Masuk
+          </Button>
+          <Button
+            size="large"
+            disabled={!canAbsenOut || !locationOk}
+            loading={submitting}
+            onClick={() => setQrPending("out")}
+          >
+            Scan QR — Absen Pulang
+          </Button>
+        </Space>
+      )}
+      {qrPending && (
+        <QRScanner
+          onDecode={(text) => doAbsenQr(qrPending, text)}
+          onError={() => setQrPending(null)}
+        />
+      )}
+    </Space>
+  );
 
   const columns = [
     { title: "Waktu", dataIndex: "timestamp", render: (v: string) => fmtTime(v) },
@@ -171,6 +269,7 @@ export default function AttendancePage() {
       dataIndex: "type",
       render: (v: string) => (v === "in" ? <Tag color="green">Masuk</Tag> : <Tag color="orange">Pulang</Tag>),
     },
+    { title: "Metode", dataIndex: "method", render: (v: string) => METHOD_LABEL[v] || v },
     {
       title: "Kecocokan Wajah",
       dataIndex: "faceDistance",
@@ -199,9 +298,11 @@ export default function AttendancePage() {
           </Col>
           <Col xs={24} sm={8}>
             <Statistic
-              title="Verifikasi"
-              value={face.livenessPassed ? "Wajah Cocok ✓" : "Menunggu"}
-              valueStyle={face.livenessPassed ? { color: "#3f8600" } : undefined}
+              title="Metode Terakhir"
+              value={
+                status.todayOut ? METHOD_LABEL[status.todayOut.method] :
+                status.todayIn ? METHOD_LABEL[status.todayIn.method] : "-"
+              }
             />
           </Col>
         </Row>
@@ -228,39 +329,31 @@ export default function AttendancePage() {
         </Card>
       )}
 
-      <Card title="Verifikasi Wajah" size="small">
-        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-          <Text type="secondary">
-            Arahkan wajah ke kamera lalu kedipkan mata. Absen hanya diproses jika wajah cocok dengan wajah terdaftar.
-          </Text>
-          <FaceCamera requireBlink onFaceChange={setFace} />
-          <Space wrap>
-            <Button
-              type="primary"
-              size="large"
-              disabled={!canAbsenIn}
-              loading={submitting}
-              onClick={() => doAbsen("in")}
-            >
-              Absen Masuk
-            </Button>
-            <Button
-              size="large"
-              disabled={!canAbsenOut}
-              loading={submitting}
-              onClick={() => doAbsen("out")}
-            >
-              Absen Pulang
-            </Button>
-            <Button size="large" onClick={() => router.push("/dashboard/attendance/register")}>
-              Daftar Ulang Wajah
-            </Button>
-          </Space>
-          {status.todayIn && !status.todayOut && (
-            <Text type="secondary">Kamu sudah absen masuk. Absen pulang untuk menyelesaikan hari ini.</Text>
-          )}
-        </Space>
+      <Card title="Verifikasi Absen" size="small">
+        {config.mode === "both" ? (
+          <Tabs
+            destroyInactiveTabPane
+            defaultActiveKey="qr"
+            items={[
+              { key: "face", label: "Absen Wajah", children: facePanel },
+              { key: "qr", label: "Absen QR", children: qrPanel },
+            ]}
+          />
+        ) : config.mode === "qr" ? (
+          qrPanel
+        ) : (
+          facePanel
+        )}
       </Card>
+
+      {["admin", "superadmin"].includes(user.role) && config.qrEnabled && (
+        <Card size="small">
+          <Space>
+            <Text type="secondary">QR statis untuk dipajang di tempat absen:</Text>
+            <Button onClick={() => router.push("/dashboard/attendance/qr")}>Lihat / Cetak QR</Button>
+          </Space>
+        </Card>
+      )}
 
       <Card title="Riwayat Hari Ini" size="small">
         <Table
@@ -268,7 +361,7 @@ export default function AttendancePage() {
           columns={columns}
           dataSource={history}
           pagination={false}
-          scroll={{ x: 500 }}
+          scroll={{ x: 600 }}
           locale={{ emptyText: "Belum ada catatan absensi hari ini" }}
         />
       </Card>

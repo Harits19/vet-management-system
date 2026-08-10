@@ -4,6 +4,7 @@ export const AttendanceKey = "Attendance";
 
 export interface IAttendanceDoc extends Document {
   userId: mongoose.Types.ObjectId;
+  method: "face" | "qr";
   type: "in" | "out";
   timestamp: Date;
   date: string; // YYYY-MM-DD (zona Indonesia, UTC+7)
@@ -15,6 +16,7 @@ export interface IAttendanceDoc extends Document {
 const AttendanceSchema = new Schema<IAttendanceDoc>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    method: { type: String, enum: ["face", "qr"], default: "face", required: true },
     type: { type: String, enum: ["in", "out"], required: true },
     timestamp: { type: Date, required: true, default: Date.now },
     date: { type: String, required: true, index: true },

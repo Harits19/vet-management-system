@@ -12,6 +12,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@types/qrcode": "^1.5.6",
     "@vet/shared": "*",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
@@ -21,6 +22,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.12.1",
     "multer": "^2.2.0",
+    "qrcode": "^1.5.4",
     "xlsx": "^0.18.5",
     "zod": "^3.24.3"
   },

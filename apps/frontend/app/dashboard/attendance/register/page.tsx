@@ -20,12 +20,19 @@ export default function RegisterFacePage() {
   const msg = useAntdMessage();
   const [face, setFace] = useState<FaceInfo>({ hasFace: false, descriptor: null, blinks: 0, livenessPassed: false });
   const [hasFace, setHasFace] = useState(false);
+  const [faceEnabled, setFaceEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (loading || !user) return;
-    apiFetch<{ data: StatusData }>("/api/attendance/status")
-      .then((r) => setHasFace(r.data.hasFace))
+    Promise.all([
+      apiFetch<{ data: StatusData }>("/api/attendance/status"),
+      apiFetch<{ data: { faceEnabled: boolean } }>("/api/attendance/config"),
+    ])
+      .then(([s, c]) => {
+        setHasFace(s.data.hasFace);
+        setFaceEnabled(c.data.faceEnabled);
+      })
       .catch(() => setHasFace(false));
   }, [loading, user]);
 
@@ -53,6 +60,18 @@ export default function RegisterFacePage() {
     return (
       <Card>
         <Alert type="info" showIcon message="Superadmin tidak perlu absensi wajah." />
+      </Card>
+    );
+  }
+
+  if (!faceEnabled) {
+    return (
+      <Card>
+        <Alert
+          type="info"
+          showIcon
+          message="Metode absen wajah sedang nonaktif (ATTENDANCE_MODE=qr). Absen cukup pakai QR statis di tempat."
+        />
       </Card>
     );
   }

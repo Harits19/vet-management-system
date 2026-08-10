@@ -7,6 +7,7 @@ import {
   checkIn,
   listMine,
   listAll,
+  generateQrPng,
 } from "../services/attendance.service.js";
 
 export function getConfig(_req: AuthRequest, res: Response) {
@@ -35,14 +36,27 @@ export async function checkInHandler(req: AuthRequest, res: Response, next: Next
     res.json({
       success: true,
       data: await checkIn(req.user!.userId, req.user!.role, {
+        method: b.method,
         type: b.type,
         descriptor: b.descriptor,
+        qrSecret: b.qrSecret,
         lat: b.lat,
         lng: b.lng,
         accuracy: b.accuracy,
         livenessPassed: b.livenessPassed,
       }),
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getQrHandler(_req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const png = await generateQrPng();
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "no-store");
+    res.send(png);
   } catch (err) {
     next(err);
   }

@@ -1,0 +1,101 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { Card, Button, Space, Typography, Alert, Spin } from "antd";
+import { useAuth, API_URL } from "../../../context/auth";
+import { useAntdMessage } from "../../../hooks/useAntdMessage";
+
+const { Title, Text } = Typography;
+
+export default function AttendanceQrPage() {
+  const { user, loading } = useAuth();
+  const msg = useAntdMessage();
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadQr = useCallback(async () => {
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/attendance/qr`, { credentials: "include" });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(json?.message || `Gagal memuat QR (${res.status})`);
+      }
+      const blob = await res.blob();
+      setQrUrl((old) => {
+        if (old) URL.revokeObjectURL(old);
+        return URL.createObjectURL(blob);
+      });
+    } catch (e: any) {
+      setError(e.message || "Gagal memuat QR");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!loading && user) loadQr();
+  }, [loading, user, loadQr]);
+
+  useEffect(() => {
+    if (!loading && user && !["admin", "superadmin"].includes(user.role)) {
+      msg.error("Halaman QR hanya untuk admin/superadmin");
+    }
+  }, [loading, user, msg]);
+
+  if (loading) return null;
+  if (!user) return null;
+
+  if (!["admin", "superadmin"].includes(user.role)) {
+    return (
+      <Card>
+        <Alert type="error" showIcon message="Halaman ini hanya untuk admin/superadmin." />
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        <Title level={4}>QR Absensi (Statis)</Title>
+        <Text type="secondary">
+          Cetak QR ini lalu tempel di tempat absensi (resepsionis / pintu masuk). Karyawan membuka menu Absensi di HP
+          lalu memindai QR ini untuk absen masuk/pulang. QR bersifat statis — isi ditentukan oleh
+          <Text code> ATTENDANCE_QR_SECRET </Text> di .env; ganti secret untuk membuat QR baru.
+        </Text>
+
+        <div className="qr-print-area" style={{ textAlign: "center", padding: 24, border: "1px dashed #d9d9d9", borderRadius: 8 }}>
+          {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 12 }} />}
+          {!qrUrl && !error && (
+            <Spin tip="Memuat QR..." style={{ display: "block", padding: 40 }} />
+          )}
+          {qrUrl && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={qrUrl} alt="QR Absensi" style={{ width: 320, height: 320, maxWidth: "100%" }} />
+              <div style={{ marginTop: 12 }}>
+                <Title level={5} style={{ marginBottom: 0 }}>SCAN UNTUK ABSEN</Title>
+                <Text type="secondary">Wedi Animal Care — Klinik Hewan</Text>
+              </div>
+            </>
+          )}
+        </div>
+
+        <Space className="no-print">
+          <Button type="primary" onClick={() => window.print()}>Cetak QR</Button>
+          <Button onClick={loadQr}>Muat Ulang</Button>
+        </Space>
+      </Space>
+
+      <style>{`
+        @media print {
+          html, body { height: auto !important; }
+          .ant-layout { min-height: 0 !important; height: auto !important; }
+          .ant-layout-sider, .ant-layout-header, .no-print { display: none !important; }
+          .ant-layout-content { min-height: 0 !important; }
+          .ant-card { box-shadow: none !important; }
+          .qr-print-area { border: none !important; padding: 0 !important; }
+          * { color: #000 !important; background: #fff !important; }
+        }
+      `}</style>
+    </Card>
+  );
+}

@@ -36,6 +36,10 @@ const env = {
   OFFICE_LNG: process.env.OFFICE_LNG || "",
   OFFICE_RADIUS_METERS: Number(process.env.OFFICE_RADIUS_METERS || 200),
   ATTENDANCE_FACE_THRESHOLD: Number(process.env.ATTENDANCE_FACE_THRESHOLD || 0.6),
+  // Mode absensi: face | qr | both — default QR (wajah bisa dinonaktifkan, cukup ganti env)
+  ATTENDANCE_MODE: process.env.ATTENDANCE_MODE || "qr",
+  // Secret QR statis — dikodekan ke QR (isi QR = "VET-ABSEN:<secret>"), dipajang di tempat absen
+  ATTENDANCE_QR_SECRET: process.env.ATTENDANCE_QR_SECRET || "vet-attendance-2026",
 };
 
 export default env;

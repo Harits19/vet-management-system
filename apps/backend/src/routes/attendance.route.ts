@@ -8,6 +8,7 @@ import {
   checkInHandler,
   listMineHandler,
   listAllHandler,
+  getQrHandler,
 } from "../controllers/attendance.controller.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 
@@ -29,5 +30,7 @@ router.get("/me", excludeSuperadmin, listMineHandler);
 router.post("/register-face", excludeSuperadmin, registerFaceHandler);
 router.post("/check-in", excludeSuperadmin, checkInHandler);
 router.get("/list", authorize("admin", "superadmin"), listAllHandler);
+// QR statis untuk dipajang/dicetak di tempat absen — hanya admin/superadmin
+router.get("/qr", authorize("admin", "superadmin"), getQrHandler);
 
 export default router;

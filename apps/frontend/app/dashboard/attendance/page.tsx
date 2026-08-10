@@ -69,6 +69,7 @@ export default function AttendancePage() {
   const [face, setFace] = useState<FaceInfo>({ hasFace: false, descriptor: null, blinks: 0, livenessPassed: false });
   const [locState, setLocState] = useState<"idle" | "getting" | "ok" | "error">("idle");
   const [loc, setLoc] = useState<{ lat: number; lng: number; accuracy: number; distance: number } | null>(null);
+  const [locErrorMsg, setLocErrorMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   // QR: qrPending = tombol scan ditekan, menunggu decode kamera
   const [qrPending, setQrPending] = useState<"in" | "out" | null>(null);
@@ -102,6 +103,16 @@ export default function AttendancePage() {
   // muncul andal di semua browser (termasuk iOS Safari yang mengabaikan request tanpa gesture).
   const requestLocation = useCallback(() => {
     if (!config?.locationEnabled) return;
+    if (!navigator.geolocation) {
+      // http://IP (bukan localhost) = non-secure context → geolocation TIDAK tersedia
+      setLoc(null);
+      setLocState("error");
+      setLocErrorMsg(
+        "Geolocation tidak tersedia di browser ini. Lokasi hanya jalan lewat HTTPS atau localhost — akses via IP http tidak didukung browser. Gunakan https://wedi-animal-care.ahlabs.my.id (atau localhost) untuk absen."
+      );
+      return;
+    }
+    setLocErrorMsg(null);
     setLoc(null); // reset lokasi lama — request fresh
     setLocState("getting");
     navigator.geolocation.getCurrentPosition(
@@ -118,6 +129,9 @@ export default function AttendancePage() {
       () => {
         setLoc(null); // GPS gagal (deny/timeout) — tidak ada lokasi valid
         setLocState("error");
+        setLocErrorMsg(
+          "Lokasi tidak terdeteksi — periksa GPS aktif & izin lokasi browser diizinkan, lalu coba lagi."
+        );
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
@@ -346,9 +360,10 @@ export default function AttendancePage() {
                   type="error"
                   showIcon
                   message={
-                    loc
+                    locErrorMsg ||
+                    (loc
                       ? `Di luar area kantor (jarak ${Math.round(loc.distance)} m dari titik kantor, maks ${config.radiusMeters} m)`
-                      : "Lokasi tidak terdeteksi — aktifkan GPS & izin lokasi browser, lalu coba lagi."
+                      : "Lokasi tidak terdeteksi — aktifkan GPS & izin lokasi browser, lalu coba lagi.")
                   }
                 />
                 <Button size="small" onClick={requestLocation}>

@@ -98,9 +98,10 @@ export default function AttendancePage() {
     }
   }, [loadingData, status, config, router]);
 
-  // Minta lokasi GPS begitu config siap (dipakai wajah & QR saat OFFICE_LAT/LNG terisi)
-  useEffect(() => {
-    if (!config?.locationEnabled || locState !== "idle") return;
+  // Minta lokasi GPS — DIPANGGIL DARI TOMBOL (user gesture), supaya prompt izin lokasi
+  // muncul andal di semua browser (termasuk iOS Safari yang mengabaikan request tanpa gesture).
+  const requestLocation = useCallback(() => {
+    if (!config?.locationEnabled) return;
     setLoc(null); // reset lokasi lama — request fresh
     setLocState("getting");
     navigator.geolocation.getCurrentPosition(
@@ -120,7 +121,7 @@ export default function AttendancePage() {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
-  }, [config, locState]);
+  }, [config]);
 
   const locationOk = !config?.locationEnabled || locState === "ok";
 
@@ -319,7 +320,19 @@ export default function AttendancePage() {
 
       {config.locationEnabled && (
         <Card size="small">
-          <Space direction="vertical" size={4}>
+          <Space direction="vertical" size={8}>
+            {locState === "idle" && (
+              <Space direction="vertical" size={8}>
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="Lokasi dibutuhkan untuk absen. Klik tombol untuk mengaktifkan izin lokasi browser."
+                />
+                <Button type="primary" onClick={requestLocation}>
+                  Aktifkan Lokasi
+                </Button>
+              </Space>
+            )}
             {locState === "getting" && <Text type="secondary">Mendeteksi lokasi GPS...</Text>}
             {locState === "ok" && loc && (
               <Text type="success">
@@ -338,13 +351,7 @@ export default function AttendancePage() {
                       : "Lokasi tidak terdeteksi — aktifkan GPS & izin lokasi browser, lalu coba lagi."
                   }
                 />
-                <Button
-                  size="small"
-                  onClick={() => {
-                    setLoc(null);
-                    setLocState("idle");
-                  }}
-                >
+                <Button size="small" onClick={requestLocation}>
                   Deteksi Ulang Lokasi
                 </Button>
               </Space>

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Alert } from "antd";
+import { Alert, Button, Space } from "antd";
 import {
   getFaceApi,
-  startCamera,
+  startCameraWithRetry,
   stopCamera,
   detectBestFace,
   eyeAspectRatio,
@@ -30,6 +30,7 @@ export default function FaceCamera({ requireBlink = false, onFaceChange }: FaceC
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState("Memuat model wajah...");
+  const [attempt, setAttempt] = useState(0);
 
   // onFaceChange lewat ref supaya effect kamera tidak restart saat parent re-render
   const onFaceChangeRef = useRef(onFaceChange);
@@ -46,6 +47,9 @@ export default function FaceCamera({ requireBlink = false, onFaceChange }: FaceC
     let blinks = 0;
     let noFaceFrames = 0;
     let lastInfo: FaceInfo = { hasFace: false, descriptor: null, blinks: 0, livenessPassed: false };
+    // cancelled = komponen sudah unmount → stream yang baru resolve WAJIB langsung di-stop,
+    // kalau tidak kamera terkunci (NotReadableError pada mount berikutnya).
+    let cancelled = false;
 
     const emit = () => onFaceChangeRef.current?.({ ...lastInfo });
 
@@ -101,15 +105,30 @@ export default function FaceCamera({ requireBlink = false, onFaceChange }: FaceC
       }
     };
 
+    setError(null);
+    setReady(false);
+    setStatus("Memuat model wajah...");
+
     (async () => {
       try {
-        const [fa, s] = await Promise.all([getFaceApi(), startCamera()]);
+        const [fa, s] = await Promise.all([getFaceApi(), startCameraWithRetry()]);
+        if (cancelled) {
+          stopCamera(s);
+          return;
+        }
         faceapi = fa;
         stream = s;
         const video = videoRef.current;
-        if (!video) return;
+        if (!video) {
+          stopCamera(s);
+          return;
+        }
         video.srcObject = s;
         await video.play();
+        if (cancelled) {
+          stopCamera(s);
+          return;
+        }
         if (canvasRef.current) {
           canvasRef.current.width = video.videoWidth || 640;
           canvasRef.current.height = video.videoHeight || 480;
@@ -118,15 +137,26 @@ export default function FaceCamera({ requireBlink = false, onFaceChange }: FaceC
         setStatus(requireBlink ? "Kedipkan mata untuk verifikasi liveness" : "Cari wajah di depan kamera...");
         timer = setInterval(tick, 180);
       } catch (e: any) {
-        setError(e?.message || "Kamera tidak bisa diakses — izinkan akses kamera lalu coba lagi.");
+        if (cancelled) return;
+        const name = e?.name;
+        if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+          setError("Izin kamera ditolak. Klik ikon kamera/lock di address bar browser → pilih Izinkan, lalu klik Coba Lagi.");
+        } else if (name === "NotReadableError") {
+          setError("Kamera sedang dipakai aplikasi lain atau masih tersangkut dari izin sebelumnya. Tutup aplikasi lain / reload halaman, lalu klik Coba Lagi.");
+        } else {
+          setError(`Kamera tidak bisa diakses: ${e?.message || "unknown error"}. Klik Coba Lagi.`);
+        }
       }
     })();
 
     return () => {
+      cancelled = true;
       if (timer) clearInterval(timer);
+      const video = videoRef.current;
+      if (video) video.srcObject = null;
       stopCamera(stream);
     };
-  }, [requireBlink]);
+  }, [requireBlink, attempt]);
 
   return (
     <div>
@@ -143,7 +173,10 @@ export default function FaceCamera({ requireBlink = false, onFaceChange }: FaceC
         />
       </div>
       {error ? (
-        <Alert type="error" showIcon message={error} style={{ marginTop: 8 }} />
+        <Space direction="vertical" size={8} style={{ width: "100%", marginTop: 8 }}>
+          <Alert type="error" showIcon message={error} />
+          <Button onClick={() => setAttempt((a) => a + 1)}>Coba Lagi</Button>
+        </Space>
       ) : (
         <Alert
           type={requireBlink ? "info" : "success"}

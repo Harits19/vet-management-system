@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Alert } from "antd";
+import { Alert, Button, Space } from "antd";
 import jsQR from "jsqr";
-import { stopCamera } from "../lib/face";
+import { startCameraWithRetry, stopCamera } from "../lib/face";
 
 interface QRScannerProps {
   onDecode: (text: string) => void;
@@ -14,6 +14,7 @@ export default function QRScanner({ onDecode, onError }: QRScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("Memulai kamera...");
+  const [attempt, setAttempt] = useState(0);
 
   const onDecodeRef = useRef(onDecode);
   useEffect(() => {
@@ -28,6 +29,9 @@ export default function QRScanner({ onDecode, onError }: QRScannerProps) {
     let stream: MediaStream | null = null;
     let timer: ReturnType<typeof setInterval> | null = null;
     let done = false;
+    // cancelled = komponen unmount → stream yang resolve belakangan langsung di-stop
+    // (mencegah kamera terkunci / NotReadableError pada scan berikutnya).
+    let cancelled = false;
 
     const canvas = document.createElement("canvas");
     canvas.width = 320;
@@ -51,20 +55,37 @@ export default function QRScanner({ onDecode, onError }: QRScannerProps) {
       }
     };
 
+    setError(null);
+    setStatus("Memulai kamera...");
+
     (async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          // facingMode environment = kamera belakang HP (QR fisik di tempat)
-          video: { width: 640, height: 480, facingMode: "environment" },
-          audio: false,
-        });
+        stream = await startCameraWithRetry("environment");
+        if (cancelled) {
+          stopCamera(stream);
+          return;
+        }
         const video = videoRef.current;
-        if (!video) return;
+        if (!video) {
+          stopCamera(stream);
+          return;
+        }
         video.srcObject = stream;
         await video.play();
+        if (cancelled) {
+          stopCamera(stream);
+          return;
+        }
         timer = setInterval(tick, 200);
       } catch (e: any) {
-        const msg = e?.message || "Kamera tidak bisa diakses — izinkan akses kamera lalu coba lagi.";
+        if (cancelled) return;
+        const name = e?.name;
+        const msg =
+          name === "NotAllowedError" || name === "PermissionDeniedError"
+            ? "Izin kamera ditolak. Klik ikon kamera/lock di address bar browser → pilih Izinkan, lalu klik Coba Lagi."
+            : name === "NotReadableError"
+              ? "Kamera sedang dipakai aplikasi lain atau masih tersangkut dari izin sebelumnya. Tutup aplikasi lain / reload halaman, lalu klik Coba Lagi."
+              : `Kamera tidak bisa diakses: ${e?.message || "unknown error"}. Klik Coba Lagi.`;
         setError(msg);
         onErrorRef.current?.(msg);
       }
@@ -72,10 +93,13 @@ export default function QRScanner({ onDecode, onError }: QRScannerProps) {
 
     return () => {
       done = true;
+      cancelled = true;
       if (timer) clearInterval(timer);
+      const video = videoRef.current;
+      if (video) video.srcObject = null;
       stopCamera(stream);
     };
-  }, []);
+  }, [attempt]);
 
   return (
     <div>
@@ -88,7 +112,10 @@ export default function QRScanner({ onDecode, onError }: QRScannerProps) {
         />
       </div>
       {error ? (
-        <Alert type="error" showIcon message={error} style={{ marginTop: 8 }} />
+        <Space direction="vertical" size={8} style={{ width: "100%", marginTop: 8 }}>
+          <Alert type="error" showIcon message={error} />
+          <Button onClick={() => setAttempt((a) => a + 1)}>Coba Lagi</Button>
+        </Space>
       ) : (
         <Alert type="info" showIcon message={status} style={{ marginTop: 8 }} />
       )}

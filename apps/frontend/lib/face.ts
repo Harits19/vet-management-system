@@ -13,12 +13,13 @@ export function getFaceApi(): Promise<any> {
   if (!faceApiPromise) {
     faceApiPromise = (async () => {
       const faceapi = await import("@vladmandic/face-api");
+      const tf = (faceapi as any).tf;
       try {
-        await faceapi.tf.setBackend("webgl");
+        await tf.setBackend("webgl");
       } catch {
-        await faceapi.tf.setBackend("cpu");
+        await tf.setBackend("cpu");
       }
-      await faceapi.tf.ready();
+      await tf.ready();
       await faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODELS_URI);
       await faceapi.nets.faceLandmark68Net.loadFromUri(FACE_MODELS_URI);
       await faceapi.nets.faceRecognitionNet.loadFromUri(FACE_MODELS_URI);
@@ -54,12 +55,34 @@ export async function detectBestFace(
   return results[0];
 }
 
-// Ambil stream kamera. Return cleanup.
-export async function startCamera(): Promise<MediaStream> {
+// Ambil stream kamera. facingMode: user = depan (wajah), environment = belakang (scan QR fisik).
+export async function startCamera(facingMode: "user" | "environment" = "user"): Promise<MediaStream> {
   return navigator.mediaDevices.getUserMedia({
-    video: { width: 640, height: 480, facingMode: "user" },
+    video: { width: 640, height: 480, facingMode },
     audio: false,
   });
+}
+
+// Retry getUserMedia beberapa kali — error sementara (kamera baru dilepas tab lain / masih
+// tersangkut setelah reset izin) biasanya sembuh dengan retry. NotAllowedError TIDAK di-retry
+// (user harus allow manual di address bar).
+export async function startCameraWithRetry(
+  facingMode: "user" | "environment" = "user",
+  attempts = 3,
+  delayMs = 500
+): Promise<MediaStream> {
+  let lastError: unknown = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await startCamera(facingMode);
+    } catch (e) {
+      lastError = e;
+      const name = (e as DOMException)?.name;
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") break;
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  throw lastError;
 }
 
 export function stopCamera(stream: MediaStream | null) {

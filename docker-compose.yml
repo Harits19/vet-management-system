@@ -13,11 +13,13 @@ services:
       - mongodb_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
-      MONGO_INITDB_DATABASE: vet-management
+      MONGO_INITDB_DATABASE: ${MONGO_APP_DATABASE:-vet-management}
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-dev-root-password}
       MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:-vetapp}
       MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-dev-app-password}
+      # Dipakai mongo-init.js (mongosh) — WAJIB sama dengan DB backend
+      MONGO_APP_DATABASE: ${MONGO_APP_DATABASE:-vet-management}
 
   backend:
     build:
@@ -33,6 +35,7 @@ services:
       MONGODB_HOST: mongodb
       MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:-vetapp}
       MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-dev-app-password}
+      MONGO_APP_DATABASE: ${MONGO_APP_DATABASE:-vet-management}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       DEFAULT_USER_PASSWORD: ${DEFAULT_USER_PASSWORD:-password123}

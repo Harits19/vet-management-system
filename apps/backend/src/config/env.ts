@@ -20,7 +20,9 @@ const env = {
     const host = process.env.MONGODB_HOST || "localhost";
     const user = process.env.MONGO_APP_USERNAME || "vetapp";
     const pass = process.env.MONGO_APP_PASSWORD || "dev-app-password";
-    return `mongodb://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host}:27017/vet-management?authSource=vet-management`;
+    // Nama DB bisa di-override per instance (default: vet-management).
+    const db = process.env.MONGO_APP_DATABASE || "vet-management";
+    return `mongodb://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host}:27017/${db}?authSource=${db}`;
   })(),
   JWT_SECRET: process.env.JWT_SECRET || "dev-secret-change-me",
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",

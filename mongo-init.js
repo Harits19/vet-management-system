@@ -3,7 +3,9 @@
 //  - mongosh (docker-entrypoint-initdb.d → otomatis jalan di volume mongo baru)
 //  - Node   (npm run dev → predev: node mongo-init.js)
 const log = typeof print !== "undefined" ? print : console.log;
-const appDb = "vet-management";
+// Nama DB aplikasi — bisa di-override per instance (mis. instance portofolio pakai
+// vet-management-dev). Default tetap vet-management (backward-compatible).
+const appDb = process.env.MONGO_APP_DATABASE || "vet-management";
 
 // Mode Node (npm run dev): baca .env root project dulu.
 // Mode mongosh (docker): env MONGO_APP_* sudah ada di container.

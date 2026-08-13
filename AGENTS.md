@@ -84,3 +84,15 @@ Absensi berbasis **lokasi (GPS) + metode: wajah (liveness kedip) ATAU QR statis*
 - **Frontend**: `/dashboard/attendance` (status hari ini + panel metode + tombol Masuk/Pulang + riwayat + link cetak QR utk superadmin), `/dashboard/attendance/register` (daftar wajah; daftar ulang = ganti; alert saat mode wajah nonaktif), `/dashboard/attendance/qr` (cetak + generate ulang QR — superadmin), `/dashboard/attendance/history` (riwayat absen SEMUA karyawan — superadmin; filter tanggal/metode/tipe/search nama; `GET /api/attendance/list?date&method&type&search`). Menu "Absensi" (Clock) untuk semua role non-superadmin; superadmin: "QR Absensi" + "Riwayat Absen" + "Manajemen User".
 - `.env`: `ATTENDANCE_MODE` (qr), `ATTENDANCE_QR_SECRET`, `OFFICE_LAT`, `OFFICE_LNG`, `OFFICE_RADIUS_METERS` (200), `ATTENDANCE_FACE_THRESHOLD` (0.6) — diteruskan docker-compose. Browser butuh HTTPS/localhost untuk kamera & GPS (domain prod sudah HTTPS). **PITFALL: ganti nilai .env absensi → WAJIB `docker compose up -d` (recreate container); `docker restart` TIDAK re-read env (env container immutable).**
 - Dependency baru: backend `qrcode` (+`@types/qrcode`), frontend `jsQR`. Shared `@vet/shared` DIUBAH (role enum) — rebuild dist wajib (frontend resolve via dist).
+
+## Instance PORTOFOLIO (dev-animal-care.ahlabs.my.id) — per 2026-08-13
+
+Instance demo/portofolio di VPS SAMA, terpisah total dari produksi:
+
+- Lokasi: `/home/ubuntu/dev-animal-care/` (copy repo, tanpa `.git`/`node_modules`/`.env`/`ssl`; update kode = rsync ulang dari repo utama, kecuali `docker-compose.yml` & `.env` yang khusus dev).
+- **DB terpisah**: `vet-management-dev` (container `vetdev-mongodb`, port host `127.0.0.1:27018`), root `rootdev`, app user `vetapp-dev` — semua nilai di `.env` dev.
+- **Tanpa nginx sendiri**: nginx produksi (repo utama) yang route domain ini. Server block `dev-animal-care.ahlabs.my.id` di `nginx.conf` utama → `vetdev-frontend:3002` / `vetdev-backend:3001` (DNS internal). Stack dev join network docker prod (`vet-management-system_default`, external) — TIDAK lewat port host (ufw host cuma buka 22/80/443/27017). `resolver 127.0.0.11` + `proxy_pass` variabel → kalau stack dev mati nginx tetap start (502), PROD tidak terpengaruh.
+- **Kode mendukung multi-DB**: nama DB tidak lagi hardcoded — `MONGO_APP_DATABASE` (default `vet-management`, dipakai `mongo-init.js`, `env.ts`, `MONGO_INITDB_DATABASE` di compose). Prod tanpa key ini = tidak berubah.
+- **HTTP-only** (belum ada cert dev) → `COOKIE_SECURE=false` WAJIB di `.env` dev. Login demo: `superadmin` / `Demo2026!` (seed otomatis, `ENABLE_SEED=true`).
+- Deploy dev: `cd /home/ubuntu/dev-animal-care && docker compose up -d --build` (atau `bash deploy.sh`). Restart nginx prod setelah ganti `nginx.conf`: `cd /home/ubuntu/vet-management-system && docker compose restart nginx` (bukan up -d, biar image/container lain tidak ikut recreate).
+- DNS: A record `dev-animal-care.ahlabs.my.id` → `43.157.243.138` (di panel DNS ahlabs.my.id).

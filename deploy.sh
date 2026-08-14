@@ -25,6 +25,12 @@ docker compose build
 echo "🚀 Starting services..."
 docker compose up -d
 
+# 5. Restart nginx — resolve ulang IP container backend/frontend.
+# Saat container di-recreate, IP docker-nya bisa berubah; tanpa restart,
+# nginx masih cache IP lama → 502 Bad Gateway untuk /api/*.
+echo "🔄 Restart nginx (refresh upstream IP)..."
+docker compose restart nginx
+
 echo ""
 echo "✅ Deploy selesai!"
 echo "   Frontend: http://wedi-animal-care.ahlabs.my.id"

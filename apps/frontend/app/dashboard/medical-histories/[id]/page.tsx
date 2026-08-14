@@ -15,20 +15,27 @@ function formatPrice(n: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
 }
 
-// Ringkasan field resep (satuan, jumlah, waktu/instruksi/catatan penggunaan, iter)
-function prescriptionSummary(p: any): string {
-  const parts: string[] = [];
-  if (p.amount !== undefined && p.amount !== null) parts.push(`Jml: ${p.amount}`);
-  if (p.unit) parts.push(p.unit);
-  if (p.usageTime) parts.push(p.usageTime);
-  if (p.usageInstruction) parts.push(p.usageInstruction);
-  if (p.usageNote) parts.push(p.usageNote);
-  if (p.iter !== undefined && p.iter !== null) parts.push(`iter ${p.iter}x`);
-  return parts.join(" · ");
+// Format resep ala tulisan dokter:
+//   R/ <nama obat> <jumlah><satuan>
+//   [dosis / racik, mis. "mfla Pulv da in caps X"]
+//   s <waktu penggunaan> <instruksi> <catatan penggunaan>
+function prescriptionLines(p: any): string[] {
+  const lines: string[] = [];
+  const qty =
+    p.amount !== undefined && p.amount !== null
+      ? ` ${p.amount}${p.unit && p.unit.length <= 3 ? p.unit : p.unit ? ` ${p.unit}` : ""}`
+      : "";
+  lines.push(`R/ ${p.name || "-"}${qty}`.trim());
+  if (p.dosage) lines.push(p.dosage);
+  const sParts = [p.usageTime, p.usageInstruction, p.usageNote].filter(Boolean);
+  if (sParts.length > 0) lines.push(`s ${sParts.join(" ")}`);
+  else if (p.usage) lines.push(`s ${p.usage}`); // fallback field lama
+  if (p.notes) lines.push(p.notes);
+  return lines;
 }
 
 // ── Komponen dokumen cetak formal (kop surat, gaya seperti surat) ──
-const docCell = { padding: "6px 8px", border: "1px solid #000", verticalAlign: "top" as const };
+const docCell = { padding: "6px 8px", border: "1px solid #000", verticalAlign: "top" as const, whiteSpace: "pre-line" as const };
 
 function DocSection({ title, rows }: { title: string; rows: [string, string][] }) {
   if (rows.every(([, v]) => !v || v === "-")) return null;
@@ -93,7 +100,7 @@ interface MHDetail {
   diagnosis: string;
   doctorId: { _id: string; name: string };
   treatments: { productId: string; name: string; quantity: number; price: number; notes?: string }[];
-  prescriptions: { productId: string; name: string; quantity: number; price: number; dosage?: string; usage?: string; notes?: string; unit?: string; amount?: number; usageTime?: string; usageInstruction?: string; usageNote?: string; iter?: number }[];
+  prescriptions: { productId: string; name: string; quantity: number; price: number; dosage?: string; usage?: string; notes?: string; unit?: string; amount?: number; usageTime?: string; usageInstruction?: string; usageNote?: string }[];
 }
 
 interface HistoryItem {
@@ -292,24 +299,15 @@ export default function MedicalHistoryDetailPage() {
             size="small"
             columns={[
               {
-                title: "Nama Obat",
+                title: "Resep",
                 dataIndex: "name",
-                render: (v: string, r: any) => {
-                  const sum = prescriptionSummary(r);
-                  return (
-                    <>
-                      <div>{v || "-"}</div>
-                      {sum && <div style={{ fontSize: 12, color: "#888" }}>{sum}</div>}
-                    </>
-                  );
-                },
+                render: (v: string, r: any) => (
+                  <div style={{ whiteSpace: "pre-line" }}>{prescriptionLines(r).join("\n")}</div>
+                ),
               },
               { title: "Jumlah", dataIndex: "quantity" },
-              { title: "Dosis", dataIndex: "dosage", render: (v?: string) => v || "-" },
-              { title: "Aturan Pakai", dataIndex: "usage", render: (v?: string) => v || "-" },
               { title: "Harga", dataIndex: "price", render: (v: number) => formatPrice(v) },
               { title: "Subtotal", key: "subtotal", render: (_: any, r: any) => formatPrice(r.price * r.quantity) },
-              { title: "Catatan", dataIndex: "notes", render: (v?: string) => v || "-" },
             ]}
           />
         ) : (
@@ -385,18 +383,12 @@ export default function MedicalHistoryDetailPage() {
 
         <DocTable
           title="RESEP OBAT"
-          headers={["Nama Obat", "Jumlah", "Jumlah Resep", "Waktu Penggunaan", "Instruksi", "Cat. Penggunaan", "Iter", "Harga", "Subtotal", "Catatan"]}
+          headers={["Resep", "Jumlah", "Harga", "Subtotal"]}
           rows={(record.prescriptions || []).map((p) => [
-            p.name,
+            prescriptionLines(p).join("\n"),
             p.quantity,
-            `${p.amount ?? "-"}${p.unit ? ` ${p.unit}` : ""}`.trim(),
-            p.usageTime || "-",
-            p.usageInstruction || "-",
-            p.usageNote || "-",
-            p.iter !== undefined && p.iter !== null ? `${p.iter}x` : "-",
             formatPrice(p.price),
             formatPrice(p.price * p.quantity),
-            p.notes || "-",
           ])}
         />
 

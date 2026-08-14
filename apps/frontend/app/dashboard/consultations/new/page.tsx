@@ -213,7 +213,6 @@ export default function NewConsultationPage() {
             usageTime: p.usageTime,
             usageInstruction: p.usageInstruction,
             usageNote: p.usageNote,
-            iter: p.iter,
           })),
         goods: goodsLines
           .filter((g) => g.productId)

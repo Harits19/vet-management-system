@@ -46,7 +46,6 @@ export interface IPrescriptionSubDoc {
   usageTime?: string; // Waktu penggunaan (mis. "2 dd 1")
   usageInstruction?: string; // Instruksi penggunaan (mis. "tab", "cth")
   usageNote?: string; // Catatan penggunaan
-  iter?: number; // Iter (x) — pengulangan resep
 }
 
 export interface IMedicalHistoryDoc {
@@ -124,7 +123,6 @@ const PrescriptionSubSchema = new Schema<IPrescriptionSubDoc>(
     usageTime: { type: String },
     usageInstruction: { type: String },
     usageNote: { type: String },
-    iter: { type: Number, min: 0 },
   },
   { _id: false },
 );

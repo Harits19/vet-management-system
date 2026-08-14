@@ -62,7 +62,6 @@ export interface PrescriptionItem {
   usageTime?: string; // Waktu penggunaan (mis. "2 dd 1")
   usageInstruction?: string; // Instruksi penggunaan (mis. "tab", "cth")
   usageNote?: string; // Catatan penggunaan
-  iter?: number; // Iter (x) — pengulangan resep
 }
 
 export interface IMedicalHistory {
@@ -110,7 +109,6 @@ const prescriptionItemSchema = z.object({
   usageTime: z.string().optional(),
   usageInstruction: z.string().optional(),
   usageNote: z.string().optional(),
-  iter: numberOptional,
 });
 
 export const soapSchema = z.object({

@@ -18,7 +18,6 @@ export interface PrescriptionLine {
   usageTime?: string; // Waktu penggunaan (mis. "2 dd 1")
   usageInstruction?: string; // Instruksi penggunaan (mis. "tab", "cth")
   usageNote?: string; // Catatan penggunaan
-  iter?: number; // Iter (x)
   _key: string;
 }
 
@@ -35,7 +34,7 @@ function formatPrice(n: number) {
 }
 
 // Nilai awal dropdown (distinct — user bisa menambah nilai baru lewat input)
-const UNIT_SEEDS = ["Unit", "Tablet", "Kaplet", "Kapsul", "Sirup", "Botol", "Tube", "Salep", "Tetes", "Ampul", "Vial", "Sachet", "Pcs", "Strip"];
+const UNIT_SEEDS = ["Unit", "Tablet", "Kaplet", "Kapsul", "Sirup", "Botol", "Tube", "Salep", "Tetes", "Ampul", "Vial", "Sachet", "Pcs", "Strip", "ml", "mg", "g", "kg", "cc", "caps"];
 const USAGE_TIME_SEEDS = ["1 dd 1", "2 dd 1", "3 dd 1", "4 dd 1", "1 dd 1/2"];
 const USAGE_INSTRUCTION_SEEDS = ["tab", "cab", "cth", "ue", "gtt", "I.M.M", "suc", "c"];
 
@@ -110,6 +109,9 @@ export default function PrescriptionEditor({ items, onChange, options, loading, 
         return (
           <Space key={line._key} direction="vertical" style={{ width: "100%", border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 8, padding: 8 }}>
             <Row gutter={8} align="middle">
+              <Col flex="none">
+                <Text strong style={{ lineHeight: "32px" }}>R/</Text>
+              </Col>
               <Col flex="auto">
                 <Select
                   mode="tags"
@@ -143,18 +145,18 @@ export default function PrescriptionEditor({ items, onChange, options, loading, 
               </Col>
             </Row>
             <Row gutter={8}>
-              <Col xs={24} sm={8}>
-                <DistinctTagSelect value={line.unit} options={unitOptions} placeholder="Satuan (mis. Unit)" onChange={(v) => updateLine(line._key, { unit: v })} />
+              <Col xs={24} sm={12}>
+                <DistinctTagSelect value={line.unit} options={unitOptions} placeholder="Satuan (mis. Unit, ml)" onChange={(v) => updateLine(line._key, { unit: v })} />
               </Col>
-              <Col xs={24} sm={8}>
+              <Col xs={24} sm={12}>
                 <InputNumber min={0} step={0.5} precision={2} style={{ width: "100%" }} placeholder="Jumlah (mis. 0.5)" value={line.amount} onChange={(v) => updateLine(line._key, { amount: v ?? undefined })} />
               </Col>
-              <Col xs={24} sm={8}>
-                <InputNumber min={0} max={99} precision={0} style={{ width: "100%" }} placeholder="Iter" addonAfter="x" value={line.iter} onChange={(v) => updateLine(line._key, { iter: v ?? undefined })} />
-              </Col>
             </Row>
-            <Row gutter={8}>
-              <Col xs={24} sm={8}>
+            <Row gutter={8} align="middle">
+              <Col flex="none">
+                <Text strong style={{ lineHeight: "32px" }}>s</Text>
+              </Col>
+              <Col xs={24} sm={7}>
                 <DistinctTagSelect value={line.usageTime} options={usageTimeOptions} placeholder="Waktu Penggunaan (mis. 2 dd 1)" onChange={(v) => updateLine(line._key, { usageTime: v })} />
               </Col>
               <Col xs={24} sm={8}>

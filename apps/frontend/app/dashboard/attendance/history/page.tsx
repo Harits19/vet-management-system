@@ -34,16 +34,16 @@ export default function AttendanceHistoryPage() {
   const msg = useAntdMessage();
   const [data, setData] = useState<HistoryRow[]>([]);
   const [loadingData, setLoadingData] = useState(false);
-  const [date, setDate] = useState<Dayjs>(dayjs());
+  const [range, setRange] = useState<[Dayjs, Dayjs]>([dayjs(), dayjs()]);
   const [method, setMethod] = useState<string>("");
   const [type, setType] = useState<string>("");
   const [search, setSearch] = useState("");
 
   const fetchData = useCallback(
-    async (d: string, m: string, t: string, q: string) => {
+    async (from: string, to: string, m: string, t: string, q: string) => {
       setLoadingData(true);
       try {
-        const params = new URLSearchParams({ date: d });
+        const params = new URLSearchParams({ startDate: from, endDate: to });
         if (m) params.set("method", m);
         if (t) params.set("type", t);
         if (q) params.set("search", q);
@@ -60,8 +60,8 @@ export default function AttendanceHistoryPage() {
 
   useEffect(() => {
     if (loading || !user) return;
-    fetchData(date.format("YYYY-MM-DD"), method, type, search);
-  }, [loading, user, date, method, type, search, fetchData]);
+    fetchData(range[0].format("YYYY-MM-DD"), range[1].format("YYYY-MM-DD"), method, type, search);
+  }, [loading, user, range, method, type, search, fetchData]);
 
   if (loading) return null;
   if (!user) return null;
@@ -117,11 +117,11 @@ export default function AttendanceHistoryPage() {
       <Card>
         <Title level={4}>Riwayat Absensi Karyawan</Title>
         <Space wrap>
-          <DatePicker
-            value={date}
-            onChange={(d) => d && setDate(d)}
+          <DatePicker.RangePicker
+            value={range}
+            onChange={(v) => v && v[0] && v[1] && setRange([v[0], v[1]])}
             allowClear={false}
-            style={{ width: 160 }}
+            style={{ width: 260 }}
           />
           <Select
             placeholder="Semua Metode"
@@ -161,7 +161,7 @@ export default function AttendanceHistoryPage() {
           loading={loadingData}
           pagination={false}
           scroll={{ x: 900 }}
-          locale={{ emptyText: "Belum ada catatan absensi pada tanggal ini" }}
+          locale={{ emptyText: "Belum ada catatan absensi pada rentang tanggal ini" }}
         />
       </Card>
     </Space>

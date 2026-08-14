@@ -85,7 +85,8 @@ export async function listAllHandler(req: AuthRequest, res: Response, next: Next
     res.json({
       success: true,
       data: await listAll({
-        date: typeof req.query.date === "string" ? req.query.date : undefined,
+        startDate: typeof req.query.startDate === "string" ? req.query.startDate : undefined,
+        endDate: typeof req.query.endDate === "string" ? req.query.endDate : undefined,
         method: typeof req.query.method === "string" ? req.query.method : undefined,
         type: typeof req.query.type === "string" ? req.query.type : undefined,
         search: typeof req.query.search === "string" ? req.query.search : undefined,

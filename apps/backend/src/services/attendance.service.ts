@@ -243,7 +243,8 @@ export async function listMine(userId: string, date?: string) {
 }
 
 export interface ListAllFilter {
-  date?: string;
+  startDate?: string; // YYYY-MM-DD (inklusif)
+  endDate?: string; // YYYY-MM-DD (inklusif)
   method?: string;
   type?: string;
   search?: string;
@@ -251,7 +252,12 @@ export interface ListAllFilter {
 
 export async function listAll(opts: ListAllFilter = {}) {
   const match: Record<string, unknown> = {};
-  if (opts.date) match.date = opts.date;
+  if (opts.startDate || opts.endDate) {
+    // date disimpan sebagai string YYYY-MM-DD (zona WIB) — perbandingan leksikografis valid
+    match.date = {};
+    if (opts.startDate) match.date.$gte = opts.startDate;
+    if (opts.endDate) match.date.$lte = opts.endDate;
+  }
   if (opts.method === "face" || opts.method === "qr") match.method = opts.method;
   if (opts.type === "in" || opts.type === "out") match.type = opts.type;
 

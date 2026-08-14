@@ -34,13 +34,19 @@ export interface ITreatmentSubDoc {
 }
 
 export interface IPrescriptionSubDoc {
-  productId: mongoose.Types.ObjectId;
+  productId?: mongoose.Types.ObjectId; // kosong = obat bebas (diketik manual, tanpa master)
   name: string;
   quantity: number;
   price: number;
   dosage?: string;
   usage?: string;
   notes?: string;
+  unit?: string; // Satuan (mis. "Unit", "Tablet")
+  amount?: number; // Jumlah obat (bisa desimal, mis. 0.5)
+  usageTime?: string; // Waktu penggunaan (mis. "2 dd 1")
+  usageInstruction?: string; // Instruksi penggunaan (mis. "tab", "cth")
+  usageNote?: string; // Catatan penggunaan
+  iter?: number; // Iter (x) — pengulangan resep
 }
 
 export interface IMedicalHistoryDoc {
@@ -105,13 +111,20 @@ const TreatmentSubSchema = new Schema<ITreatmentSubDoc>(
 
 const PrescriptionSubSchema = new Schema<IPrescriptionSubDoc>(
   {
-    productId: { type: Schema.Types.ObjectId, required: true, ref: "Product" },
+    // productId kosong = obat bebas (diketik manual di konsultasi, tanpa stok/harga)
+    productId: { type: Schema.Types.ObjectId, ref: "Product" },
     name: { type: String, required: true },
     quantity: { type: Number, required: true, min: 1 },
     price: { type: Number, required: true, min: 0 },
     dosage: { type: String },
     usage: { type: String },
     notes: { type: String },
+    unit: { type: String },
+    amount: { type: Number, min: 0 },
+    usageTime: { type: String },
+    usageInstruction: { type: String },
+    usageNote: { type: String },
+    iter: { type: Number, min: 0 },
   },
   { _id: false },
 );

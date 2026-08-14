@@ -199,8 +199,22 @@ export default function NewConsultationPage() {
           .filter((t) => t.productId)
           .map((t) => ({ productId: t.productId, name: t.name, quantity: t.quantity, price: t.price, notes: t.notes })),
         prescriptions: prescriptions
-          .filter((p) => p.productId)
-          .map((p) => ({ productId: p.productId, name: p.name, quantity: p.quantity, price: p.price, dosage: p.dosage, usage: p.usage, notes: p.notes })),
+          .filter((p) => p.productId || p.name)
+          .map((p) => ({
+            productId: p.productId,
+            name: p.name,
+            quantity: p.quantity,
+            price: p.price,
+            dosage: p.dosage,
+            usage: p.usage,
+            notes: p.notes,
+            unit: p.unit,
+            amount: p.amount,
+            usageTime: p.usageTime,
+            usageInstruction: p.usageInstruction,
+            usageNote: p.usageNote,
+            iter: p.iter,
+          })),
         goods: goodsLines
           .filter((g) => g.productId)
           .map((g) => ({ productId: g.productId, name: g.name, quantity: g.quantity, price: g.price, notes: g.notes })),
@@ -401,7 +415,7 @@ export default function NewConsultationPage() {
               </Card>
 
               <Card title="Resep Obat" style={{ marginTop: 16 }}>
-                <Text type="secondary">Obat diambil dari Master Obat dan otomatis menjadi item obat pada transaksi. Obat suntik: tuliskan di catatan resep.</Text>
+                <Text type="secondary">Obat diambil dari Master Obat dan otomatis menjadi item obat pada transaksi. Obat tidak ada di master? Ketik nama obat baru — tersimpan sebagai obat bebas tanpa harga & stok (tidak ditagihkan). Obat suntik: tuliskan di catatan resep.</Text>
                 <div style={{ marginTop: 12 }}>
                   <PrescriptionEditor
                     items={prescriptions}

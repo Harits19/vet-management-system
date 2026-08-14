@@ -69,7 +69,32 @@ async function enrichTreatments(treatments: any[]) {
   );
 }
 
+// Obat bebas (diketik manual di konsultasi): otomatis dicatat ke master obat
+// (ProductModel, productType medicine) supaya tetap terpantau di inventory —
+// harga & stok 0 (belum diisi user). Kalau nama sudah ada di master, tidak dibuat duplikat.
+async function ensureFreeTextMedicine(name: string, unit?: string) {
+  const cleanName = (name || "").trim();
+  if (!cleanName) return;
+  const escaped = cleanName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const exists = await ProductModel.findOne({
+    productType: "medicine",
+    "product.name": { $regex: `^${escaped}$`, $options: "i" },
+  }).lean();
+  if (exists) return;
+  await ProductModel.create({
+    productType: "medicine",
+    category: "Obat Bebas",
+    product: { name: cleanName },
+    pricing: { cost: 0, selling: 0 },
+    inventory: { quantity: 0 },
+    unit: unit?.trim() || undefined,
+    isActive: true,
+  });
+}
+
 async function enrichPrescriptions(prescriptions: any[]) {
+  // Dedup nama dalam satu batch supaya tidak dobel-create master obat
+  const seen = new Set<string>();
   return Promise.all(
     prescriptions.map(async (p) => {
       if (p.productId) {
@@ -82,7 +107,16 @@ async function enrichPrescriptions(prescriptions: any[]) {
           };
         }
       }
-      return p;
+      // Obat bebas (tanpa master): catat ke master obat utk inventory, lalu
+      // buang productId kosong supaya tidak di-cast ke ObjectId oleh mongoose
+      // dan tidak dibuatkan item transaksi (tanpa harga & stok).
+      const { productId, ...rest } = p;
+      const key = String(rest.name || "").trim().toLowerCase();
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        await ensureFreeTextMedicine(rest.name, rest.unit);
+      }
+      return rest;
     })
   );
 }

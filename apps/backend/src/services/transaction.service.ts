@@ -228,8 +228,10 @@ export async function buildTransactionItemsFromMh(
   // Transaksi hanya menagih stok yang tersedia: quantity di-clamp ke stok
   // (stok tidak pernah minus). Item dengan stok 0 tidak masuk transaksi.
   // Rekam medis tetap menyimpan resep lengkap — yang di-clamp hanya item transaksi.
+  // Obat bebas (diketik manual, tanpa productId) tidak masuk transaksi & tidak potong stok.
   const physicalBatches: { item: any; product: any; prescribedQty: number }[] = [];
   for (const p of [...prescriptions, ...goods]) {
+    if (!p.productId) continue; // obat bebas — tanpa master, tanpa harga/stok
     const product = await ProductModel.findById(p.productId);
     if (!product) throw Object.assign(new Error(`Produk ${p.name || p.productId} tidak ditemukan`), { status: 404 });
     const billedQty = Math.min(product.inventory.quantity ?? 0, p.quantity);

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { stringRequired, numberFromString } from "./common.js";
+import { stringRequired, numberFromString, numberOptional } from "./common.js";
 
 // ──────────────────────────────────────────
 // Medical History — SOAP + Diagnosis + Tindakan + Resep Obat
@@ -50,13 +50,19 @@ export interface TreatmentItem {
 }
 
 export interface PrescriptionItem {
-  productId: string;
+  productId: string; // kosong = obat bebas (diketik manual, tanpa harga & stok)
   name: string;
-  quantity: number; // Jumlah
-  price: number; // Harga (dari master obat)
+  quantity: number; // Jumlah (qty billing)
+  price: number; // Harga (dari master obat; 0 utk obat bebas)
   dosage?: string; // Dosis
   usage?: string; // Aturan Pakai
   notes?: string; // Catatan
+  unit?: string; // Satuan (dropdown, mis. "Unit")
+  amount?: number; // Jumlah obat (bisa desimal, mis. 0.5)
+  usageTime?: string; // Waktu penggunaan (mis. "2 dd 1")
+  usageInstruction?: string; // Instruksi penggunaan (mis. "tab", "cth")
+  usageNote?: string; // Catatan penggunaan
+  iter?: number; // Iter (x) — pengulangan resep
 }
 
 export interface IMedicalHistory {
@@ -92,13 +98,19 @@ const treatmentItemSchema = z.object({
 });
 
 const prescriptionItemSchema = z.object({
-  productId: stringRequired,
+  productId: z.string().trim(), // boleh kosong = obat bebas (ketik manual, tanpa master/stok)
   name: z.string(),
   quantity: z.preprocess((val) => Number(val), z.number().min(1)),
   price: numberFromString,
   dosage: z.string().optional(),
   usage: z.string().optional(),
   notes: z.string().optional(),
+  unit: z.string().optional(),
+  amount: numberOptional,
+  usageTime: z.string().optional(),
+  usageInstruction: z.string().optional(),
+  usageNote: z.string().optional(),
+  iter: numberOptional,
 });
 
 export const soapSchema = z.object({

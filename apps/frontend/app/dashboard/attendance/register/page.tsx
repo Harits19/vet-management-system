@@ -18,7 +18,12 @@ export default function RegisterFacePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const msg = useAntdMessage();
-  const [face, setFace] = useState<FaceInfo>({ hasFace: false, descriptor: null, blinks: 0, livenessPassed: false });
+  const [face, setFace] = useState<FaceInfo>({
+    hasFace: false,
+    descriptor: null,
+    blinks: 0,
+    livenessPassed: false,
+  });
   const [hasFace, setHasFace] = useState(false);
   const [faceEnabled, setFaceEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -79,7 +84,7 @@ export default function RegisterFacePage() {
   return (
     <Card>
       <Title level={4}>Daftarkan Wajah</Title>
-      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         {hasFace && (
           <Alert
             type="warning"
@@ -88,11 +93,17 @@ export default function RegisterFacePage() {
           />
         )}
         <Text type="secondary">
-          Arahkan wajah ke kamera, pastikan pencahayaan cukup dan wajah terlihat jelas. Wajah ini dipakai untuk
-          verifikasi saat absen masuk/pulang.
+          Arahkan wajah ke kamera, pastikan pencahayaan cukup dan wajah terlihat jelas. Wajah ini
+          dipakai untuk verifikasi saat absen masuk/pulang.
         </Text>
         <FaceCamera requireBlink={false} onFaceChange={setFace} />
-        <Button type="primary" size="large" disabled={!face.hasFace} loading={submitting} onClick={submit}>
+        <Button
+          type="primary"
+          size="large"
+          disabled={!face.hasFace}
+          loading={submitting}
+          onClick={submit}
+        >
           {face.hasFace ? "Daftarkan Wajah Ini" : "Tunggu wajah terdeteksi..."}
         </Button>
       </Space>

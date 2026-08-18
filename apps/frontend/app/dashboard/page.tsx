@@ -24,18 +24,35 @@ interface DashboardData {
   patients: { year: number; month: number; day: number };
   lowStock: { medicine: LowStockItem[]; petshop: LowStockItem[]; consumable: LowStockItem[] };
   diagnoses: { data: { name: string; count: number }[]; total: number };
-  customers: { data: { _id: string; name: string; whatsapp?: string; petCount: number; visitCount: number }[]; total: number };
+  customers: {
+    data: { _id: string; name: string; whatsapp?: string; petCount: number; visitCount: number }[];
+    total: number;
+  };
 }
 
 function formatPrice(n: number) {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(n);
 }
 
 const lowStockColumns = [
   { title: "Nama", dataIndex: "product", key: "name", render: (p: any) => p?.name },
   { title: "Kategori", dataIndex: "category", key: "category", render: (c: string) => c || "-" },
-  { title: "Stok", dataIndex: "inventory", key: "qty", render: (i: any) => <Tag color="red">{i?.quantity ?? 0}</Tag> },
-  { title: "Harga", dataIndex: "pricing", key: "price", render: (p: any) => formatPrice(p?.selling ?? 0) },
+  {
+    title: "Stok",
+    dataIndex: "inventory",
+    key: "qty",
+    render: (i: any) => <Tag color="red">{i?.quantity ?? 0}</Tag>,
+  },
+  {
+    title: "Harga",
+    dataIndex: "pricing",
+    key: "price",
+    render: (p: any) => formatPrice(p?.selling ?? 0),
+  },
 ];
 
 export default function DashboardPage() {
@@ -50,7 +67,14 @@ export default function DashboardPage() {
   const [patientsMonth, setPatientsMonth] = useState(dayjs());
   const [patientsDate, setPatientsDate] = useState(dayjs());
 
-  const fetchData = (dp: number, cp: number, py: dayjs.Dayjs, pm: dayjs.Dayjs, pd: dayjs.Dayjs, section: "all" | "patients" | "diagnoses" | "customers" = "all") => {
+  const fetchData = (
+    dp: number,
+    cp: number,
+    py: dayjs.Dayjs,
+    pm: dayjs.Dayjs,
+    pd: dayjs.Dayjs,
+    section: "all" | "patients" | "diagnoses" | "customers" = "all"
+  ) => {
     if (section === "all") setLoading(true);
     else setLoading(false);
     setLoadingPatients(section === "patients");
@@ -74,23 +98,49 @@ export default function DashboardPage() {
       });
   };
 
-  useEffect(() => { fetchData(1, 1, patientsYear, patientsMonth, patientsDate); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    fetchData(1, 1, patientsYear, patientsMonth, patientsDate);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stockTabs = [
     {
       key: "medicine",
       label: `Obat (${data?.lowStock?.medicine?.length ?? 0})`,
-      children: <Table dataSource={data?.lowStock?.medicine ?? []} columns={lowStockColumns} rowKey="_id" pagination={false} size="small" />,
+      children: (
+        <Table
+          dataSource={data?.lowStock?.medicine ?? []}
+          columns={lowStockColumns}
+          rowKey="_id"
+          pagination={false}
+          size="small"
+        />
+      ),
     },
     {
       key: "petshop",
       label: `Petshop (${data?.lowStock?.petshop?.length ?? 0})`,
-      children: <Table dataSource={data?.lowStock?.petshop ?? []} columns={lowStockColumns} rowKey="_id" pagination={false} size="small" />,
+      children: (
+        <Table
+          dataSource={data?.lowStock?.petshop ?? []}
+          columns={lowStockColumns}
+          rowKey="_id"
+          pagination={false}
+          size="small"
+        />
+      ),
     },
     {
       key: "consumable",
       label: `Barang Habis Pakai (${data?.lowStock?.consumable?.length ?? 0})`,
-      children: <Table dataSource={data?.lowStock?.consumable ?? []} columns={lowStockColumns} rowKey="_id" pagination={false} size="small" />,
+      children: (
+        <Table
+          dataSource={data?.lowStock?.consumable ?? []}
+          columns={lowStockColumns}
+          rowKey="_id"
+          pagination={false}
+          size="small"
+        />
+      ),
     },
   ];
 
@@ -100,17 +150,35 @@ export default function DashboardPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
           <Card loading={loading}>
-            <Statistic title="Penjualan Hari Ini" value={data?.today?.total ?? 0} prefix="Rp" precision={0} suffix={`(${data?.today?.count ?? 0} transaksi)`} />
+            <Statistic
+              title="Penjualan Hari Ini"
+              value={data?.today?.total ?? 0}
+              prefix="Rp"
+              precision={0}
+              suffix={`(${data?.today?.count ?? 0} transaksi)`}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card loading={loading}>
-            <Statistic title="Minggu Ini" value={data?.week?.total ?? 0} prefix="Rp" precision={0} suffix={`(${data?.week?.count ?? 0} transaksi)`} />
+            <Statistic
+              title="Minggu Ini"
+              value={data?.week?.total ?? 0}
+              prefix="Rp"
+              precision={0}
+              suffix={`(${data?.week?.count ?? 0} transaksi)`}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card loading={loading}>
-            <Statistic title="Bulan Ini" value={data?.month?.total ?? 0} prefix="Rp" precision={0} suffix={`(${data?.month?.count ?? 0} transaksi)`} />
+            <Statistic
+              title="Bulan Ini"
+              value={data?.month?.total ?? 0}
+              prefix="Rp"
+              precision={0}
+              suffix={`(${data?.month?.count ?? 0} transaksi)`}
+            />
           </Card>
         </Col>
       </Row>
@@ -118,42 +186,90 @@ export default function DashboardPage() {
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} sm={8}>
           <Card loading={loading || loadingPatients}>
-            <Space direction="vertical" style={{ width: "100%" }}>
+            <Space orientation="vertical" style={{ width: "100%" }}>
               <DatePicker
                 picker="year"
                 value={patientsYear}
                 allowClear={false}
                 style={{ width: "100%" }}
-                onChange={(d) => { if (d) { setPatientsYear(d); fetchData(diagnosesPage, customersPage, d, patientsMonth, patientsDate, "patients"); } }}
+                onChange={(d) => {
+                  if (d) {
+                    setPatientsYear(d);
+                    fetchData(
+                      diagnosesPage,
+                      customersPage,
+                      d,
+                      patientsMonth,
+                      patientsDate,
+                      "patients"
+                    );
+                  }
+                }}
               />
-              <Statistic title={`Pasien Tahun ${patientsYear.format("YYYY")}`} value={data?.patients?.year ?? 0} suffix="ekor" />
+              <Statistic
+                title={`Pasien Tahun ${patientsYear.format("YYYY")}`}
+                value={data?.patients?.year ?? 0}
+                suffix="ekor"
+              />
             </Space>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card loading={loading || loadingPatients}>
-            <Space direction="vertical" style={{ width: "100%" }}>
+            <Space orientation="vertical" style={{ width: "100%" }}>
               <DatePicker
                 picker="month"
                 value={patientsMonth}
                 allowClear={false}
                 style={{ width: "100%" }}
-                onChange={(d) => { if (d) { setPatientsMonth(d); fetchData(diagnosesPage, customersPage, patientsYear, d, patientsDate, "patients"); } }}
+                onChange={(d) => {
+                  if (d) {
+                    setPatientsMonth(d);
+                    fetchData(
+                      diagnosesPage,
+                      customersPage,
+                      patientsYear,
+                      d,
+                      patientsDate,
+                      "patients"
+                    );
+                  }
+                }}
               />
-              <Statistic title={`Pasien Bulan ${patientsMonth.format("MMMM YYYY")}`} value={data?.patients?.month ?? 0} suffix="ekor" />
+              <Statistic
+                title={`Pasien Bulan ${patientsMonth.format("MMMM YYYY")}`}
+                value={data?.patients?.month ?? 0}
+                suffix="ekor"
+              />
             </Space>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card loading={loading || loadingPatients}>
-            <Space direction="vertical" style={{ width: "100%" }}>
+            <Space orientation="vertical" style={{ width: "100%" }}>
               <DatePicker
                 value={patientsDate}
                 allowClear={false}
                 style={{ width: "100%" }}
-                onChange={(d) => { if (d) { setPatientsDate(d); fetchData(diagnosesPage, customersPage, patientsYear, patientsMonth, d, "patients"); } }}
+                onChange={(d) => {
+                  if (d) {
+                    setPatientsDate(d);
+                    fetchData(
+                      diagnosesPage,
+                      customersPage,
+                      patientsYear,
+                      patientsMonth,
+                      d,
+                      "patients"
+                    );
+                  }
+                }}
               />
-              <Statistic title={`Pasien ${patientsDate.format("DD/MM/YYYY")}`} value={data?.patients?.day ?? 0} suffix="ekor" />
+              <Statistic
+                title={`Pasien ${patientsDate.format("DD/MM/YYYY")}`}
+                value={data?.patients?.day ?? 0}
+                suffix="ekor"
+              />
             </Space>
           </Card>
         </Col>
@@ -170,7 +286,12 @@ export default function DashboardPage() {
               dataSource={data?.diagnoses?.data ?? []}
               columns={[
                 { title: "Diagnosa", dataIndex: "name", key: "name" },
-                { title: "Jumlah Pasien", dataIndex: "count", key: "count", render: (n: number) => <Tag color="blue">{n}</Tag> },
+                {
+                  title: "Jumlah Pasien",
+                  dataIndex: "count",
+                  key: "count",
+                  render: (n: number) => <Tag color="blue">{n}</Tag>,
+                },
               ]}
               rowKey="name"
               size="small"
@@ -179,7 +300,17 @@ export default function DashboardPage() {
                 pageSize: 10,
                 total: data?.diagnoses?.total ?? 0,
                 showSizeChanger: false,
-                onChange: (p) => { setDiagnosesPage(p); fetchData(p, customersPage, patientsYear, patientsMonth, patientsDate, "diagnoses"); },
+                onChange: (p) => {
+                  setDiagnosesPage(p);
+                  fetchData(
+                    p,
+                    customersPage,
+                    patientsYear,
+                    patientsMonth,
+                    patientsDate,
+                    "diagnoses"
+                  );
+                },
               }}
             />
           </Card>
@@ -200,7 +331,17 @@ export default function DashboardPage() {
                 pageSize: 10,
                 total: data?.customers?.total ?? 0,
                 showSizeChanger: false,
-                onChange: (p) => { setCustomersPage(p); fetchData(diagnosesPage, p, patientsYear, patientsMonth, patientsDate, "customers"); },
+                onChange: (p) => {
+                  setCustomersPage(p);
+                  fetchData(
+                    diagnosesPage,
+                    p,
+                    patientsYear,
+                    patientsMonth,
+                    patientsDate,
+                    "customers"
+                  );
+                },
               }}
             />
           </Card>

@@ -16,7 +16,7 @@
     "@tensorflow/tfjs": "^4.22.0",
     "@vet/shared": "*",
     "@vladmandic/face-api": "^1.7.15",
-    "antd": "^5.24.7",
+    "antd": "^6.6.1",
     "dayjs": "^1.11.13",
     "jsqr": "^1.4.0",
     "lucide-react": "^0.487.0",

@@ -47,7 +47,9 @@ export default function AttendanceHistoryPage() {
         if (m) params.set("method", m);
         if (t) params.set("type", t);
         if (q) params.set("search", q);
-        const res = await apiFetch<{ data: HistoryRow[] }>(`/api/attendance/list?${params.toString()}`);
+        const res = await apiFetch<{ data: HistoryRow[] }>(
+          `/api/attendance/list?${params.toString()}`
+        );
         setData(res.data);
       } catch (e: any) {
         msg.error(e.message || "Gagal memuat riwayat absen");
@@ -83,7 +85,9 @@ export default function AttendanceHistoryPage() {
         <Space>
           <Text strong>{r.userName || "-"}</Text>
           {r.userRole && (
-            <Tag color={ROLE_TAG[r.userRole]?.color || "default"}>{ROLE_TAG[r.userRole]?.label || r.userRole}</Tag>
+            <Tag color={ROLE_TAG[r.userRole]?.color || "default"}>
+              {ROLE_TAG[r.userRole]?.label || r.userRole}
+            </Tag>
           )}
         </Space>
       ),
@@ -97,7 +101,8 @@ export default function AttendanceHistoryPage() {
     {
       title: "Tipe",
       dataIndex: "type",
-      render: (v: string) => (v === "in" ? <Tag color="green">Masuk</Tag> : <Tag color="orange">Pulang</Tag>),
+      render: (v: string) =>
+        v === "in" ? <Tag color="green">Masuk</Tag> : <Tag color="orange">Pulang</Tag>,
     },
     {
       title: "Kecocokan Wajah",
@@ -113,7 +118,7 @@ export default function AttendanceHistoryPage() {
   ];
 
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       <Card>
         <Title level={4}>Riwayat Absensi Karyawan</Title>
         <Space wrap>

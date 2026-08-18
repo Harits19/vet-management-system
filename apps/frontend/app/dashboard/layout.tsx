@@ -3,35 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/auth";
+import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space, Grid, Drawer, theme as antdTheme } from "antd";
 import {
-  Layout,
-  Menu,
-  Button,
-  Typography,
-  Avatar,
-  Dropdown,
-  Space,
-  Grid,
-  Drawer,
-  theme as antdTheme,
-} from "antd";
-import {
-  Users,
-  Dog,
-  Package,
-  LayoutDashboard,
-  PawPrint,
-  User as UserIcon,
-  ShoppingCart,
-  Stethoscope,
-  FileText,
-  ClipboardList,
-  LogOut,
-  FileSignature,
-  Menu as MenuIcon,
-  Clock,
-  QrCode,
-  History,
+  Users, Dog, Package, LayoutDashboard, PawPrint, User as UserIcon,
+  ShoppingCart, Stethoscope, FileText, ClipboardList, LogOut, FileSignature, Menu as MenuIcon, Clock, QrCode, History
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -47,102 +22,36 @@ function SidebarMenu({ role, onNavigate }: { role: string; onNavigate?: () => vo
     item.key === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.key);
 
   const items = [
-    {
-      key: "/dashboard",
-      icon: <LayoutDashboard size={18} />,
-      label: <Link href="/dashboard">Dashboard</Link>,
-    },
-    {
-      key: "/dashboard/customers",
-      icon: <Users size={18} />,
-      label: <Link href="/dashboard/customers">Klien</Link>,
-    },
-    {
-      key: "/dashboard/pets",
-      icon: <Dog size={18} />,
-      label: <Link href="/dashboard/pets">Pasien Baru</Link>,
-    },
-    {
-      key: "/dashboard/services",
-      icon: <Stethoscope size={18} />,
-      label: <Link href="/dashboard/services">Jasa</Link>,
-    },
-    {
-      key: "/dashboard/products",
-      icon: <Package size={18} />,
-      label: <Link href="/dashboard/products">Barang</Link>,
-    },
-    {
-      key: "/dashboard/transactions",
-      icon: <ShoppingCart size={18} />,
-      label: <Link href="/dashboard/transactions">Transaksi</Link>,
-    },
+    { key: "/dashboard", icon: <LayoutDashboard size={18} />, label: <Link href="/dashboard">Dashboard</Link> },
+    { key: "/dashboard/customers", icon: <Users size={18} />, label: <Link href="/dashboard/customers">Klien</Link> },
+    { key: "/dashboard/pets", icon: <Dog size={18} />, label: <Link href="/dashboard/pets">Pasien Baru</Link> },
+    { key: "/dashboard/services", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/services">Jasa</Link> },
+    { key: "/dashboard/products", icon: <Package size={18} />, label: <Link href="/dashboard/products">Barang</Link> },
+    { key: "/dashboard/transactions", icon: <ShoppingCart size={18} />, label: <Link href="/dashboard/transactions">Transaksi</Link> },
   ];
 
   if (["doctor", "superadmin"].includes(role)) {
-    items.splice(
-      3,
-      0,
-      {
-        key: "/dashboard/consultations",
-        icon: <Stethoscope size={18} />,
-        label: <Link href="/dashboard/consultations/new">Pasien Lama</Link>,
-      },
-      {
-        key: "/dashboard/medical-histories",
-        icon: <FileText size={18} />,
-        label: <Link href="/dashboard/medical-histories">Rekam Medis</Link>,
-      },
-      {
-        key: "/dashboard/diagnoses",
-        icon: <ClipboardList size={18} />,
-        label: <Link href="/dashboard/diagnoses">List Diagnosis</Link>,
-      },
-      {
-        key: "/dashboard/letters",
-        icon: <FileSignature size={18} />,
-        label: <Link href="/dashboard/letters">Surat</Link>,
-      }
+    items.splice(3, 0,
+      { key: "/dashboard/consultations", icon: <Stethoscope size={18} />, label: <Link href="/dashboard/consultations/new">Pasien Lama</Link> },
+      { key: "/dashboard/medical-histories", icon: <FileText size={18} />, label: <Link href="/dashboard/medical-histories">Rekam Medis</Link> },
+      { key: "/dashboard/diagnoses", icon: <ClipboardList size={18} />, label: <Link href="/dashboard/diagnoses">List Diagnosis</Link> },
+      { key: "/dashboard/letters", icon: <FileSignature size={18} />, label: <Link href="/dashboard/letters">Surat</Link> },
     );
   }
 
   // Absensi — semua role kecuali superadmin (superadmin dikecualikan dari absensi)
   if (!["superadmin"].includes(role)) {
-    items.push({
-      key: "/dashboard/attendance",
-      icon: <Clock size={18} />,
-      label: <Link href="/dashboard/attendance">Absensi</Link>,
-    });
+    items.push({ key: "/dashboard/attendance", icon: <Clock size={18} />, label: <Link href="/dashboard/attendance">Absensi</Link> });
   }
 
   if (["superadmin"].includes(role)) {
     // QR absensi: superadmin tidak ikut absen, tapi bisa cetak & generate ulang QR
-    items.push({
-      key: "/dashboard/attendance/qr",
-      icon: <QrCode size={18} />,
-      label: <Link href="/dashboard/attendance/qr">QR Absensi</Link>,
-    });
-    items.push({
-      key: "/dashboard/attendance/history",
-      icon: <History size={18} />,
-      label: <Link href="/dashboard/attendance/history">Riwayat Absen</Link>,
-    });
-    items.push({
-      key: "/dashboard/users",
-      icon: <UserIcon size={18} />,
-      label: <Link href="/dashboard/users">Manajemen User</Link>,
-    });
+    items.push({ key: "/dashboard/attendance/qr", icon: <QrCode size={18} />, label: <Link href="/dashboard/attendance/qr">QR Absensi</Link> });
+    items.push({ key: "/dashboard/attendance/history", icon: <History size={18} />, label: <Link href="/dashboard/attendance/history">Riwayat Absen</Link> });
+    items.push({ key: "/dashboard/users", icon: <UserIcon size={18} />, label: <Link href="/dashboard/users">Manajemen User</Link> });
   }
 
-  return (
-    <Menu
-      mode="inline"
-      selectedKeys={[items.find(isActive)?.key || ""]}
-      items={items}
-      style={{ borderInlineEnd: "none" }}
-      onClick={onNavigate}
-    />
-  );
+  return <Menu mode="inline" selectedKeys={[items.find(isActive)?.key || ""]} items={items} style={{ borderInlineEnd: "none" }} onClick={onNavigate} />;
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -161,13 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (loading || !user) return null;
 
   const logo = (
-    <div
-      style={{
-        padding: "16px",
-        textAlign: "center",
-        borderBottom: `1px solid ${token.colorBorderSecondary}`,
-      }}
-    >
+    <div style={{ padding: "16px", textAlign: "center", borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
       <Space>
         <PawPrint size={24} style={{ color: token.colorPrimary }} />
         <Text strong>Vet System</Text>
@@ -178,20 +81,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <Layout style={{ minHeight: "100vh" }}>
       {isDesktop && (
-        <Sider
-          width={220}
-          style={{
-            background: token.colorBgContainer,
-            borderRight: `1px solid ${token.colorBorderSecondary}`,
-          }}
-        >
+        <Sider width={220} style={{ background: token.colorBgContainer, borderRight: `1px solid ${token.colorBorderSecondary}` }}>
           {logo}
           <SidebarMenu role={user.role} />
         </Sider>
       )}
       <Drawer
         placement="left"
-        size={220}
+        width={220}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         closable={false}
@@ -201,45 +98,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <SidebarMenu role={user.role} onNavigate={() => setDrawerOpen(false)} />
       </Drawer>
       <Layout>
-        <Header
-          style={{
-            background: token.colorBgContainer,
-            padding: "0 16px",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-          }}
-        >
+        <Header style={{ background: token.colorBgContainer, padding: "0 16px", display: "flex", justifyContent: "flex-end", alignItems: "center", borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
           {!isDesktop && (
-            <Button
-              type="text"
-              icon={<MenuIcon size={18} />}
-              onClick={() => setDrawerOpen(true)}
-              style={{ marginRight: "auto" }}
-              aria-label="Buka menu"
-            />
+            <Button type="text" icon={<MenuIcon size={18} />} onClick={() => setDrawerOpen(true)} style={{ marginRight: "auto" }} aria-label="Buka menu" />
           )}
-          <Dropdown
-            menu={{
-              items: [
-                { key: "userinfo", label: `${user.name} (${user.role})`, disabled: true },
-                { type: "divider" },
-                {
-                  key: "profile",
-                  label: <Link href="/dashboard/profile">Edit Profil</Link>,
-                  icon: <UserIcon size={14} />,
-                },
-                { type: "divider" },
-                {
-                  key: "logout",
-                  label: "Logout",
-                  icon: <LogOut size={14} />,
-                  onClick: logout.fetch,
-                },
-              ],
-            }}
-          >
+          <Dropdown menu={{
+            items: [
+              { key: "userinfo", label: `${user.name} (${user.role})`, disabled: true },
+              { type: "divider" },
+              { key: "profile", label: <Link href="/dashboard/profile">Edit Profil</Link>, icon: <UserIcon size={14} /> },
+              { type: "divider" },
+              { key: "logout", label: "Logout", icon: <LogOut size={14} />, onClick: logout },
+            ]
+          }}>
             <Button type="text">
               <Space>
                 <Avatar size="small" icon={<UserIcon size={14} />} />
@@ -248,7 +119,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Button>
           </Dropdown>
         </Header>
-        <Content style={{ padding: 24, background: token.colorBgLayout }}>{children}</Content>
+        <Content style={{ padding: 24, background: token.colorBgLayout }}>
+          {children}
+        </Content>
       </Layout>
     </Layout>
   );

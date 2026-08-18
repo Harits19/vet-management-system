@@ -10,11 +10,7 @@ import { useRouter } from "next/navigation";
 const { Title, Text } = Typography;
 
 function formatPrice(n: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(n);
+  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
 }
 
 interface CartItem {
@@ -38,25 +34,19 @@ export default function CreateShopPage() {
     Promise.all([
       apiFetch<{ data: any[] }>("/api/customers?page=1&limit=100"),
       apiFetch<{ data: any[] }>("/api/products?limit=100"),
-    ])
-      .then(([c, p]) => {
-        setCustomers(c.data);
-        setProducts(p.data);
-      })
-      .catch(console.error);
+    ]).then(([c, p]) => {
+      setCustomers(c.data);
+      setProducts(p.data);
+    }).catch(console.error);
   }, []);
 
   // Server-side search (backend bisa punya >100 data, search client-side tidak cukup)
   const searchCustomers = async (q = "") => {
-    const res = await apiFetch<{ data: any[] }>(
-      `/api/customers?search=${encodeURIComponent(q)}&limit=100`
-    );
+    const res = await apiFetch<{ data: any[] }>(`/api/customers?search=${encodeURIComponent(q)}&limit=100`);
     setCustomers(res.data);
   };
   const searchProducts = async (q = "") => {
-    const res = await apiFetch<{ data: any[] }>(
-      `/api/products?search=${encodeURIComponent(q)}&limit=100`
-    );
+    const res = await apiFetch<{ data: any[] }>(`/api/products?search=${encodeURIComponent(q)}&limit=100`);
     setProducts(res.data);
   };
 
@@ -65,33 +55,21 @@ export default function CreateShopPage() {
     if (!prod) return;
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === productId);
-      if (existing)
-        return prev.map((i) =>
-          i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      return [
-        ...prev,
-        { productId: prod._id, name: prod.product.name, quantity: 1, price: prod.pricing.selling },
-      ];
+      if (existing) return prev.map((i) => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i);
+      return [...prev, { productId: prod._id, name: prod.product.name, quantity: 1, price: prod.pricing.selling }];
     });
   };
 
   const updateQty = (productId: string, qty: number) => {
-    if (qty < 1) {
-      setCart((prev) => prev.filter((i) => i.productId !== productId));
-      return;
-    }
-    setCart((prev) => prev.map((i) => (i.productId === productId ? { ...i, quantity: qty } : i)));
+    if (qty < 1) { setCart((prev) => prev.filter((i) => i.productId !== productId)); return; }
+    setCart((prev) => prev.map((i) => i.productId === productId ? { ...i, quantity: qty } : i));
   };
 
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const kembalian = paidAmount > cartTotal ? paidAmount - cartTotal : 0;
 
   const handleSubmit = async () => {
-    if (cart.length === 0) {
-      msg.warning("Pilih minimal 1 produk");
-      return;
-    }
+    if (cart.length === 0) { msg.warning("Pilih minimal 1 produk"); return; }
     try {
       const values = await form.validateFields();
       setSubmitting(true);
@@ -116,12 +94,8 @@ export default function CreateShopPage() {
   return (
     <div>
       <Space style={{ marginBottom: 16 }}>
-        <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>
-          Kembali
-        </Button>
-        <Title level={4} style={{ margin: 0 }}>
-          Transaksi Barang Baru
-        </Title>
+        <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>Kembali</Button>
+        <Title level={4} style={{ margin: 0 }}>Transaksi Barang Baru</Title>
       </Space>
 
       <Card>
@@ -129,32 +103,22 @@ export default function CreateShopPage() {
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item name="customerId" label="Klien (opsional)">
-                <Select
-                  showSearch
-                  placeholder="Cari klien..."
-                  allowClear
+                <Select showSearch placeholder="Cari klien..." allowClear
                   onSearch={searchCustomers}
                   onFocus={() => searchCustomers()}
                   filterOption={false}
-                  options={customers.map((c) => ({ value: c._id, label: c.name }))}
-                />
+                  options={customers.map((c) => ({ value: c._id, label: c.name }))} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item
-                name="paymentMethod"
-                label="Metode Bayar"
-                rules={[{ required: true, message: "Pilih metode" }]}
-              >
-                <Select
-                  options={[
-                    { value: "Tunai", label: "Tunai" },
-                    { value: "Transfer", label: "Transfer" },
-                    { value: "QRIS", label: "QRIS" },
-                    { value: "Debit", label: "Kartu Debit" },
-                    { value: "Kredit", label: "Kartu Kredit" },
-                  ]}
-                />
+              <Form.Item name="paymentMethod" label="Metode Bayar" rules={[{ required: true, message: "Pilih metode" }]}>
+                <Select options={[
+                  { value: "Tunai", label: "Tunai" },
+                  { value: "Transfer", label: "Transfer" },
+                  { value: "QRIS", label: "QRIS" },
+                  { value: "Debit", label: "Kartu Debit" },
+                  { value: "Kredit", label: "Kartu Kredit" },
+                ]} />
               </Form.Item>
             </Col>
           </Row>
@@ -162,51 +126,21 @@ export default function CreateShopPage() {
       </Card>
 
       <Card title="Item" style={{ marginTop: 16 }}>
-        <Space orientation="vertical" style={{ width: "100%" }}>
-          <Select
-            showSearch
-            placeholder="Tambah produk..."
-            style={{ width: "100%" }}
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Select showSearch placeholder="Tambah produk..." style={{ width: "100%" }}
             onSearch={searchProducts}
             onFocus={() => searchProducts()}
             filterOption={false}
-            options={products.map((p) => ({
-              value: p._id,
-              label: `${p.product.name} - ${formatPrice(p.pricing.selling)}  (stok: ${p.inventory?.quantity ?? 0})`,
-            }))}
-            onChange={(val) => {
-              if (val) addToCart(val as string);
-            }}
+            options={products.map((p) => ({ value: p._id, label: `${p.product.name} - ${formatPrice(p.pricing.selling)}  (stok: ${p.inventory?.quantity ?? 0})` }))}
+            onChange={(val) => { if (val) addToCart(val as string); }}
           />
 
           {cart.map((item) => (
             <Row key={item.productId} gutter={8} align="middle">
-              <Col flex="auto">
-                <Text strong>{item.name}</Text>
-              </Col>
-              <Col>
-                <Input
-                  type="number"
-                  value={item.quantity}
-                  onChange={(e) => updateQty(item.productId, parseInt(e.target.value) || 1)}
-                  style={{ width: 60 }}
-                  min={1}
-                />
-              </Col>
-              <Col>
-                <Text>{formatPrice(item.price * item.quantity)}</Text>
-              </Col>
-              <Col>
-                <Button
-                  size="small"
-                  danger
-                  onClick={() =>
-                    setCart((prev) => prev.filter((i) => i.productId !== item.productId))
-                  }
-                >
-                  X
-                </Button>
-              </Col>
+              <Col flex="auto"><Text strong>{item.name}</Text></Col>
+              <Col><Input type="number" value={item.quantity} onChange={(e) => updateQty(item.productId, parseInt(e.target.value) || 1)} style={{ width: 60 }} min={1} /></Col>
+              <Col><Text>{formatPrice(item.price * item.quantity)}</Text></Col>
+              <Col><Button size="small" danger onClick={() => setCart((prev) => prev.filter((i) => i.productId !== item.productId))}>X</Button></Col>
             </Row>
           ))}
         </Space>
@@ -216,8 +150,7 @@ export default function CreateShopPage() {
           <div style={{ fontSize: 18, fontWeight: "bold" }}>Total: {formatPrice(cartTotal)}</div>
           {kembalian > 0 && (
             <div style={{ fontSize: 14, color: "#52c41a", marginTop: 4 }}>
-              <Info size={14} style={{ marginRight: 4 }} />
-              Kembalian: {formatPrice(kembalian)}
+              <Info size={14} style={{ marginRight: 4 }} />Kembalian: {formatPrice(kembalian)}
             </div>
           )}
         </div>
@@ -227,11 +160,7 @@ export default function CreateShopPage() {
         <Row gutter={16}>
           <Col xs={24} sm={12}>
             <Form.Item label="Jumlah Dibayar">
-              <Input
-                type="number"
-                onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
-                placeholder="Masukkan nominal"
-              />
+              <Input type="number" onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)} placeholder="Masukkan nominal" />
             </Form.Item>
           </Col>
         </Row>

@@ -41,8 +41,7 @@ export default function AttendanceQrPage() {
   const regenerate = () => {
     modal.confirm({
       title: "Generate Ulang QR Absensi?",
-      content:
-        "QR lama akan langsung tidak berlaku setelah ini. Cetak QR baru dan ganti yang ditempel di tempat absen.",
+      content: "QR lama akan langsung tidak berlaku setelah ini. Cetak QR baru dan ganti yang ditempel di tempat absen.",
       okText: "Generate Ulang",
       okType: "danger",
       cancelText: "Batal",
@@ -74,23 +73,15 @@ export default function AttendanceQrPage() {
 
   return (
     <Card>
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <Title level={4}>QR Absensi (Statis)</Title>
         <Text type="secondary">
-          Cetak QR ini lalu tempel di tempat absensi (resepsionis / pintu masuk). Karyawan membuka
-          menu Absensi di HP lalu memindai QR ini untuk absen masuk/pulang. Secret QR disimpan di
-          database — generate ulang membuat QR baru dan QR lama langsung mati (hanya superadmin).
+          Cetak QR ini lalu tempel di tempat absensi (resepsionis / pintu masuk). Karyawan membuka menu Absensi di HP
+          lalu memindai QR ini untuk absen masuk/pulang. Secret QR disimpan di database — generate ulang membuat QR
+          baru dan QR lama langsung mati (hanya superadmin).
         </Text>
 
-        <div
-          className="qr-print-area"
-          style={{
-            textAlign: "center",
-            padding: 24,
-            border: "1px dashed #d9d9d9",
-            borderRadius: 8,
-          }}
-        >
+        <div className="qr-print-area" style={{ textAlign: "center", padding: 24, border: "1px dashed #d9d9d9", borderRadius: 8 }}>
           {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 12 }} />}
           {!qrUrl && !error && (
             <Spin tip="Memuat QR..." style={{ display: "block", padding: 40 }} />
@@ -98,15 +89,9 @@ export default function AttendanceQrPage() {
           {qrUrl && (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={qrUrl}
-                alt="QR Absensi"
-                style={{ width: 320, height: 320, maxWidth: "100%" }}
-              />
+              <img src={qrUrl} alt="QR Absensi" style={{ width: 320, height: 320, maxWidth: "100%" }} />
               <div style={{ marginTop: 12 }}>
-                <Title level={5} style={{ marginBottom: 0 }}>
-                  SCAN UNTUK ABSEN
-                </Title>
+                <Title level={5} style={{ marginBottom: 0 }}>SCAN UNTUK ABSEN</Title>
                 <Text type="secondary">Wedi Animal Care — Klinik Hewan</Text>
               </div>
             </>
@@ -114,9 +99,7 @@ export default function AttendanceQrPage() {
         </div>
 
         <Space className="no-print" wrap>
-          <Button type="primary" onClick={() => window.print()}>
-            Cetak QR
-          </Button>
+          <Button type="primary" onClick={() => window.print()}>Cetak QR</Button>
           <Button onClick={loadQr}>Muat Ulang</Button>
           <Button danger loading={regenerating} onClick={regenerate}>
             Generate Ulang QR

@@ -134,21 +134,15 @@ export default function FaceCamera({ requireBlink = false, onFaceChange }: FaceC
           canvasRef.current.height = video.videoHeight || 480;
         }
         setReady(true);
-        setStatus(
-          requireBlink ? "Kedipkan mata untuk verifikasi liveness" : "Cari wajah di depan kamera..."
-        );
+        setStatus(requireBlink ? "Kedipkan mata untuk verifikasi liveness" : "Cari wajah di depan kamera...");
         timer = setInterval(tick, 180);
       } catch (e: any) {
         if (cancelled) return;
         const name = e?.name;
         if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-          setError(
-            "Izin kamera ditolak. Klik ikon kamera/lock di address bar browser → pilih Izinkan, lalu klik Coba Lagi."
-          );
+          setError("Izin kamera ditolak. Klik ikon kamera/lock di address bar browser → pilih Izinkan, lalu klik Coba Lagi.");
         } else if (name === "NotReadableError") {
-          setError(
-            "Kamera sedang dipakai aplikasi lain atau masih tersangkut dari izin sebelumnya. Tutup aplikasi lain / reload halaman, lalu klik Coba Lagi."
-          );
+          setError("Kamera sedang dipakai aplikasi lain atau masih tersangkut dari izin sebelumnya. Tutup aplikasi lain / reload halaman, lalu klik Coba Lagi.");
         } else {
           setError(`Kamera tidak bisa diakses: ${e?.message || "unknown error"}. Klik Coba Lagi.`);
         }
@@ -179,7 +173,7 @@ export default function FaceCamera({ requireBlink = false, onFaceChange }: FaceC
         />
       </div>
       {error ? (
-        <Space orientation="vertical" size={8} style={{ width: "100%", marginTop: 8 }}>
+        <Space direction="vertical" size={8} style={{ width: "100%", marginTop: 8 }}>
           <Alert type="error" showIcon message={error} />
           <Button onClick={() => setAttempt((a) => a + 1)}>Coba Lagi</Button>
         </Space>

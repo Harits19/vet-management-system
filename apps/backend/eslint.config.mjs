@@ -11,6 +11,13 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     languageOptions: {
+      parserOptions: {
+        // Monorepo: root repo punya tsconfig di tiap app (backend & frontend).
+        // Tanpa tsconfigRootDir eksplisit, typescript-eslint infer dari kandidat
+        // tsconfig yang bisa lebih dari satu dalam satu proses lint (editor),
+        // lalu melempar "multiple candidate TSConfigRootDirs".
+        tsconfigRootDir: import.meta.dirname,
+      },
       globals: {
         ...globals.node,
       },

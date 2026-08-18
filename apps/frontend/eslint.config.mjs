@@ -16,6 +16,17 @@ export default tseslint.config(
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   ...tseslint.configs.recommended,
   {
+    languageOptions: {
+      parserOptions: {
+        // Monorepo: root repo punya tsconfig di tiap app (backend & frontend).
+        // Tanpa tsconfigRootDir eksplisit, typescript-eslint infer dari kandidat
+        // tsconfig yang bisa lebih dari satu dalam satu proses lint (editor),
+        // lalu melempar "multiple candidate TSConfigRootDirs".
+        tsconfigRootDir: __dirname,
+      },
+    },
+  },
+  {
     rules: {
       // Codebase existing memakai `any` & punya unused vars secara luas.
       // Dibuat warning agar tidak memblokir `next build` (deploy) —

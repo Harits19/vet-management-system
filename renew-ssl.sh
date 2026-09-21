@@ -20,7 +20,7 @@ copy_cert() {
 }
 
 copy_cert "wedi-animal-care.ahlabs.my.id" "/home/ubuntu/vet-management-system/ssl"
-copy_cert "dev-animal-care.ahlabs.my.id" "/home/ubuntu/vet-management-system/ssl-dev"
+# copy_cert "dev-animal-care.ahlabs.my.id" "/home/ubuntu/vet-management-system/ssl-dev"
 
 # Reload nginx to pick up new certs
 docker exec vet-nginx nginx -s reload 2>/dev/null || true

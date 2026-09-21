@@ -23,10 +23,17 @@ command -v docker >/dev/null 2>&1 || die "Docker belum terpasang: bash install-d
 
 if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
 
+# Nilai .env dibaca langsung dari file, bukan dari env var: script ini dipanggil
+# `sudo bash setup-https.sh` (deploy.sh) dan sudo membuang environment pemanggil.
+env_get() {
+  sed -nE "s/^$1=\"?([^\"]*)\"?[[:space:]]*\$/\1/p" .env | tr -d '\r' | head -1
+}
+
 if [ -z "$DOMAIN" ]; then
-  DOMAIN="$(sed -nE 's/^FRONTEND_ORIGINS="?([^",]+).*/\1/p' .env | head -1 \
+  DOMAIN="$(printf '%s' "$(env_get FRONTEND_ORIGINS)" | cut -d, -f1 \
     | sed -E 's#^https?://##; s#/.*$##; s#:[0-9]+$##')"
 fi
+[ -n "$EMAIL" ] || EMAIL="$(env_get CERTBOT_EMAIL)"
 [ -n "$DOMAIN" ] || die "Domain tidak diketahui. Set FRONTEND_ORIGINS di .env, atau pakai -d domain.tld"
 [ -n "$EMAIL" ] || die "Email Let's Encrypt tidak diketahui. Set CERTBOT_EMAIL di .env, atau pakai -e kamu@mail.com"
 

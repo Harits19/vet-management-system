@@ -56,8 +56,13 @@ fi
 
 docker compose up -d nginx
 
+# nginx.conf pakai `root /var/www/certbot`, jadi URI /.well-known/acme-challenge/TOKEN
+# dipetakan ke /var/www/certbot/.well-known/acme-challenge/TOKEN -> token WAJIB ada
+# di subdir itu, bukan di akar webroot.
+ACME_DIR="certbot-webroot/.well-known/acme-challenge"
+mkdir -p "$ACME_DIR"
 TOKEN="vet-acme-probe-$$"
-echo ok > "certbot-webroot/$TOKEN"
+echo ok > "$ACME_DIR/$TOKEN"
 REACHABLE=0
 for _ in $(seq 1 20); do
   if curl -fsS --max-time 5 "http://${DOMAIN}/.well-known/acme-challenge/${TOKEN}" >/dev/null 2>&1; then
@@ -66,7 +71,7 @@ for _ in $(seq 1 20); do
   fi
   sleep 2
 done
-rm -f "certbot-webroot/$TOKEN"
+rm -f "$ACME_DIR/$TOKEN"
 [ "$REACHABLE" -eq 1 ] || die "Challenge HTTP-01 belum bisa diakses dari luar. Cek DNS A record '${DOMAIN}' -> IP VPS, port 80 terbuka, dan log: docker compose logs nginx"
 
 ARGS=(

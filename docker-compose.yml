@@ -80,7 +80,8 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
-      - ./ssl-dev:/etc/nginx/ssl-dev:ro
+      # ssl-dev dimatikan 2026-09-21 — blok server dev di nginx.conf ikut dimatikan.
+      # - ./ssl-dev:/etc/nginx/ssl-dev:ro
       - ./certbot-webroot:/var/www/certbot:ro
     depends_on:
       - frontend

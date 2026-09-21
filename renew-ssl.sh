@@ -25,6 +25,7 @@ copy_cert() {
 }
 
 copy_cert "wedi-animal-care.ahlabs.my.id" "${BASE_DIR}/ssl"
+# ssl-dev dimatikan 2026-09-21 (blok server dev di nginx.conf ikut dimatikan).
 # copy_cert "dev-animal-care.ahlabs.my.id" "${BASE_DIR}/ssl-dev"
 
 # Reload nginx to pick up new certs

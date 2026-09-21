@@ -98,21 +98,43 @@ else
 fi
 
 # ── 3. Bootstrap ssl/ ──────────────────────────────────────────────────
-step "3. Siapkan ssl/ (bootstrap kalau masih kosong)"
-mkdir -p "$SCRIPT_DIR/ssl" "$SCRIPT_DIR/certbot-webroot"
+step "3. Siapkan direktori cert (bootstrap kalau masih kosong)"
+mkdir -p "$SCRIPT_DIR/certbot-webroot"
 
-# nginx TIDAK mau start kalau file cert yang direferensikan nginx.conf hilang.
-# Jadi di VPS baru: isi sementara dengan self-signed 1 hari, ganti setelah cert asli terbit.
-if [ ! -s "$SCRIPT_DIR/ssl/fullchain.pem" ] || [ ! -s "$SCRIPT_DIR/ssl/privkey.pem" ]; then
-  echo "ssl/ kosong → bikin self-signed sementara supaya nginx bisa start (bootstrap HTTP-01)"
+# nginx TIDAK mau start kalau ADA SATU SAJA file cert yang direferensikan nginx.conf hilang
+# (fatal: cannot load certificate ... No such file or directory) → container restart-loop,
+# port 80/443 tak pernah terbuka, dan acme-challenge mustahil dilayani. Jadi semua direktori
+# cert yang dipakai nginx.conf diisi self-signed 1 hari dulu, ditimpa cert asli di langkah 6.
+bootstrap_dir() {
+  local host_dir="$1"
+  if [ -s "$host_dir/fullchain.pem" ] && [ -s "$host_dir/privkey.pem" ]; then
+    echo "  ok     : ${host_dir#"$SCRIPT_DIR"/} sudah ada"
+    return 0
+  fi
+  mkdir -p "$host_dir"
+  echo "  bootstrap: ${host_dir#"$SCRIPT_DIR"/} (self-signed 1 hari, sementara)"
   openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
-    -keyout "$SCRIPT_DIR/ssl/privkey.pem" \
-    -out "$SCRIPT_DIR/ssl/fullchain.pem" \
+    -keyout "$host_dir/privkey.pem" \
+    -out "$host_dir/fullchain.pem" \
     -subj "/CN=${DOMAIN}" >/dev/null 2>&1
-  chmod 600 "$SCRIPT_DIR/ssl/privkey.pem"
-  chmod 644 "$SCRIPT_DIR/ssl/fullchain.pem"
+  chmod 600 "$host_dir/privkey.pem"
+  chmod 644 "$host_dir/fullchain.pem"
+}
+
+# Ambil semua direktori cert dari nginx.conf: /etc/nginx/ssl-dev → <repo>/ssl-dev
+# Baris komentar dibuang dulu — kalau tidak, blok server yang dimatikan (di-comment)
+# tetap ikut ke-bootstrap, padahal nginx tidak lagi mereferensikannya.
+CERT_DIRS="$(sed -E '/^[[:space:]]*#/d' "$SCRIPT_DIR/nginx.conf" \
+  | grep -oE 'ssl_certificate(_key)?[[:space:]]+/etc/nginx/[^;]+;' \
+  | sed -E 's#.*[[:space:]](/etc/nginx/[^/]+)/.*#\1#' | sort -u || true)"
+
+if [ -z "$CERT_DIRS" ]; then
+  echo "⚠️  tidak ada directive ssl_certificate di nginx.conf — hanya ssl/ yang disiapkan"
+  bootstrap_dir "$SCRIPT_DIR/ssl"
 else
-  echo "ssl/ sudah ada — dilewati"
+  for d in $CERT_DIRS; do
+    bootstrap_dir "$SCRIPT_DIR/${d#/etc/nginx/}"
+  done
 fi
 
 # ── 4. nginx hidup + challenge reachable ───────────────────────────────

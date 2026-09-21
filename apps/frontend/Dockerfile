@@ -4,10 +4,6 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-# NEXT_PUBLIC_* vars are inlined at build time by Next.js
-ARG NEXT_PUBLIC_API_URL=http://wedi-animal-care.ahlabs.my.id
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-
 COPY package.json tsconfig.base.json ./
 COPY packages/shared ./packages/shared
 COPY apps/frontend ./apps/frontend

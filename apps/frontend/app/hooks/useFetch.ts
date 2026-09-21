@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAntdMessage } from "./useAntdMessage";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+// API selalu same-origin: di produksi nginx mem-proxy /api ke backend,
+// di dev ada rewrite di next.config.js.
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export { API_URL };
 

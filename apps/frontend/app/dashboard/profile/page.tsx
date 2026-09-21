@@ -76,7 +76,7 @@ export default function ProfilePage() {
 
       <Card style={{ maxWidth: 640 }}>
         <Form form={form} layout="vertical" autoComplete="off">
-          <Divider orientation="left" plain>
+          <Divider titlePlacement="left" plain>
             <Space><FileSignature size={14} /> Data Akun</Space>
           </Divider>
 
@@ -109,7 +109,7 @@ export default function ProfilePage() {
             />
           )}
 
-          <Divider orientation="left" plain>
+          <Divider titlePlacement="left" plain>
             <Space><KeyRound size={14} /> Ganti Password</Space>
           </Divider>
 

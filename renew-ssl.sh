@@ -1,34 +1,23 @@
 #!/bin/sh
-# Copy renewed Let's Encrypt certs to the SSL dirs used by Docker Nginx.
-# Dipakai manual ATAU sebagai certbot deploy-hook (renungan otomatis).
-# Hanya copy domain yang ada di /etc/letsencrypt/live/ — yang tidak ada di-skip.
 set -e
 
-# Direktori repo = lokasi script ini (hook certbot memanggil dengan path absolut).
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-copy_cert() {
-  DOMAIN="$1"
-  SSL_DIR="$2"
-  if [ -d "/etc/letsencrypt/live/${DOMAIN}" ]; then
-    mkdir -p "${SSL_DIR}"
-    cp "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" "${SSL_DIR}/fullchain.pem"
-    cp "/etc/letsencrypt/live/${DOMAIN}/privkey.pem" "${SSL_DIR}/privkey.pem"
-    chmod 644 "${SSL_DIR}/fullchain.pem"
-    chmod 600 "${SSL_DIR}/privkey.pem"
-    # Hook certbot jalan sebagai root; kalau user ubuntu ada, samakan owner.
-    chown ubuntu:ubuntu "${SSL_DIR}"/*.pem 2>/dev/null || true
-    echo "SSL certs updated for ${DOMAIN}"
-  else
-    echo "skip ${DOMAIN}: /etc/letsencrypt/live/${DOMAIN} tidak ada"
-  fi
-}
+DOMAIN="$(sed -nE 's/^FRONTEND_ORIGINS="?([^",]+).*/\1/p' "$BASE_DIR/.env" 2>/dev/null | head -1 \
+  | sed -E 's#^https?://##; s#/.*$##; s#:[0-9]+$##')"
 
-copy_cert "wedi-animal-care.ahlabs.my.id" "${BASE_DIR}/ssl"
-# ssl-dev dimatikan 2026-09-21 (blok server dev di nginx.conf ikut dimatikan).
-# copy_cert "dev-animal-care.ahlabs.my.id" "${BASE_DIR}/ssl-dev"
+if [ -z "$DOMAIN" ] || [ ! -d "/etc/letsencrypt/live/${DOMAIN}" ]; then
+  echo "skip: cert tidak ditemukan untuk domain '${DOMAIN}'"
+  exit 0
+fi
 
-# Reload nginx to pick up new certs
+mkdir -p "$BASE_DIR/ssl"
+cp "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" "$BASE_DIR/ssl/fullchain.pem"
+cp "/etc/letsencrypt/live/${DOMAIN}/privkey.pem" "$BASE_DIR/ssl/privkey.pem"
+chmod 644 "$BASE_DIR/ssl/fullchain.pem"
+chmod 600 "$BASE_DIR/ssl/privkey.pem"
+chown ubuntu:ubuntu "$BASE_DIR/ssl"/*.pem 2>/dev/null || true
+
 docker exec vet-nginx nginx -s reload 2>/dev/null || true
 
-echo "Done — nginx reloaded."
+echo "SSL certs updated for ${DOMAIN}"

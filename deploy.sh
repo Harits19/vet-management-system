@@ -1,39 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
+cd "$(dirname "$0")"
 
-echo "========================================"
-echo "  Vet Management System — Deploy"
-echo "  Domain: http://wedi-animal-care.ahlabs.my.id"
-echo "========================================"
-
-# 1. Copy .env
 if [ ! -f .env ]; then
   cp .env.example .env
-  echo "⚠️  Copy .env.example → .env"
-  echo "   EDIT .env DULU sebelum lanjut!"
-  exit 1
+  echo "== .env dibuat dari .env.example"
 fi
-
-# 2. Load env
 set -a; source .env; set +a
 
-# 3. Pull & build
-echo "📦 Building images..."
+command -v docker >/dev/null 2>&1 || {
+  echo "Docker belum terpasang. Jalankan: bash install-docker.sh"
+  echo "Lalu logout/login (atau newgrp docker) dan ulangi: bash deploy.sh"
+  exit 1
+}
+
+if [ ! -s ssl/fullchain.pem ]; then
+  if [ "$(uname -s)" = "Linux" ]; then
+    echo "== terbitkan sertifikat HTTPS"
+    sudo bash setup-https.sh
+  else
+    echo "⚠️  ssl/fullchain.pem belum ada — terbitkan sertifikat di VPS: sudo bash setup-https.sh"
+  fi
+fi
+
+echo "== build & start"
 docker compose build
-
-# 4. Start
-echo "🚀 Starting services..."
 docker compose up -d
+docker compose up -d --force-recreate nginx
 
-# 5. Restart nginx — resolve ulang IP container backend/frontend.
-# Saat container di-recreate, IP docker-nya bisa berubah; tanpa restart,
-# nginx masih cache IP lama → 502 Bad Gateway untuk /api/*.
-echo "🔄 Restart nginx (refresh upstream IP)..."
-docker compose restart nginx
-
+DOMAIN="$(printf '%s' "${FRONTEND_ORIGINS:-}" | cut -d, -f1 | sed -E 's#^https?://##; s#/.*$##; s#:[0-9]+$##')"
 echo ""
-echo "✅ Deploy selesai!"
-echo "   Frontend: http://wedi-animal-care.ahlabs.my.id"
-echo "   API:      http://wedi-animal-care.ahlabs.my.id/api"
-echo ""
-echo "📋 Logs: docker compose logs -f"
+echo "✅ Selesai"
+echo "   Buka   : https://${DOMAIN}"
+echo "   Login  : superadmin / ${DEFAULT_USER_PASSWORD:-password123}"
+echo "   Logs   : docker compose logs -f"

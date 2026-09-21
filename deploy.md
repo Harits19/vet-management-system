@@ -1,43 +1,22 @@
-# Deploy — Vet Management System
+# Deploy
 
-Deploy ke VPS (`ubuntu@43.157.243.138`). Satu `docker-compose.yml` untuk semua service
-(backend, frontend, mongodb, nginx) — tidak ada compose file terpisah untuk prod.
+VPS: `ubuntu@43.157.243.138`, repo di `/home/ubuntu/vet-management-system`.
 
-1. SSH ke VPS
+```bash
+ssh ubuntu@43.157.243.138
+git clone <url-repo> && cd vet-management-system
 
-   ssh ubuntu@43.157.243.138
+bash install-docker.sh   # sekali saja, lalu logout/login
+bash deploy.sh           # build + up + sertifikat HTTPS otomatis
+```
 
-2. Clone projek
+Syarat: DNS A record domain → IP VPS, port 80 & 443 terbuka.
+Domain diambil dari `FRONTEND_ORIGINS`, email dari `CERTBOT_EMAIL` (keduanya di `.env`).
 
-   git clone https://github.com/Harits19/vet-management-system
-   cd vet-management-system
+Selesai. Buka `https://<domain>`, login `superadmin` / `DEFAULT_USER_PASSWORD` (`.env`).
 
-3. Buat .env (template: .env.example)
+Deploy ulang (update kode) = `bash deploy.sh` lagi.
+Di VPS, ganti dulu `JWT_SECRET`, `MONGO_INITDB_ROOT_PASSWORD`, `MONGO_APP_PASSWORD`,
+`DEFAULT_USER_PASSWORD` kalau tidak mau pakai default repo.
 
-   cp .env.example .env
-   nano .env
-
-   Yang wajib diganti:
-   - `JWT_SECRET` → string acak kuat
-   - `MONGO_INITDB_ROOT_PASSWORD` & `MONGO_APP_PASSWORD` → ganti dari default dev
-   - `NODE_ENV=production`, `COOKIE_SECURE=true`
-   - `FRONTEND_ORIGINS` & `NEXT_PUBLIC_API_URL` → pakai domain (lihat komentar di .env.example)
-   - `MONGO_PORT=0.0.0.0:27017` kalau mau akses DB dari luar (mis. dev laptop)
-
-   Catatan: tidak ada key `MONGODB_URI` — URI di-generate di kode dari
-   `MONGODB_HOST` + `MONGO_APP_USERNAME`/`MONGO_APP_PASSWORD`. Di docker,
-   `MONGODB_HOST=mongodb` otomatis di-set compose.
-
-4. DNS record A → 43.157.243.138 (wedi-animal-care.ahlabs.my.id)
-
-5. Build & start
-
-   bash deploy.sh
-
-   (atau manual: `docker compose build && docker compose up -d`)
-
-   Nginx otomatis serve frontend di `/` dan proxy API di `/api/`. Tinggal pointing DNS aja.
-
-Catatan: domain masih HTTP-only (`http://wedi-animal-care.ahlabs.my.id`).
-Blok HTTPS (443 + redirect) sudah ada di `nginx.conf`, tapi butuh sertifikat
-diletakkan manual di folder `ssl/` (gitignored, tidak ikut repo).
+Detail nilai `.env` & aturan kerja: `AGENTS.md`.

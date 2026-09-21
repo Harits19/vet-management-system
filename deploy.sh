@@ -2,6 +2,18 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+ENV_FILE=".env"
+# 1. Cek dan muat variabel dari file .env
+if [ -f "$ENV_FILE" ]; then
+    echo "✔ Membaca file $ENV_FILE..."
+    # Export variabel dari .env (mengabaikan baris kosong & komentar)
+    export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+    echo "❌ Error: File '$ENV_FILE' tidak ditemukan di root project!"
+    exit 1
+fi
+
+
 if [ ! -f .env ]; then
   cp .env.example .env
   echo "== .env dibuat dari .env.example"

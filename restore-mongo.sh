@@ -62,8 +62,16 @@ echo "✔ Menggunakan file/folder backup: $BACKUP_TARGET"
 ARGS=(
     "--host=$HOST"
     "--port=$PORT_ONLY"
-    "--drop" # Menghapus koleksi lama agar tidak bentrok/duplikat
 )
+
+# Catatan: TANPA --drop, mongorestore hanya menambah data (mode insert).
+# Dokumen dengan _id yang sudah ada akan gagal (duplicate key) tapi restore
+# tetap lanjut; koleksi/data lama yang tidak ada di dump tetap utuh.
+# Set RESTORE_DROP=1 kalau memang mau menghapus koleksi lama dulu (DESTRUKTIF).
+if [ "${RESTORE_DROP:-0}" = "1" ]; then
+    echo "⚠️  RESTORE_DROP=1 → koleksi akan DIHAPUS dulu sebelum restore."
+    ARGS+=("--drop")
+fi
 
 # Jika variabel root username & password ada di .env, tambahkan auth
 if [ -n "$ROOT_USER" ] && [ -n "$ROOT_PASS" ]; then

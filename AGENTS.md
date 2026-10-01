@@ -35,7 +35,7 @@ Login: `superadmin` / nilai `DEFAULT_USER_PASSWORD` di `.env`.
   `DEFAULT_USER_PASSWORD` (default di repo = publik, jangan dipakai untuk DB yang terbuka ke internet).
 - Tidak ada key `MONGODB_URI` — URI di-generate di kode: `apps/backend/src/config/env.ts`
   (`MONGODB_HOST` + `MONGO_APP_USERNAME`/`MONGO_APP_PASSWORD`); `mongo-init.js` pakai root (authSource=admin).
-- `MONGODB_HOST`: `localhost` (dev native) | `43.157.243.138` (laptop → DB prod) | `mongodb` (otomatis di-set
+- `MONGODB_HOST`: `localhost` (dev native) | `43.157.225.200` (laptop → DB prod) | `mongodb` (otomatis di-set
   docker-compose; nilai di `.env` TIDAK dipakai docker).
 - `MONGO_PORT`: `127.0.0.1:27017` (aman) | `0.0.0.0:27017` (publik, kalau laptop dev perlu akses DB).
 - `FRONTEND_ORIGINS` → CORS + **sumber domain** untuk `deploy.sh`/`setup-https.sh` (entri pertama).
@@ -58,7 +58,7 @@ Frontend dev mem-proxy `/api` → `localhost:3001` (rewrite di `apps/frontend/ne
 
 ## Produksi
 
-- VPS `ubuntu@43.157.243.138`, repo di `/home/ubuntu/vet-management-system`,
+- VPS `ubuntu@43.157.225.200`, repo di `/home/ubuntu/vet-management-system`,
   domain **https://wedi-animal-care.ahlabs.my.id**.
 - HTTPS: certbot webroot (`certbot-webroot/`) → disalin ke `ssl/` oleh `renew-ssl.sh`;
   renewal otomatis lewat `certbot.timer` + deploy-hook `/etc/letsencrypt/renewal-hooks/deploy/vet-renew-ssl.sh`.

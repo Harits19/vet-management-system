@@ -230,7 +230,10 @@ export default function CustomersPage() {
           </Col>
         </Row>
         <Table dataSource={data} columns={columns} rowKey="_id" loading={loading}
-          onChange={(_, __, sorter) => {
+          onChange={(_, __, sorter, extra) => {
+            // Ant Design memanggil onChange ini JUGA saat pindah halaman (extra.action === "paginate").
+            // Tanpa guard, setPage(1) menimpa halaman yang baru dipilih → indikator balik ke 1.
+            if (extra?.action !== "sort") return;
             const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
             const sb = s?.order ? String(s.field) : "createdAt";
             const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";

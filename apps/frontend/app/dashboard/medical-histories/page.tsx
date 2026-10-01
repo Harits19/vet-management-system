@@ -71,7 +71,10 @@ export default function MedicalHistoriesPage() {
           </Col>
         </Row>
         <Table dataSource={data} columns={columns} rowKey="_id" loading={loading} scroll={{ x: 900 }}
-          onChange={(_, __, sorter) => {
+          onChange={(_, __, sorter, extra) => {
+            // Ant Design memanggil onChange ini JUGA saat pindah halaman (extra.action === "paginate").
+            // Tanpa guard, setPage(1) menimpa halaman yang baru dipilih → indikator balik ke 1.
+            if (extra?.action !== "sort") return;
             const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
             const sb = s?.order ? String(s.field) : "visitDate";
             const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";

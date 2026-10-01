@@ -9,8 +9,7 @@ fi
 set -a; source .env; set +a
 
 command -v docker >/dev/null 2>&1 || {
-  echo "Docker belum terpasang. Jalankan: bash install-docker.sh"
-  echo "Lalu logout/login (atau newgrp docker) dan ulangi: bash deploy.sh"
+  echo "Docker belum terpasang: bash install-docker.sh, lalu logout/login."
   exit 1
 }
 
@@ -19,7 +18,7 @@ if [ ! -s ssl/fullchain.pem ]; then
     echo "== terbitkan sertifikat HTTPS"
     sudo bash setup-https.sh
   else
-    echo "⚠️  ssl/fullchain.pem belum ada — terbitkan sertifikat di VPS: sudo bash setup-https.sh"
+    echo "⚠️  ssl/fullchain.pem belum ada — terbitkan di VPS: sudo bash setup-https.sh"
   fi
 fi
 

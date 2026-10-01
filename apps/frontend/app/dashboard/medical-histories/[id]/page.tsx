@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Card, Descriptions, Table, Typography, Tag, Timeline, Button, Space } from "antd";
-import { ArrowLeft, Printer } from "lucide-react";
-import { apiFetch } from "../../../context/auth";
+import { ArrowLeft, Printer, Edit } from "lucide-react";
+import { apiFetch, useAuth } from "../../../context/auth";
 import { useStoreInfo } from "../../../hooks/useStoreInfo";
 import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
@@ -114,7 +114,10 @@ export default function MedicalHistoryDetailPage() {
   const params = useParams();
   const router = useRouter();
   const store = useStoreInfo();
+  const { user } = useAuth();
   const id = params.id as string;
+  // Sama dengan authorize backend pada PUT /api/medical-histories/:id
+  const canEdit = user?.role === "doctor" || user?.role === "superadmin";
   const [record, setRecord] = useState<MHDetail | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,6 +181,11 @@ export default function MedicalHistoryDetailPage() {
     <div>
       <Space style={{ marginBottom: 16 }} className="no-print">
         <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>Kembali</Button>
+        {canEdit && (
+          <Button icon={<Edit size={16} />} onClick={() => router.push(`/dashboard/consultations/new?edit=${id}`)}>
+            Edit
+          </Button>
+        )}
         <Button type="primary" icon={<Printer size={16} />} onClick={() => window.print()}>Cetak / Print</Button>
       </Space>
       <Title level={4} className="no-print">Detail Rekam Medis</Title>

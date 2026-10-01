@@ -164,6 +164,15 @@ export async function createMedicalHistory(input: MedicalHistoryCreateRequest, d
     goods,
   });
 
+  // Tanggal kedatangan meng-override `createdAt` supaya urutan & tampilan riwayat
+  // mengikuti tanggal kunjungan (bukan waktu input). Mongoose mengabaikan createdAt
+  // saat create kalau `timestamps` aktif → set eksplisit lewat collection.
+  if (input.visitDate) {
+    const visit = new Date(input.visitDate);
+    await MedicalHistoryModel.collection.updateOne({ _id: record._id }, { $set: { createdAt: visit } });
+    (record as any).createdAt = visit;
+  }
+
   // Auto-create transaction (utang) dari tindakan & resep & barang.
   // Rekam medis TETAP tersimpan walau transaksi gagal dibuat (mis. stok kurang) —
   // kegagalan transaksi dilaporkan lewat transactionError.
@@ -210,6 +219,14 @@ export async function updateMedicalHistory(id: string, input: MedicalHistoryUpda
 
   const updated = await MedicalHistoryModel.findByIdAndUpdate(id, { $set: patch }, { new: true, runValidators: true }).lean();
   if (!updated) throw Object.assign(new Error("Medical history not found"), { status: 404 });
+
+  // Kalau tanggal kunjungan diubah lewat edit, createdAt ikut disamakan
+  // (konsisten dengan aturan create di atas).
+  if (input.visitDate) {
+    const visit = new Date(input.visitDate);
+    await MedicalHistoryModel.collection.updateOne({ _id: updated._id }, { $set: { createdAt: visit } });
+    (updated as any).createdAt = visit;
+  }
 
   // Sinkron transaksi terkait (hanya jika masih utang).
   // Rekam medis TETAP ter-update walau sinkronisasi gagal (mis. stok kurang) —

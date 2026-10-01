@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Form, Input, Select, Button, Row, Col, Typography, Space, Divider, Tag, Empty, Spin, Alert, AutoComplete } from "antd";
+import { Card, Form, Input, Select, Button, Row, Col, Typography, Space, Divider, Tag, Empty, Spin, Alert, AutoComplete, DatePicker } from "antd";
 import { ArrowLeft, Save, Info } from "lucide-react";
 import { apiFetch } from "../../../context/auth";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
@@ -48,6 +48,10 @@ export default function NewConsultationPage() {
   const [diagnosisOptions, setDiagnosisOptions] = useState<{ value: string }[]>([]);
   const [mhRecords, setMhRecords] = useState<any[]>([]);
   const [mhLoading, setMhLoading] = useState(false);
+
+  // ?edit=<id> → halaman ini dipakai untuk mengubah rekam medis yang sudah ada
+  const editId = searchParams.get("edit");
+  const isEdit = !!editId;
 
   const selectedDiagnosis = Form.useWatch("diagnosis", form);
 
@@ -104,6 +108,60 @@ export default function NewConsultationPage() {
     } catch { setMhRecords([]); } finally { setMhLoading(false); }
   };
 
+  // Mode edit — muat rekam medis yang sudah ada lalu isi form + daftar item.
+  // Pasien & pemilik dikunci (transaksi terkait sudah terikat ke pasien ini).
+  const loadForEdit = async (id: string) => {
+    const res = await apiFetch<{ data: any }>(`/api/medical-histories/${id}`);
+    const r = res.data;
+    const pet = r.petId;
+    const customerId = pet?.customerId?._id || pet?.customerId;
+
+    form.setFieldsValue({
+      customerId,
+      petId: pet?._id,
+      visitDate: r.visitDate ? dayjs(r.visitDate) : dayjs(),
+      complaint: r.soap?.subjective?.complaint,
+      physicalExam: r.soap?.objective?.physicalExam ?? [],
+      labResult: r.soap?.objective?.labResult,
+      differentialDiagnosis: r.soap?.assessment?.differentialDiagnosis,
+      physicalExamNote: r.soap?.assessment?.physicalExamNote,
+      treatmentPlan: r.soap?.plan?.treatmentPlan,
+      doctorNotes: r.soap?.plan?.doctorNotes,
+      ownerNote: r.soap?.plan?.ownerNote,
+      paramedicNote: r.soap?.plan?.paramedicNote,
+      diagnosis: r.diagnosis,
+    });
+
+    if (customerId) await loadPets(customerId);
+    setSelectedPet(pet ?? null);
+
+    setTreatments(
+      (r.treatments ?? []).map((t: any, i: number) => ({
+        productId: t.productId ? String(t.productId) : "",
+        name: t.name, quantity: t.quantity, price: t.price, notes: t.notes,
+        _key: `t-edit-${i}`,
+      })),
+    );
+    setPrescriptions(
+      (r.prescriptions ?? []).map((p: any, i: number) => ({
+        productId: p.productId ? String(p.productId) : "",
+        name: p.name, quantity: p.quantity, price: p.price,
+        dosage: p.dosage, usage: p.usage, notes: p.notes, unit: p.unit, amount: p.amount,
+        usageTime: p.usageTime, usageInstruction: p.usageInstruction, usageNote: p.usageNote,
+        _key: `p-edit-${i}`,
+      })),
+    );
+    setGoodsLines(
+      (r.goods ?? []).map((g: any, i: number) => ({
+        productId: g.productId ? String(g.productId) : "",
+        name: g.name, quantity: g.quantity, price: g.price, notes: g.notes,
+        _key: `g-edit-${i}`,
+      })),
+    );
+
+    if (pet?._id) loadMedicalHistory(pet._id);
+  };
+
   useEffect(() => {
     Promise.all([
       apiFetch<{ data: any[] }>("/api/customers?page=1&limit=100"),
@@ -116,6 +174,12 @@ export default function NewConsultationPage() {
         setServices(s.data);
         setMedicines(m.data);
         setGoods(g.data);
+
+        // Mode edit: isi form dari rekam medis yang sudah ada, bukan dari query petId
+        if (editId) {
+          await loadForEdit(editId);
+          return;
+        }
 
         const customerId = searchParams.get("customerId");
         const petId = searchParams.get("petId");
@@ -180,9 +244,11 @@ export default function NewConsultationPage() {
         .map((i: any) => ({ key: i.key, label: i.label, unit: i.unit, value: i.value ?? undefined }))
         .filter((i: any) => i.value !== undefined);
 
+      const visitDate = values.visitDate ? dayjs(values.visitDate) : dayjs();
+
       const payload = {
         petId: values.petId,
-        visitDate: new Date().toISOString(),
+        visitDate: visitDate.toISOString(),
         soap: {
           subjective: { complaint: values.complaint },
           objective: { physicalExam, labResult: values.labResult || undefined },
@@ -219,15 +285,25 @@ export default function NewConsultationPage() {
           .map((g) => ({ productId: g.productId, name: g.name, quantity: g.quantity, price: g.price, notes: g.notes })),
       };
 
-      const res = await apiFetch<{ data: any }>("/api/medical-histories", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      const res = await apiFetch<{ data: any }>(
+        isEdit ? `/api/medical-histories/${editId}` : "/api/medical-histories",
+        {
+          method: isEdit ? "PUT" : "POST",
+          body: JSON.stringify(payload),
+        },
+      );
 
       const txn = res.data?.transaction;
       const txnError = res.data?.transactionError;
       const txnWarnings: string[] = res.data?.transactionWarnings ?? [];
-      if (txnError) {
+      if (isEdit) {
+        if (txnError) {
+          // Perubahan rekam medis TETAP tersimpan walau sinkron transaksi gagal
+          msg.warning(`Perubahan tersimpan, tapi sinkronisasi transaksi gagal: ${txnError}`);
+        } else {
+          msg.success("Perubahan rekam medis tersimpan.");
+        }
+      } else if (txnError) {
         // Rekam medis TETAP tersimpan walau transaksi gagal (mis. stok kurang)
         msg.warning(`Rekam medis tersimpan, tapi transaksi gagal dibuat: ${txnError}`);
       } else if (txnWarnings.length > 0) {
@@ -252,7 +328,7 @@ export default function NewConsultationPage() {
     <div>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>Kembali</Button>
-        <Title level={4} style={{ margin: 0 }}>Pasien Lama — Konsultasi</Title>
+        <Title level={4} style={{ margin: 0 }}>{isEdit ? "Edit Rekam Medis" : "Pasien Lama — Konsultasi"}</Title>
       </Space>
 
       <Spin spinning={mastersLoading}>
@@ -263,6 +339,7 @@ export default function NewConsultationPage() {
                 <Form.Item name="customerId" label="Pemilik" rules={[{ required: true, message: "Pilih pemilik" }]}>
                   <Select
                     showSearch
+                    disabled={isEdit}
                     placeholder="Cari pemilik..."
                     onSearch={searchCustomers}
                     onFocus={() => searchCustomers()}
@@ -282,10 +359,29 @@ export default function NewConsultationPage() {
                     showSearch
                     loading={petLoading}
                     placeholder="Pilih pasien..."
-                    disabled={!form.getFieldValue("customerId")}
+                    disabled={isEdit || !form.getFieldValue("customerId")}
                     options={pets.map((p) => ({ value: p._id, label: `${p.name} (${p.kind})` }))}
                     onChange={(val) => loadPetDetail(val)}
                     notFoundContent={<Empty description="Belum ada pasien" image={Empty.PRESENTED_IMAGE_SIMPLE} />}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16} style={{ marginTop: 12 }}>
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  name="visitDate"
+                  label="Tanggal Kedatangan"
+                  initialValue={dayjs()}
+                  rules={[{ required: true, message: "Tanggal kedatangan wajib diisi" }]}
+                  extra="Menimpa tanggal dibuat (createdAt) rekam medis."
+                >
+                  <DatePicker
+                    showTime={{ format: "HH:mm" }}
+                    format="DD/MM/YYYY HH:mm"
+                    allowClear={false}
+                    style={{ width: "100%" }}
                   />
                 </Form.Item>
               </Col>
@@ -445,7 +541,7 @@ export default function NewConsultationPage() {
 
           <Divider />
           <Button type="primary" size="large" block icon={<Save size={16} />} loading={submitting} onClick={handleSubmit}>
-            Simpan Rekam Medis & Buat Transaksi
+            {isEdit ? "Simpan Perubahan" : "Simpan Rekam Medis & Buat Transaksi"}
           </Button>
         </Spin>
     </div>

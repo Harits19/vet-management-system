@@ -23,8 +23,7 @@ command -v docker >/dev/null 2>&1 || die "Docker belum terpasang: bash install-d
 
 if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
 
-# Nilai .env dibaca langsung dari file, bukan dari env var: script ini dipanggil
-# `sudo bash setup-https.sh` (deploy.sh) dan sudo membuang environment pemanggil.
+# dipanggil `sudo bash setup-https.sh` -> env var hilang, baca langsung dari .env
 env_get() {
   sed -nE "s/^$1=\"?([^\"]*)\"?[[:space:]]*\$/\1/p" .env | tr -d '\r' | head -1
 }
@@ -44,8 +43,7 @@ if ! command -v certbot >/dev/null 2>&1; then
   $SUDO apt-get install -y certbot
 fi
 
-# nginx menolak start kalau file cert yang direferensikan nginx.conf belum ada
-# (fatal: cannot load certificate) -> isi self-signed dulu, ditimpa cert asli di bawah.
+# nginx gagal start kalau cert belum ada -> isi self-signed dulu, ditimpa cert asli
 mkdir -p ssl certbot-webroot
 if [ ! -s ssl/fullchain.pem ]; then
   openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
@@ -56,9 +54,7 @@ fi
 
 docker compose up -d nginx
 
-# nginx.conf pakai `root /var/www/certbot`, jadi URI /.well-known/acme-challenge/TOKEN
-# dipetakan ke /var/www/certbot/.well-known/acme-challenge/TOKEN -> token WAJIB ada
-# di subdir itu, bukan di akar webroot.
+# nginx.conf pakai `root /var/www/certbot` -> token harus ada di subdir acme-challenge
 ACME_DIR="certbot-webroot/.well-known/acme-challenge"
 mkdir -p "$ACME_DIR"
 TOKEN="vet-acme-probe-$$"
@@ -80,7 +76,7 @@ ARGS=(
   --non-interactive --keep-until-expiring
 )
 [ "$STAGING" -eq 1 ] && ARGS+=(--staging)
-$SUDO "${ARGS[@]}"
+$SUDO certbot "${ARGS[@]}"
 
 $SUDO sh ./renew-ssl.sh
 

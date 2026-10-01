@@ -1,9 +1,9 @@
 # Deploy
 
-VPS: `ubuntu@43.157.243.138`, repo di `/home/ubuntu/vet-management-system`.
+VPS: `ubuntu@43.157.225.200`, repo di `/home/ubuntu/vet-management-system`.
 
 ```bash
-ssh ubuntu@43.157.243.138
+ssh ubuntu@43.157.225.200
 git clone <url-repo> && cd vet-management-system
 
 bash install-docker.sh   # sekali saja, lalu logout/login

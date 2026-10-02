@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, Table, Button, Input, Space, Select, Typography, Tag } from "antd";
 import { Plus, Eye, Trash2 } from "lucide-react";
 import { apiFetch } from "../../context/auth";
@@ -9,50 +9,26 @@ import { useAntdModal } from "../../hooks/useAntdModal";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { LETTER_TYPE_OPTIONS, letterTypeLabel, letterTypeColor } from "./constants";
+import { LetterRow, useGetLetters } from "@/api/useGetLetters";
 
 const { Title } = Typography;
-
-interface LetterRow {
-  _id: string;
-  letterType: string;
-  letterNumber: string;
-  date: string;
-  petId: { _id: string; name: string; kind?: string };
-  customerId: { _id: string; name: string };
-  doctorId: { _id: string; name: string };
-  ownerSignature?: string;
-  subject?: string;
-}
 
 export default function LettersPage() {
   const router = useRouter();
   const msg = useAntdMessage();
   const modal = useAntdModal();
-  const [data, setData] = useState<LetterRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [letterType, setLetterType] = useState<string | undefined>();
 
-  const fetchData = async (p = page, s = search, t = letterType, sb = sortBy, od = order) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search: s, sortBy: sb, order: od });
-      if (t) params.set("letterType", t);
-      const res = await apiFetch<{ data: LetterRow[]; meta: { total: number } }>(`/api/letters?${params}`);
-      setData(res.data);
-      setTotal(res.meta.total);
-    } catch (err: any) {
-      msg.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, []);
+  const {
+    invalidate,
+    data,
+    isLoading: loading,
+  } = useGetLetters({ page, limit, search, sortBy, order, letterType });
 
   const handleDelete = (id: string) => {
     modal.confirm({
@@ -61,7 +37,7 @@ export default function LettersPage() {
         try {
           await apiFetch(`/api/letters/${id}`, { method: "DELETE" });
           msg.success("Surat dihapus");
-          fetchData();
+          invalidate();
         } catch (err: any) {
           msg.error(err.message);
         }
@@ -96,7 +72,7 @@ export default function LettersPage() {
             placeholder="Cari nomor / isi surat..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onSearch={() => { setPage(1); fetchData(1, search, letterType); }}
+            onSearch={() => setPage(1)}
             enterButton
             style={{ width: 260 }}
           />
@@ -106,14 +82,14 @@ export default function LettersPage() {
             style={{ width: 260 }}
             options={LETTER_TYPE_OPTIONS}
             value={letterType}
-            onChange={(v) => { setLetterType(v); setPage(1); fetchData(1, search, v); }}
+            onChange={(v) => { setLetterType(v); setPage(1); }}
           />
           <Button type="primary" icon={<Plus size={16} />} onClick={() => router.push("/dashboard/letters/create")}>
             Buat Surat
           </Button>
         </Space>
         <Table
-          dataSource={data}
+          dataSource={data?.data ?? []}
           columns={columns}
           rowKey="_id"
           loading={loading}
@@ -124,9 +100,14 @@ export default function LettersPage() {
             const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
             const sb = s?.order ? String(s.field) : "date";
             const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
-            setSortBy(sb); setOrder(od); setPage(1); fetchData(1, search, letterType, sb, od);
+            setSortBy(sb); setOrder(od); setPage(1);
           }}
-          pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }}
+          pagination={{
+            current: page,
+            total: data?.meta.total ?? 0,
+            pageSize: limit,
+            onChange: (p, l) => { setPage(p); setLimit(l); },
+          }}
         />
       </Card>
     </div>

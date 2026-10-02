@@ -3,14 +3,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAntdMessage } from "./useAntdMessage";
 
 export interface VetQueryProps extends RequestInit {
-  params?: Record<string, string | number>;
-  url: "/api/customers";
+  params?: Record<string, string | number | undefined>;
+  url: string;
+  enabled?: boolean;
 }
 
-export function useVetQuery<TData>({ url, ...options }: VetQueryProps) {
+export function useVetQuery<TData>({ url, enabled = true, ...options }: VetQueryProps) {
   const params = new URLSearchParams();
   if (options.params) {
     Object.entries(options.params).forEach(([key, value]) => {
+      if (value === undefined) return;
       params.append(key, String(value));
     });
   }
@@ -23,6 +25,7 @@ export function useVetQuery<TData>({ url, ...options }: VetQueryProps) {
   };
   const query = useQuery<TData>({
     queryKey: [url, options],
+    enabled,
     queryFn: async () => {
       try {
         const res = await apiFetch(finalURL, options);

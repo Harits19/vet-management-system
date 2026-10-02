@@ -73,9 +73,20 @@ Lokasi (GPS) + metode wajah (liveness kedip) atau QR statis. Endpoint `/api/atte
 
 ## Aturan kerja
 
+- **Setiap perubahan langsung di-commit, di-push ke branch, lalu dibuatkan PR** (jangan push
+  langsung ke `main`). Selalu: branch baru dari `main` terbaru → commit → push → PR.
+- **Commit message & PR (title + description) WAJIB Bahasa Inggris dengan standar open source:**
+  - Commit: Conventional Commits — `type(scope): imperative summary`, tipe
+    `feat|fix|docs|refactor|perf|test|chore|ci`. Subject ≤ 72 karakter, tanpa titik di akhir.
+    Body menjelaskan **kenapa** (bukan mengulang diff), dibungkus ~72 kolom.
+  - PR: title mengikuti format Conventional Commits; description pakai heading
+    `## Summary`, `## Changes`, `## Test Plan` (checklist `- [ ]`), `## Notes`. Satu PR = satu
+    topik, jelaskan apa yang **tidak** diubah kalau relevan. Jangan pernah menaruh secret/token.
+  - Bahasa Indonesia tetap dipakai untuk komunikasi dengan user dan komentar kode seperlunya.
 - Bahasa Indonesia + caveman mode ULTRA (aturan: `.clinerules/caveman-ultra.md`).
 - Solusi minimal yang jalan > optimasi; fix sekecil mungkin.
-- Di VPS: hanya ubah kode, JANGAN jalankan build/typecheck/test (verifikasi di laptop).
+- Di VPS **boleh** jalankan lint & build (`npm run lint`, `npm run build`, `npx tsc --noEmit`) —
+  verifikasi wajib sebelum lapor selesai. Yang tidak perlu: menguji coba fitur baru secara manual.
 - Ubah nilai `.env` yang dibaca container → WAJIB `docker compose up -d` (recreate container);
   `docker restart` tidak membaca ulang env.
 - File bind-mount (`nginx.conf`): edit via rename → container masih baca inode lama;

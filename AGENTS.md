@@ -77,7 +77,8 @@ Lokasi (GPS) + metode wajah (liveness kedip) atau QR statis. Endpoint `/api/atte
   langsung ke `main`). Selalu: branch baru dari `main` terbaru → commit → push → PR.
 - Bahasa Indonesia + caveman mode ULTRA (aturan: `.clinerules/caveman-ultra.md`).
 - Solusi minimal yang jalan > optimasi; fix sekecil mungkin.
-- Di VPS: hanya ubah kode, JANGAN jalankan build/typecheck/test (verifikasi di laptop).
+- Di VPS **boleh** jalankan lint & build (`npm run lint`, `npm run build`, `npx tsc --noEmit`) —
+  verifikasi wajib sebelum lapor selesai. Yang tidak perlu: menguji coba fitur baru secara manual.
 - Ubah nilai `.env` yang dibaca container → WAJIB `docker compose up -d` (recreate container);
   `docker restart` tidak membaca ulang env.
 - File bind-mount (`nginx.conf`): edit via rename → container masih baca inode lama;

@@ -1,27 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Table, Button, Input, Space, Modal, Form, Tag, Typography, Row, Col, Select, AutoComplete } from "antd";
+import {
+  Card,
+  Table,
+  Button,
+  Input,
+  Space,
+  Modal,
+  Form,
+  Tag,
+  Typography,
+  Row,
+  Col,
+  Select,
+  AutoComplete,
+} from "antd";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
 import { useRouter } from "next/navigation";
+import { Customer, useGetCustomers } from "@/api/useGetCustomers";
 
 const { Title } = Typography;
-
-interface Customer {
-  _id: string;
-  name: string;
-  whatsapp?: string;
-  address?: string;
-  province?: string;
-  regency?: string;
-  district?: string;
-  village?: string;
-  hamlet?: string;
-  createdAt: string;
-}
 
 interface Wilayah {
   code: string;
@@ -37,7 +39,14 @@ async function fetchWilayah(path: string): Promise<Wilayah[]> {
 
 // Hanya dipakai di halaman ini — TIDAK boleh export (Next.js App Router: file page
 // hanya boleh punya default export + metadata yang diizinkan)
-function formatAddress(c: { address?: string; hamlet?: string; village?: string; district?: string; regency?: string; province?: string }) {
+function formatAddress(c: {
+  address?: string;
+  hamlet?: string;
+  village?: string;
+  district?: string;
+  regency?: string;
+  province?: string;
+}) {
   const parts = [
     c.address,
     c.hamlet ? `Dusun ${c.hamlet}` : "",
@@ -50,12 +59,10 @@ function formatAddress(c: { address?: string; hamlet?: string; village?: string;
 }
 
 export default function CustomersPage() {
-  const [data, setData] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
+  const [limit, setLimit] = useState(10);
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
@@ -63,34 +70,28 @@ export default function CustomersPage() {
   const [provinces, setProvinces] = useState<Wilayah[]>([]);
   const [regencies, setRegencies] = useState<Wilayah[]>([]); // semua kabupaten (difilter client-side)
   const [districts, setDistricts] = useState<Wilayah[]>([]); // semua kecamatan (difilter client-side)
-  const [villages, setVillages] = useState<Wilayah[]>([]);   // desa kecamatan terpilih
+  const [villages, setVillages] = useState<Wilayah[]>([]); // desa kecamatan terpilih
   const [villageCache, setVillageCache] = useState<Record<string, Wilayah[]>>({}); // cache desa per provinsi
   const [dusunOptions, setDusunOptions] = useState<{ value: string }[]>([]);
   const provinceName = Form.useWatch("province", form);
   const regencyName = Form.useWatch("regency", form);
   const provinceCode = provinces.find((x) => x.name === provinceName)?.code ?? "";
   const regencyCode = regencies.find((x) => x.name === regencyName)?.code ?? "";
-  const regencyOptions = provinceCode ? regencies.filter((r) => r.code.startsWith(provinceCode)) : [];
-  const districtOptions = regencyCode ? districts.filter((d) => d.code.startsWith(regencyCode)) : [];
+  const regencyOptions = provinceCode
+    ? regencies.filter((r) => r.code.startsWith(provinceCode))
+    : [];
+  const districtOptions = regencyCode
+    ? districts.filter((d) => d.code.startsWith(regencyCode))
+    : [];
   const router = useRouter();
   const msg = useAntdMessage();
   const modal = useAntdModal();
 
-  const fetchData = async (p = page, s = search, sb = sortBy, od = order) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search: s, sortBy: sb, order: od });
-      const res = await apiFetch<{ data: Customer[]; meta: { total: number } }>(`/api/customers?${params}`);
-      setData(res.data);
-      setTotal(res.meta.total);
-    } catch (err: any) {
-      msg.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, []);
+  const {
+    invalidate,
+    data,
+    isLoading: loading,
+  } = useGetCustomers({ limit, order, page, search, sortBy });
 
   const loadProvinces = async (): Promise<Wilayah[]> => {
     if (provinces.length) return provinces;
@@ -143,14 +144,25 @@ export default function CustomersPage() {
     try {
       const res = await apiFetch<{ data: string[] }>("/api/customers/distinct?field=hamlet");
       setDusunOptions(res.data.map((v) => ({ value: v })));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
-  useEffect(() => { loadProvinces(); loadDusunOptions(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    loadProvinces();
+    loadDusunOptions();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSearch = () => { setPage(1); fetchData(1, search); };
+  const handleSearch = () => {
+    setPage(1);
+  };
 
-  const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    form.resetFields();
+    setModalOpen(true);
+  };
   const openEdit = async (c: Customer) => {
     setEditing(c);
     form.resetFields(); // buang state form dari edit sebelumnya (field yang tidak ada di record baru tidak ikut terbawa)
@@ -173,14 +185,17 @@ export default function CustomersPage() {
     try {
       const values = await form.validateFields();
       if (editing) {
-        await apiFetch(`/api/customers/${editing._id}`, { method: "PUT", body: JSON.stringify(values) });
+        await apiFetch(`/api/customers/${editing._id}`, {
+          method: "PUT",
+          body: JSON.stringify(values),
+        });
         msg.success("Customer diupdate");
       } else {
         await apiFetch("/api/customers", { method: "POST", body: JSON.stringify(values) });
         msg.success("Customer dibuat");
       }
       setModalOpen(false);
-      fetchData();
+      invalidate();
     } catch (err: any) {
       if (err.message) msg.error(err.message);
     }
@@ -193,7 +208,7 @@ export default function CustomersPage() {
         try {
           await apiFetch(`/api/customers/${id}`, { method: "DELETE" });
           msg.success("Customer dihapus");
-          fetchData();
+          invalidate();
         } catch (err: any) {
           msg.error(err.message);
         }
@@ -206,12 +221,22 @@ export default function CustomersPage() {
     { title: "WhatsApp", dataIndex: "whatsapp", key: "whatsapp", render: (v?: string) => v || "-" },
     { title: "Alamat", key: "address", render: (_: any, r: Customer) => formatAddress(r) },
     {
-      title: "Aksi", key: "action",
+      title: "Aksi",
+      key: "action",
       render: (_: any, record: Customer) => (
         <Space>
-          <Button size="small" icon={<Eye size={14} />} onClick={() => router.push(`/dashboard/customers/${record._id}`)} />
+          <Button
+            size="small"
+            icon={<Eye size={14} />}
+            onClick={() => router.push(`/dashboard/customers/${record._id}`)}
+          />
           <Button size="small" icon={<Edit size={14} />} onClick={() => openEdit(record)} />
-          <Button size="small" danger icon={<Trash2 size={14} />} onClick={() => handleDelete(record._id)} />
+          <Button
+            size="small"
+            danger
+            icon={<Trash2 size={14} />}
+            onClick={() => handleDelete(record._id)}
+          />
         </Space>
       ),
     },
@@ -223,13 +248,25 @@ export default function CustomersPage() {
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">
-            <Input.Search placeholder="Cari customer..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={handleSearch} enterButton />
+            <Input.Search
+              placeholder="Cari customer..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onSearch={handleSearch}
+              enterButton
+            />
           </Col>
           <Col>
-            <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>Tambah Customer</Button>
+            <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>
+              Tambah Customer
+            </Button>
           </Col>
         </Row>
-        <Table dataSource={data} columns={columns} rowKey="_id" loading={loading}
+        <Table
+          dataSource={data?.data ?? []}
+          columns={columns}
+          rowKey="_id"
+          loading={loading}
           onChange={(_, __, sorter, extra) => {
             // Ant Design memanggil onChange ini JUGA saat pindah halaman (extra.action === "paginate").
             // Tanpa guard, setPage(1) menimpa halaman yang baru dipilih → indikator balik ke 1.
@@ -237,12 +274,28 @@ export default function CustomersPage() {
             const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
             const sb = s?.order ? String(s.field) : "createdAt";
             const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
-            setSortBy(sb); setOrder(od); setPage(1); fetchData(1, search, sb, od);
+            setSortBy(sb);
+            setOrder(od);
+            setPage(1);
           }}
-          pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
+          pagination={{
+            current: page,
+            total: data?.meta.total ?? 0,
+            pageSize: limit,
+            onChange: (page, limit) => {
+              setPage(page);
+              setLimit(limit);
+            },
+          }}
+        />
       </Card>
 
-      <Modal title={editing ? "Edit Customer" : "Tambah Customer"} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)}>
+      <Modal
+        title={editing ? "Edit Customer" : "Tambah Customer"}
+        open={modalOpen}
+        onOk={handleSubmit}
+        onCancel={() => setModalOpen(false)}
+      >
         <Form form={form} layout="vertical">
           <Form.Item name="name" label="Nama" rules={[{ required: true, message: "Nama wajib" }]}>
             <Input />
@@ -257,7 +310,11 @@ export default function CustomersPage() {
               optionFilterProp="label"
               options={provinces.map((p) => ({ value: p.name, label: p.name }))}
               onChange={() => {
-                form.setFieldsValue({ regency: undefined, district: undefined, village: undefined });
+                form.setFieldsValue({
+                  regency: undefined,
+                  district: undefined,
+                  village: undefined,
+                });
                 setVillages([]);
                 loadAllRegencies();
               }}
@@ -302,7 +359,9 @@ export default function CustomersPage() {
             <AutoComplete
               options={dusunOptions}
               placeholder="Pilih dusun yang pernah diisi atau ketik baru"
-              filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
+              filterOption={(input, option) =>
+                (option?.value || "").toLowerCase().includes(input.toLowerCase())
+              }
             />
           </Form.Item>
           <Form.Item name="address" label="Detail Alamat">

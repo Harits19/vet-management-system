@@ -9,7 +9,7 @@
     "dev": "concurrently -n shared,backend,frontend -c yellow,green,blue \"npm run dev --workspace @vet/shared\" \"npm run dev --workspace @vet/backend\" \"npm run dev --workspace @vet/frontend\"",
     "predev": "npm run build --workspace @vet/shared && node mongo-init.js",
     "build": "npm run build --workspace @vet/shared && npm run build --workspace @vet/backend && npm run build --workspace @vet/frontend",
-    "dev:frontend": "npm run dev --workspace @vet/frontend",
+    "dev:frontend": "BACKEND_PROXY_URL=https://wedi-animal-care.ahlabs.my.id npm run dev --workspace @vet/frontend",
     "dev:backend": "npm run dev --workspace @vet/backend",
     "typecheck": "npm run typecheck --workspace @vet/shared && npm run typecheck --workspace @vet/backend",
     "docker:up": "docker compose up -d",

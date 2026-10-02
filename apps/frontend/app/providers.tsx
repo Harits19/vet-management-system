@@ -23,10 +23,16 @@ function ThemedConfigProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider>
-      <ThemedConfigProvider>{children}</ThemedConfigProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <ThemedConfigProvider>{children}</ThemedConfigProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

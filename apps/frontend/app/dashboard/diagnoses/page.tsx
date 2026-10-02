@@ -6,26 +6,9 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
+import { DiagnosisTemplate, TplLine, useGetDiagnosisTemplates } from "@/api/useGetDiagnosisTemplates";
 
 const { Title, Text } = Typography;
-
-interface TplLine {
-  productId: string;
-  name: string;
-  quantity: number;
-  dosage?: string;
-  _key: string;
-}
-
-interface DiagnosisTemplate {
-  _id: string;
-  name: string;
-  items: {
-    treatments: Omit<TplLine, "_key">[];
-    prescriptions: Omit<TplLine, "_key">[];
-    goods: Omit<TplLine, "_key">[];
-  };
-}
 
 interface SvcOpt { _id: string; name: string; price: number; }
 interface ProdOpt { _id: string; product: { name: string }; pricing: { selling: number }; inventory?: { quantity?: number }; unit?: string; }
@@ -35,10 +18,8 @@ const fmt = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", c
 const newLine = (prefix: string, lines: TplLine[]) => ({ productId: "", name: "", quantity: 1, _key: `${prefix}-${Date.now()}-${lines.length}` });
 
 export default function DiagnosesPage() {
-  const [data, setData] = useState<DiagnosisTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -56,21 +37,11 @@ export default function DiagnosesPage() {
   const [prescriptions, setPrescriptions] = useState<TplLine[]>([]);
   const [goodsLines, setGoodsLines] = useState<TplLine[]>([]);
 
-  const fetchData = async (p = page, s = search) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search: s });
-      const res = await apiFetch<{ data: DiagnosisTemplate[]; meta: { total: number } }>(`/api/diagnosis-templates?${params}`);
-      setData(res.data);
-      setTotal(res.meta.total);
-    } catch (err: any) {
-      msg.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, []);
+  const {
+    invalidate,
+    data,
+    isLoading: loading,
+  } = useGetDiagnosisTemplates({ page, limit, search });
 
   // Master jasa/obat/barang untuk picker item template (abaikan stok — produk stok 0 tetap bisa dipilih)
   useEffect(() => {
@@ -96,8 +67,6 @@ export default function DiagnosesPage() {
     const res = await apiFetch<{ data: ProdOpt[] }>(`/api/products?productType=good&search=${encodeURIComponent(q)}&limit=100`);
     setGoods(res.data);
   };
-
-  const handleSearch = () => { setPage(1); fetchData(1, search); };
 
   const svcOpts = services.map((s) => ({ value: s._id, label: `${s.name} — ${fmt(s.price)}` }));
   const prodLabel = (p: ProdOpt) => `${p.product?.name || "-"}${p.unit ? ` (${p.unit})` : ""} — stok ${p.inventory?.quantity ?? 0} — ${fmt(p.pricing?.selling ?? 0)}`;
@@ -144,7 +113,7 @@ export default function DiagnosesPage() {
         msg.success("List diagnosis dibuat");
       }
       setModalOpen(false);
-      fetchData();
+      invalidate();
     } catch (err: any) {
       if (err.message) msg.error(err.message);
     }
@@ -158,7 +127,7 @@ export default function DiagnosesPage() {
         try {
           await apiFetch(`/api/diagnosis-templates/${id}`, { method: "DELETE" });
           msg.success("List diagnosis dihapus");
-          fetchData();
+          invalidate();
         } catch (err: any) {
           msg.error(err.message);
         }
@@ -231,14 +200,19 @@ export default function DiagnosesPage() {
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">
-            <Input.Search placeholder="Cari diagnosis..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={handleSearch} enterButton />
+            <Input.Search placeholder="Cari diagnosis..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={() => setPage(1)} enterButton />
           </Col>
           <Col>
             <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>Tambah Diagnosis</Button>
           </Col>
         </Row>
-        <Table dataSource={data} columns={columns} rowKey="_id" loading={loading} scroll={{ x: 900 }}
-          pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
+        <Table dataSource={data?.data ?? []} columns={columns} rowKey="_id" loading={loading} scroll={{ x: 900 }}
+          pagination={{
+            current: page,
+            total: data?.meta.total ?? 0,
+            pageSize: limit,
+            onChange: (p, l) => { setPage(p); setLimit(l); },
+          }} />
       </Card>
 
       <Modal title={editing ? "Edit List Diagnosis" : "Tambah List Diagnosis"} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={860}>

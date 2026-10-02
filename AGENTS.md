@@ -73,6 +73,8 @@ Lokasi (GPS) + metode wajah (liveness kedip) atau QR statis. Endpoint `/api/atte
 
 ## Aturan kerja
 
+- **Setiap perubahan langsung di-commit, di-push ke branch, lalu dibuatkan PR** (jangan push
+  langsung ke `main`). Selalu: branch baru dari `main` terbaru → commit → push → PR.
 - Bahasa Indonesia + caveman mode ULTRA (aturan: `.clinerules/caveman-ultra.md`).
 - Solusi minimal yang jalan > optimasi; fix sekecil mungkin.
 - Di VPS: hanya ubah kode, JANGAN jalankan build/typecheck/test (verifikasi di laptop).

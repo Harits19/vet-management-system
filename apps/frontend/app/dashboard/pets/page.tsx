@@ -2,36 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row, Col, Tag, Empty, DatePicker, InputNumber, Radio, AutoComplete } from "antd";
-import { Plus, Search, Edit, Trash2, UserPlus, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, UserPlus, Eye } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { computePetAge } from "@vet/shared";
+import { Pet, useGetPets } from "@/api/useGetPets";
 
 const { Title } = Typography;
 
-interface Pet {
-  _id: string;
-  code?: string;
-  name: string;
-  kind: string;
-  breed?: string;
-  furColor?: string;
-  gender: "male" | "female";
-  birthDate?: string;
-  initialAge?: { value: number; unit: "month" | "year" };
-  notes?: string;
-  customerId: { _id: string; name: string; whatsapp?: string };
-  createdAt: string;
-}
-
 export default function PetsPage() {
-  const [data, setData] = useState<Pet[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
@@ -48,6 +32,12 @@ export default function PetsPage() {
 
   const ageMode = Form.useWatch("ageMode", form);
 
+  const {
+    invalidate,
+    data,
+    isLoading: loading,
+  } = useGetPets({ page, limit, search, sortBy, order });
+
   const fetchDistinct = async (field: "kind" | "breed" | "notes") => {
     try {
       const res = await apiFetch<{ data: string[] }>(`/api/pets/distinct?field=${field}`);
@@ -56,20 +46,6 @@ export default function PetsPage() {
       else if (field === "breed") setBreedOptions(opts);
       else setNotesOptions(opts);
     } catch { /* ignore */ }
-  };
-
-  const fetchData = async (p = page, s = search, sb = sortBy, od = order) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search: s, sortBy: sb, order: od });
-      const res = await apiFetch<{ data: Pet[]; meta: { total: number } }>(`/api/pets?${params}`);
-      setData(res.data);
-      setTotal(res.meta.total);
-    } catch (err: any) {
-      msg.error(err.message);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const fetchCustomers = async (q = "") => {
@@ -84,9 +60,7 @@ export default function PetsPage() {
     });
   };
 
-  useEffect(() => { fetchData(); fetchCustomers(); fetchDistinct("kind"); fetchDistinct("breed"); fetchDistinct("notes"); }, []);
-
-  const handleSearch = () => { setPage(1); fetchData(1, search); };
+  useEffect(() => { fetchCustomers(); fetchDistinct("kind"); fetchDistinct("breed"); fetchDistinct("notes"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openCreate = () => {
     setEditing(null);
@@ -138,7 +112,7 @@ export default function PetsPage() {
         msg.success("Pasien ditambahkan");
       }
       setModalOpen(false);
-      fetchData();
+      invalidate();
     } catch (err: any) {
       if (err.message) msg.error(err.message);
     }
@@ -151,7 +125,7 @@ export default function PetsPage() {
         try {
           await apiFetch(`/api/pets/${id}`, { method: "DELETE" });
           msg.success("Dihapus");
-          fetchData();
+          invalidate();
         } catch (err: any) {
           msg.error(err.message);
         }
@@ -187,13 +161,13 @@ export default function PetsPage() {
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">
-            <Input.Search placeholder="Cari pasien..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={handleSearch} enterButton />
+            <Input.Search placeholder="Cari pasien..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={() => setPage(1)} enterButton />
           </Col>
           <Col>
             <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>Tambah Pasien</Button>
           </Col>
         </Row>
-        <Table dataSource={data} columns={columns} rowKey="_id" loading={loading}
+        <Table dataSource={data?.data ?? []} columns={columns} rowKey="_id" loading={loading}
           onChange={(_, __, sorter, extra) => {
             // Ant Design memanggil onChange ini JUGA saat pindah halaman (extra.action === "paginate").
             // Tanpa guard, setPage(1) menimpa halaman yang baru dipilih → indikator balik ke 1.
@@ -201,9 +175,14 @@ export default function PetsPage() {
             const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
             const sb = s?.order ? String(s.field) : "createdAt";
             const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
-            setSortBy(sb); setOrder(od); setPage(1); fetchData(1, search, sb, od);
+            setSortBy(sb); setOrder(od); setPage(1);
           }}
-          pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
+          pagination={{
+            current: page,
+            total: data?.meta.total ?? 0,
+            pageSize: limit,
+            onChange: (p, l) => { setPage(p); setLimit(l); },
+          }} />
       </Card>
 
       <Modal title={editing ? "Edit Pasien" : "Tambah Pasien"} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={500}>

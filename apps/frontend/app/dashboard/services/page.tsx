@@ -1,28 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, Table, Button, Input, Space, Modal, Form, Typography, Row, Col, Tag } from "antd";
-import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
+import { Service, useGetServices } from "@/api/useGetServices";
 
 const { Title } = Typography;
 
-interface Service {
-  _id: string;
-  name: string;
-  description?: string;
-  price: number;
-  cost?: number;
-  isActive: boolean;
-}
-
 export default function ServicesPage() {
-  const [data, setData] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
@@ -32,23 +22,11 @@ export default function ServicesPage() {
   const msg = useAntdMessage();
   const modal = useAntdModal();
 
-  const fetchData = async (p = page, s = search, sb = sortBy, od = order) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search: s, sortBy: sb, order: od });
-      const res = await apiFetch<{ data: Service[]; meta: { total: number } }>(`/api/services?${params}`);
-      setData(res.data);
-      setTotal(res.meta.total);
-    } catch (err: any) {
-      msg.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, []);
-
-  const handleSearch = () => { setPage(1); fetchData(1, search); };
+  const {
+    invalidate,
+    data,
+    isLoading: loading,
+  } = useGetServices({ page, limit, search, sortBy, order });
 
   const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
   const openEdit = (s: Service) => { setEditing(s); form.resetFields(); form.setFieldsValue(s); setModalOpen(true); };
@@ -64,7 +42,7 @@ export default function ServicesPage() {
         msg.success("Jasa dibuat");
       }
       setModalOpen(false);
-      fetchData();
+      invalidate();
     } catch (err: any) {
       if (err.message) msg.error(err.message);
     }
@@ -77,7 +55,7 @@ export default function ServicesPage() {
         try {
           await apiFetch(`/api/services/${id}`, { method: "DELETE" });
           msg.success("Dinonaktifkan");
-          fetchData();
+          invalidate();
         } catch (err: any) {
           msg.error(err.message);
         }
@@ -109,13 +87,13 @@ export default function ServicesPage() {
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">
-            <Input.Search placeholder="Cari jasa..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={handleSearch} enterButton style={{ width: 250 }} />
+            <Input.Search placeholder="Cari jasa..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={() => setPage(1)} enterButton style={{ width: 250 }} />
           </Col>
           <Col>
             <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>Tambah Jasa</Button>
           </Col>
         </Row>
-        <Table dataSource={data} columns={columns} rowKey="_id" loading={loading}
+        <Table dataSource={data?.data ?? []} columns={columns} rowKey="_id" loading={loading}
           onChange={(_, __, sorter, extra) => {
             // Ant Design memanggil onChange ini JUGA saat pindah halaman (extra.action === "paginate").
             // Tanpa guard, setPage(1) menimpa halaman yang baru dipilih → indikator balik ke 1.
@@ -123,9 +101,14 @@ export default function ServicesPage() {
             const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
             const sb = s?.order ? String(s.field) : "createdAt";
             const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
-            setSortBy(sb); setOrder(od); setPage(1); fetchData(1, search, sb, od);
+            setSortBy(sb); setOrder(od); setPage(1);
           }}
-          pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
+          pagination={{
+            current: page,
+            total: data?.meta.total ?? 0,
+            pageSize: limit,
+            onChange: (p, l) => { setPage(p); setLimit(l); },
+          }} />
       </Card>
 
       <Modal title={editing ? "Edit Jasa" : "Tambah Jasa"} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={500}>

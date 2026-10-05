@@ -1,25 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, Table, Button, Input, Space, Modal, Form, Select, Switch, Tag, Typography, Row, Col } from "antd";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
 import dayjs from "dayjs";
+import { UserRecord, useGetUsers } from "@/api/useGetUsers";
 
 const { Title } = Typography;
-
-interface UserRecord {
-  _id: string;
-  name: string;
-  username: string;
-  email: string;
-  role: "superadmin" | "cashier" | "doctor";
-  isActive: boolean;
-  doctorSignature?: string;
-  createdAt: string;
-}
 
 const ROLE_LABELS: Record<UserRecord["role"], string> = {
   superadmin: "Super Admin",
@@ -34,10 +24,8 @@ const ROLE_COLORS: Record<UserRecord["role"], string> = {
 };
 
 export default function UsersPage() {
-  const [data, setData] = useState<UserRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<UserRecord | null>(null);
@@ -45,23 +33,11 @@ export default function UsersPage() {
   const msg = useAntdMessage();
   const modal = useAntdModal();
 
-  const fetchData = async (p = page, s = search) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(p), limit: "10", search: s });
-      const res = await apiFetch<{ data: UserRecord[]; meta: { total: number } }>(`/api/users?${params}`);
-      setData(res.data);
-      setTotal(res.meta.total);
-    } catch (err: any) {
-      msg.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, []);
-
-  const handleSearch = () => { setPage(1); fetchData(1, search); };
+  const {
+    invalidate,
+    data,
+    isLoading: loading,
+  } = useGetUsers({ page, limit, search });
 
   const openCreate = () => {
     setEditing(null);
@@ -90,7 +66,7 @@ export default function UsersPage() {
         msg.success("User dibuat");
       }
       setModalOpen(false);
-      fetchData();
+      invalidate();
     } catch (err: any) {
       if (err.message) msg.error(err.message);
     }
@@ -104,7 +80,7 @@ export default function UsersPage() {
         try {
           await apiFetch(`/api/users/${u._id}`, { method: "DELETE" });
           msg.success("User dinonaktifkan");
-          fetchData();
+          invalidate();
         } catch (err: any) {
           msg.error(err.message);
         }
@@ -142,14 +118,19 @@ export default function UsersPage() {
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">
-            <Input.Search placeholder="Cari nama / username / email..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={handleSearch} enterButton />
+            <Input.Search placeholder="Cari nama / username / email..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={() => setPage(1)} enterButton />
           </Col>
           <Col>
             <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>Tambah User</Button>
           </Col>
         </Row>
-        <Table dataSource={data} columns={columns} rowKey="_id" loading={loading} scroll={{ x: 900 }}
-          pagination={{ current: page, total, pageSize: 10, onChange: (p) => { setPage(p); fetchData(p); } }} />
+        <Table dataSource={data?.data ?? []} columns={columns} rowKey="_id" loading={loading} scroll={{ x: 900 }}
+          pagination={{
+            current: page,
+            total: data?.meta.total ?? 0,
+            pageSize: limit,
+            onChange: (p, l) => { setPage(p); setLimit(l); },
+          }} />
       </Card>
 
       <Modal title={editing ? "Edit User" : "Tambah User"} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={500}>

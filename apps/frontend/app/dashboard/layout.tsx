@@ -88,7 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
       <Drawer
         placement="left"
-        width={220}
+        size={220}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         closable={false}

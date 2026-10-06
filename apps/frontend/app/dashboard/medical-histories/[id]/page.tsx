@@ -3,16 +3,21 @@
 import { useEffect, useState } from "react";
 import { Card, Descriptions, Table, Typography, Tag, Timeline, Button, Space } from "antd";
 import { ArrowLeft, Printer, Edit } from "lucide-react";
-import { apiFetch, useAuth } from "../../../context/auth";
+import { useAuth } from "../../../context/auth";
 import { useStoreInfo } from "../../../hooks/useStoreInfo";
 import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { computePetAge } from "@vet/shared";
+import { apiFetch } from "@/hooks/useVetQuery";
 
 const { Title, Text } = Typography;
 
 function formatPrice(n: number) {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(n);
 }
 
 // Format resep ala tulisan dokter:
@@ -35,7 +40,12 @@ function prescriptionLines(p: any): string[] {
 }
 
 // ── Komponen dokumen cetak formal (kop surat, gaya seperti surat) ──
-const docCell = { padding: "6px 8px", border: "1px solid #000", verticalAlign: "top" as const, whiteSpace: "pre-line" as const };
+const docCell = {
+  padding: "6px 8px",
+  border: "1px solid #000",
+  verticalAlign: "top" as const,
+  whiteSpace: "pre-line" as const,
+};
 
 function DocSection({ title, rows }: { title: string; rows: [string, string][] }) {
   if (rows.every(([, v]) => !v || v === "-")) return null;
@@ -46,7 +56,9 @@ function DocSection({ title, rows }: { title: string; rows: [string, string][] }
         <tbody>
           {rows.map(([label, value]) => (
             <tr key={label}>
-              <td style={{ padding: "4px 12px 4px 0", width: 190, verticalAlign: "top" }}>{label}</td>
+              <td style={{ padding: "4px 12px 4px 0", width: 190, verticalAlign: "top" }}>
+                {label}
+              </td>
               <td style={{ padding: "4px 0", width: 20, verticalAlign: "top" }}>:</td>
               <td style={{ padding: "4px 0", verticalAlign: "top" }}>{value || "-"}</td>
             </tr>
@@ -57,18 +69,38 @@ function DocSection({ title, rows }: { title: string; rows: [string, string][] }
   );
 }
 
-function DocTable({ title, headers, rows }: { title: string; headers: string[]; rows: (string | number)[][] }) {
+function DocTable({
+  title,
+  headers,
+  rows,
+}: {
+  title: string;
+  headers: string[];
+  rows: (string | number)[][];
+}) {
   if (rows.length === 0) return null;
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ fontWeight: "bold", marginBottom: 8 }}>{title}</div>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
-          <tr>{headers.map((h) => <th key={h} style={{ ...docCell, textAlign: "left" }}>{h}</th>)}</tr>
+          <tr>
+            {headers.map((h) => (
+              <th key={h} style={{ ...docCell, textAlign: "left" }}>
+                {h}
+              </th>
+            ))}
+          </tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i}>{r.map((c, j) => <td key={j} style={docCell}>{c}</td>)}</tr>
+            <tr key={i}>
+              {r.map((c, j) => (
+                <td key={j} style={docCell}>
+                  {c}
+                </td>
+              ))}
+            </tr>
           ))}
         </tbody>
       </table>
@@ -93,14 +125,41 @@ interface MHDetail {
   visitDate: string;
   soap?: {
     subjective: { complaint: string };
-    objective: { physicalExam: { key: string; label: string; value?: number; unit?: string }[]; labResult?: string };
+    objective: {
+      physicalExam: { key: string; label: string; value?: number; unit?: string }[];
+      labResult?: string;
+    };
     assessment: { differentialDiagnosis: string; physicalExamNote?: string };
-    plan: { treatmentPlan: string; doctorNotes?: string; ownerNote?: string; paramedicNote?: string };
+    plan: {
+      treatmentPlan: string;
+      doctorNotes?: string;
+      ownerNote?: string;
+      paramedicNote?: string;
+    };
   };
   diagnosis: string;
   doctorId: { _id: string; name: string };
-  treatments: { productId: string; name: string; quantity: number; price: number; notes?: string }[];
-  prescriptions: { productId: string; name: string; quantity: number; price: number; dosage?: string; usage?: string; notes?: string; unit?: string; amount?: number; usageTime?: string; usageInstruction?: string; usageNote?: string }[];
+  treatments: {
+    productId: string;
+    name: string;
+    quantity: number;
+    price: number;
+    notes?: string;
+  }[];
+  prescriptions: {
+    productId: string;
+    name: string;
+    quantity: number;
+    price: number;
+    dosage?: string;
+    usage?: string;
+    notes?: string;
+    unit?: string;
+    amount?: number;
+    usageTime?: string;
+    usageInstruction?: string;
+    usageNote?: string;
+  }[];
 }
 
 interface HistoryItem {
@@ -129,7 +188,9 @@ export default function MedicalHistoryDetailPage() {
         setRecord(res.data);
         const petId = res.data.petId?._id;
         if (petId) {
-          const hRes = await apiFetch<{ data: { records: HistoryItem[] } }>(`/api/medical-histories/by-pet/${petId}`);
+          const hRes = await apiFetch<{ data: { records: HistoryItem[] } }>(
+            `/api/medical-histories/by-pet/${petId}`
+          );
           setHistory(hRes.data.records || []);
         }
       } catch (err) {
@@ -180,15 +241,24 @@ export default function MedicalHistoryDetailPage() {
   return (
     <div>
       <Space style={{ marginBottom: 16 }} className="no-print">
-        <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>Kembali</Button>
+        <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>
+          Kembali
+        </Button>
         {canEdit && (
-          <Button icon={<Edit size={16} />} onClick={() => router.push(`/dashboard/consultations/new?edit=${id}`)}>
+          <Button
+            icon={<Edit size={16} />}
+            onClick={() => router.push(`/dashboard/consultations/new?edit=${id}`)}
+          >
             Edit
           </Button>
         )}
-        <Button type="primary" icon={<Printer size={16} />} onClick={() => window.print()}>Cetak / Print</Button>
+        <Button type="primary" icon={<Printer size={16} />} onClick={() => window.print()}>
+          Cetak / Print
+        </Button>
       </Space>
-      <Title level={4} className="no-print">Detail Rekam Medis</Title>
+      <Title level={4} className="no-print">
+        Detail Rekam Medis
+      </Title>
 
       <style>{`
         .rm-doc { display: none; }
@@ -206,142 +276,165 @@ export default function MedicalHistoryDetailPage() {
       `}</style>
 
       <div className="screen-only">
-      <Card loading={loading} title="Informasi Pasien">
-        <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-          <Descriptions.Item label="Nama Hewan">{pet?.name || "-"}</Descriptions.Item>
-          <Descriptions.Item label="Pemilik">{pet?.customerId?.name || "-"}</Descriptions.Item>
-          <Descriptions.Item label="Jenis Hewan">{pet?.kind || "-"}</Descriptions.Item>
-          <Descriptions.Item label="Ras">{pet?.breed || "-"}</Descriptions.Item>
-          <Descriptions.Item label="Warna Bulu">{pet?.furColor || "-"}</Descriptions.Item>
-          <Descriptions.Item label="Umur">{petAge ? <Tag color="green">{petAge.label}</Tag> : "-"}</Descriptions.Item>
-          <Descriptions.Item label="Tanggal Kunjungan">{dayjs(record.visitDate).format("DD/MM/YYYY HH:mm")}</Descriptions.Item>
-          <Descriptions.Item label="Berat Badan (kunjungan ini)">{showExamValue("weight")}</Descriptions.Item>
-          <Descriptions.Item label="Suhu Tubuh (kunjungan ini)">{showExamValue("temperature")}</Descriptions.Item>
-          <Descriptions.Item label="Dokter">{record.doctorId?.name || "-"}</Descriptions.Item>
-        </Descriptions>
-      </Card>
-
-      {history.length > 1 && (
-        <Card title="Riwayat Berat Badan & Suhu Tubuh" size="small" style={{ marginTop: 16 }}>
-          <Timeline
-            items={history.map((h) => ({
-              key: h._id,
-              color: h._id === record._id ? "green" : "gray",
-              children: (
-                <Text>
-                  <Text strong>{dayjs(h.visitDate).format("DD/MM/YYYY")}</Text>
-                  {" — "}BB: <Text strong>{h.weight ?? "-"} kg</Text>, Suhu: <Text strong>{h.temperature ?? "-"} °C</Text>
-                  {h._id === record._id && <Tag color="green" style={{ marginLeft: 8 }}>Rekam ini</Tag>}
-                </Text>
-              ),
-            }))}
-          />
+        <Card loading={loading} title="Informasi Pasien">
+          <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+            <Descriptions.Item label="Nama Hewan">{pet?.name || "-"}</Descriptions.Item>
+            <Descriptions.Item label="Pemilik">{pet?.customerId?.name || "-"}</Descriptions.Item>
+            <Descriptions.Item label="Jenis Hewan">{pet?.kind || "-"}</Descriptions.Item>
+            <Descriptions.Item label="Ras">{pet?.breed || "-"}</Descriptions.Item>
+            <Descriptions.Item label="Warna Bulu">{pet?.furColor || "-"}</Descriptions.Item>
+            <Descriptions.Item label="Umur">
+              {petAge ? <Tag color="green">{petAge.label}</Tag> : "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Tanggal Kunjungan">
+              {dayjs(record.visitDate).format("DD/MM/YYYY HH:mm")}
+            </Descriptions.Item>
+            <Descriptions.Item label="Berat Badan (kunjungan ini)">
+              {showExamValue("weight")}
+            </Descriptions.Item>
+            <Descriptions.Item label="Suhu Tubuh (kunjungan ini)">
+              {showExamValue("temperature")}
+            </Descriptions.Item>
+            <Descriptions.Item label="Dokter">{record.doctorId?.name || "-"}</Descriptions.Item>
+          </Descriptions>
         </Card>
-      )}
 
-      <Card title="SOAP" style={{ marginTop: 16 }}>
-        <Descriptions column={1} bordered size="small">
-          <Descriptions.Item label="S — Keluhan (Subjective)">
-            {record.soap?.subjective?.complaint || "-"}
-          </Descriptions.Item>
-          <Descriptions.Item label="O — Berat Badan">
-            {showExamValue("weight")}
-          </Descriptions.Item>
-          <Descriptions.Item label="O — Suhu Tubuh">
-            {showExamValue("temperature")}
-          </Descriptions.Item>
-          <Descriptions.Item label="A — Diagnosis Banding (Assessment)">
-            {record.soap?.assessment?.differentialDiagnosis || "-"}
-          </Descriptions.Item>
-          <Descriptions.Item label="A — Pemeriksaan Fisik (catatan)">
-            {record.soap?.assessment?.physicalExamNote || "-"}
-          </Descriptions.Item>
-          <Descriptions.Item label="P — Rencana Penanganan (Plan)">
-            {record.soap?.plan?.treatmentPlan || "-"}
-          </Descriptions.Item>
-          <Descriptions.Item label="P — Catatan Dokter (Plan)">
-            {record.soap?.plan?.doctorNotes || "-"}
-          </Descriptions.Item>
-          <Descriptions.Item label="P — Catatan Dokter Untuk Pemilik">
-            {record.soap?.plan?.ownerNote || "-"}
-          </Descriptions.Item>
-          <Descriptions.Item label="P — Catatan Dokter Untuk Paramedis">
-            {record.soap?.plan?.paramedicNote || "-"}
-          </Descriptions.Item>
-          <Descriptions.Item label="O — Hasil Pemeriksaan Laboratorium">
-            {record.soap?.objective?.labResult || "-"}
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
-
-      <Card title="Diagnosis (Penegakan Diagnosis)" style={{ marginTop: 16 }}>
-        <Text>{record.diagnosis || "-"}</Text>
-      </Card>
-
-      <Card title="Tindakan (Jasa)" style={{ marginTop: 16 }}>
-        {record.treatments?.length > 0 ? (
-          <Table
-            dataSource={record.treatments}
-            rowKey={(r) => `${r.productId}-${r.name}`}
-            pagination={false}
-            size="small"
-            columns={[
-              { title: "Nama Tindakan", dataIndex: "name" },
-              { title: "Jumlah", dataIndex: "quantity" },
-              { title: "Harga", dataIndex: "price", render: (v: number) => formatPrice(v) },
-              { title: "Subtotal", key: "subtotal", render: (_: any, r: any) => formatPrice(r.price * r.quantity) },
-              { title: "Catatan", dataIndex: "notes", render: (v?: string) => v || "-" },
-            ]}
-          />
-        ) : (
-          <Text type="secondary">Tidak ada tindakan</Text>
-        )}
-      </Card>
-
-      <Card title="Resep Obat" style={{ marginTop: 16 }}>
-        {record.prescriptions?.length > 0 ? (
-          <Table
-            dataSource={record.prescriptions}
-            rowKey={(r) => `${r.productId}-${r.name}`}
-            pagination={false}
-            size="small"
-            columns={[
-              {
-                title: "Resep",
-                dataIndex: "name",
-                render: (v: string, r: any) => (
-                  <div style={{ whiteSpace: "pre-line" }}>{prescriptionLines(r).join("\n")}</div>
+        {history.length > 1 && (
+          <Card title="Riwayat Berat Badan & Suhu Tubuh" size="small" style={{ marginTop: 16 }}>
+            <Timeline
+              items={history.map((h) => ({
+                key: h._id,
+                color: h._id === record._id ? "green" : "gray",
+                children: (
+                  <Text>
+                    <Text strong>{dayjs(h.visitDate).format("DD/MM/YYYY")}</Text>
+                    {" — "}BB: <Text strong>{h.weight ?? "-"} kg</Text>, Suhu:{" "}
+                    <Text strong>{h.temperature ?? "-"} °C</Text>
+                    {h._id === record._id && (
+                      <Tag color="green" style={{ marginLeft: 8 }}>
+                        Rekam ini
+                      </Tag>
+                    )}
+                  </Text>
                 ),
-              },
-              { title: "Jumlah", dataIndex: "quantity" },
-              { title: "Harga", dataIndex: "price", render: (v: number) => formatPrice(v) },
-              { title: "Subtotal", key: "subtotal", render: (_: any, r: any) => formatPrice(r.price * r.quantity) },
-            ]}
-          />
-        ) : (
-          <Text type="secondary">Tidak ada resep obat</Text>
+              }))}
+            />
+          </Card>
         )}
-      </Card>
 
-      <Card title="Barang (Non-Obat)" style={{ marginTop: 16 }}>
-        {(record as any).goods?.length > 0 ? (
-          <Table
-            dataSource={(record as any).goods}
-            rowKey={(r: any) => `${r.productId}-${r.name}`}
-            pagination={false}
-            size="small"
-            columns={[
-              { title: "Nama Barang", dataIndex: "name" },
-              { title: "Jumlah", dataIndex: "quantity" },
-              { title: "Harga", dataIndex: "price", render: (v: number) => formatPrice(v) },
-              { title: "Subtotal", key: "subtotal", render: (_: any, r: any) => formatPrice(r.price * r.quantity) },
-              { title: "Catatan", dataIndex: "notes", render: (v?: string) => v || "-" },
-            ]}
-          />
-        ) : (
-          <Text type="secondary">Tidak ada barang</Text>
-        )}
-      </Card>
+        <Card title="SOAP" style={{ marginTop: 16 }}>
+          <Descriptions column={1} bordered size="small">
+            <Descriptions.Item label="S — Keluhan (Subjective)">
+              {record.soap?.subjective?.complaint || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="O — Berat Badan">{showExamValue("weight")}</Descriptions.Item>
+            <Descriptions.Item label="O — Suhu Tubuh">
+              {showExamValue("temperature")}
+            </Descriptions.Item>
+            <Descriptions.Item label="A — Diagnosis Banding (Assessment)">
+              {record.soap?.assessment?.differentialDiagnosis || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="A — Pemeriksaan Fisik (catatan)">
+              {record.soap?.assessment?.physicalExamNote || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="P — Rencana Penanganan (Plan)">
+              {record.soap?.plan?.treatmentPlan || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="P — Catatan Dokter (Plan)">
+              {record.soap?.plan?.doctorNotes || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="P — Catatan Dokter Untuk Pemilik">
+              {record.soap?.plan?.ownerNote || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="P — Catatan Dokter Untuk Paramedis">
+              {record.soap?.plan?.paramedicNote || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="O — Hasil Pemeriksaan Laboratorium">
+              {record.soap?.objective?.labResult || "-"}
+            </Descriptions.Item>
+          </Descriptions>
+        </Card>
+
+        <Card title="Diagnosis (Penegakan Diagnosis)" style={{ marginTop: 16 }}>
+          <Text>{record.diagnosis || "-"}</Text>
+        </Card>
+
+        <Card title="Tindakan (Jasa)" style={{ marginTop: 16 }}>
+          {record.treatments?.length > 0 ? (
+            <Table
+              dataSource={record.treatments}
+              rowKey={(r) => `${r.productId}-${r.name}`}
+              pagination={false}
+              size="small"
+              columns={[
+                { title: "Nama Tindakan", dataIndex: "name" },
+                { title: "Jumlah", dataIndex: "quantity" },
+                { title: "Harga", dataIndex: "price", render: (v: number) => formatPrice(v) },
+                {
+                  title: "Subtotal",
+                  key: "subtotal",
+                  render: (_: any, r: any) => formatPrice(r.price * r.quantity),
+                },
+                { title: "Catatan", dataIndex: "notes", render: (v?: string) => v || "-" },
+              ]}
+            />
+          ) : (
+            <Text type="secondary">Tidak ada tindakan</Text>
+          )}
+        </Card>
+
+        <Card title="Resep Obat" style={{ marginTop: 16 }}>
+          {record.prescriptions?.length > 0 ? (
+            <Table
+              dataSource={record.prescriptions}
+              rowKey={(r) => `${r.productId}-${r.name}`}
+              pagination={false}
+              size="small"
+              columns={[
+                {
+                  title: "Resep",
+                  dataIndex: "name",
+                  render: (v: string, r: any) => (
+                    <div style={{ whiteSpace: "pre-line" }}>{prescriptionLines(r).join("\n")}</div>
+                  ),
+                },
+                { title: "Jumlah", dataIndex: "quantity" },
+                { title: "Harga", dataIndex: "price", render: (v: number) => formatPrice(v) },
+                {
+                  title: "Subtotal",
+                  key: "subtotal",
+                  render: (_: any, r: any) => formatPrice(r.price * r.quantity),
+                },
+              ]}
+            />
+          ) : (
+            <Text type="secondary">Tidak ada resep obat</Text>
+          )}
+        </Card>
+
+        <Card title="Barang (Non-Obat)" style={{ marginTop: 16 }}>
+          {(record as any).goods?.length > 0 ? (
+            <Table
+              dataSource={(record as any).goods}
+              rowKey={(r: any) => `${r.productId}-${r.name}`}
+              pagination={false}
+              size="small"
+              columns={[
+                { title: "Nama Barang", dataIndex: "name" },
+                { title: "Jumlah", dataIndex: "quantity" },
+                { title: "Harga", dataIndex: "price", render: (v: number) => formatPrice(v) },
+                {
+                  title: "Subtotal",
+                  key: "subtotal",
+                  render: (_: any, r: any) => formatPrice(r.price * r.quantity),
+                },
+                { title: "Catatan", dataIndex: "notes", render: (v?: string) => v || "-" },
+              ]}
+            />
+          ) : (
+            <Text type="secondary">Tidak ada barang</Text>
+          )}
+        </Card>
       </div>
 
       {/* ── Dokumen cetak formal (hanya tampil saat print) ── */}
@@ -359,20 +452,39 @@ export default function MedicalHistoryDetailPage() {
         }}
       >
         {/* Kop surat */}
-        <div style={{ textAlign: "center", borderBottom: "3px double #000", paddingBottom: 12, marginBottom: 20 }}>
-          <div style={{ fontSize: 22, fontWeight: "bold", letterSpacing: 2 }}>{store?.name || "WEDI ANIMAL CARE"}</div>
+        <div
+          style={{
+            textAlign: "center",
+            borderBottom: "3px double #000",
+            paddingBottom: 12,
+            marginBottom: 20,
+          }}
+        >
+          <div style={{ fontSize: 22, fontWeight: "bold", letterSpacing: 2 }}>
+            {store?.name || "WEDI ANIMAL CARE"}
+          </div>
           <div style={{ fontSize: 12 }}>Klinik Hewan — Praktek Dokter Hewan</div>
           {store && (store.address || store.whatsapp || store.phone) && (
             <div style={{ fontSize: 11, marginTop: 4 }}>
-              {[store.address, store.whatsapp ? `WA: ${store.whatsapp}` : "", store.phone ? `Telp: ${store.phone}` : ""].filter(Boolean).join(" · ")}
+              {[
+                store.address,
+                store.whatsapp ? `WA: ${store.whatsapp}` : "",
+                store.phone ? `Telp: ${store.phone}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </div>
           )}
         </div>
 
         {/* Judul dokumen */}
         <div style={{ textAlign: "center", marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: "bold", textDecoration: "underline" }}>REKAM MEDIS</div>
-          <div style={{ fontSize: 12 }}>Tanggal: {dayjs(record.visitDate).format("DD/MM/YYYY HH:mm")}</div>
+          <div style={{ fontSize: 16, fontWeight: "bold", textDecoration: "underline" }}>
+            REKAM MEDIS
+          </div>
+          <div style={{ fontSize: 12 }}>
+            Tanggal: {dayjs(record.visitDate).format("DD/MM/YYYY HH:mm")}
+          </div>
         </div>
 
         <DocSection title="DATA PASIEN" rows={infoRows} />
@@ -386,7 +498,13 @@ export default function MedicalHistoryDetailPage() {
         <DocTable
           title="TINDAKAN (JASA)"
           headers={["Nama Tindakan", "Jumlah", "Harga", "Subtotal", "Catatan"]}
-          rows={(record.treatments || []).map((t) => [t.name, t.quantity, formatPrice(t.price), formatPrice(t.price * t.quantity), t.notes || "-"])}
+          rows={(record.treatments || []).map((t) => [
+            t.name,
+            t.quantity,
+            formatPrice(t.price),
+            formatPrice(t.price * t.quantity),
+            t.notes || "-",
+          ])}
         />
 
         <DocTable
@@ -403,11 +521,25 @@ export default function MedicalHistoryDetailPage() {
         <DocTable
           title="BARANG (NON-OBAT)"
           headers={["Nama Barang", "Jumlah", "Harga", "Subtotal", "Catatan"]}
-          rows={((record as any).goods || []).map((g: any) => [g.name, g.quantity, formatPrice(g.price), formatPrice(g.price * g.quantity), g.notes || "-"])}
+          rows={((record as any).goods || []).map((g: any) => [
+            g.name,
+            g.quantity,
+            formatPrice(g.price),
+            formatPrice(g.price * g.quantity),
+            g.notes || "-",
+          ])}
         />
 
         {/* Tanda tangan */}
-        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginTop: 32 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 16,
+            marginTop: 32,
+          }}
+        >
           <div style={{ textAlign: "center", width: 250 }}>
             <div style={{ fontSize: 12 }}>Pemilik / Penanggung Jawab,</div>
             <div style={{ height: 80 }} />

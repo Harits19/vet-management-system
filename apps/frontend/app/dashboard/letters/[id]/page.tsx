@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, Space, Typography, Skeleton, Tag, Card } from "antd";
 import { ArrowLeft, Printer } from "lucide-react";
-import { apiFetch } from "../../../context/auth";
+import { apiFetch } from "@/hooks/useVetQuery";
 import { useStoreInfo } from "../../../hooks/useStoreInfo";
 import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
@@ -31,7 +31,16 @@ interface LetterDetail {
     gender?: string;
     initialAge?: { value: number; unit: "month" | "year" };
   };
-  customerId?: { name: string; whatsapp?: string; address?: string; province?: string; regency?: string; district?: string; village?: string; hamlet?: string };
+  customerId?: {
+    name: string;
+    whatsapp?: string;
+    address?: string;
+    province?: string;
+    regency?: string;
+    district?: string;
+    village?: string;
+    hamlet?: string;
+  };
   doctorId?: { name: string };
 }
 
@@ -42,9 +51,23 @@ function formatAge(age?: { value: number; unit: "month" | "year" }) {
   return `${v} ${u}`;
 }
 
-function formatAddress(c?: { address?: string; hamlet?: string; village?: string; district?: string; regency?: string; province?: string }) {
+function formatAddress(c?: {
+  address?: string;
+  hamlet?: string;
+  village?: string;
+  district?: string;
+  regency?: string;
+  province?: string;
+}) {
   if (!c) return "-";
-  const parts = [c.address, c.hamlet ? `Dusun ${c.hamlet}` : "", c.village, c.district, c.regency, c.province].filter(Boolean);
+  const parts = [
+    c.address,
+    c.hamlet ? `Dusun ${c.hamlet}` : "",
+    c.village,
+    c.district,
+    c.regency,
+    c.province,
+  ].filter(Boolean);
   return parts.join(", ") || "-";
 }
 
@@ -139,7 +162,13 @@ export default function LetterDetailPage() {
             </Text>
             {store && (store.address || store.whatsapp || store.phone) && (
               <Text style={{ fontSize: 11, fontFamily: "inherit", display: "block", marginTop: 4 }}>
-                {[store.address, store.whatsapp ? `WA: ${store.whatsapp}` : "", store.phone ? `Telp: ${store.phone}` : ""].filter(Boolean).join(" · ")}
+                {[
+                  store.address,
+                  store.whatsapp ? `WA: ${store.whatsapp}` : "",
+                  store.phone ? `Telp: ${store.phone}` : "",
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </Text>
             )}
           </div>
@@ -196,7 +225,15 @@ export default function LetterDetailPage() {
             </Text>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginTop: 32 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 16,
+              marginTop: 32,
+            }}
+          >
             <div style={{ textAlign: "center", width: 250 }}>
               <Text style={{ fontFamily: "inherit", fontSize: 12 }}>
                 {data.signedAt

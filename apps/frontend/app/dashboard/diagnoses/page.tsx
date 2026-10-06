@@ -203,7 +203,7 @@ export default function DiagnosesPage() {
     showDosage = false,
     onSearch?: (q: string) => void
   ) => (
-    <Space direction="vertical" style={{ width: "100%" }}>
+    <Space orientation="vertical" style={{ width: "100%" }}>
       {lines.map((line) => (
         <Row key={line._key} gutter={8} align="middle" wrap>
           <Col flex="auto">

@@ -19,7 +19,12 @@ export default function RegisterFacePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const msg = useAntdMessage();
-  const [face, setFace] = useState<FaceInfo>({ hasFace: false, descriptor: null, blinks: 0, livenessPassed: false });
+  const [face, setFace] = useState<FaceInfo>({
+    hasFace: false,
+    descriptor: null,
+    blinks: 0,
+    livenessPassed: false,
+  });
   const [hasFace, setHasFace] = useState(false);
   const [faceEnabled, setFaceEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -60,7 +65,7 @@ export default function RegisterFacePage() {
   if (user.role === "superadmin") {
     return (
       <Card>
-        <Alert type="info" showIcon message="Superadmin tidak perlu absensi wajah." />
+        <Alert type="info" showIcon title="Superadmin tidak perlu absensi wajah." />
       </Card>
     );
   }
@@ -71,7 +76,7 @@ export default function RegisterFacePage() {
         <Alert
           type="info"
           showIcon
-          message="Metode absen wajah sedang nonaktif (ATTENDANCE_MODE=qr). Absen cukup pakai QR statis di tempat."
+          title="Metode absen wajah sedang nonaktif (ATTENDANCE_MODE=qr). Absen cukup pakai QR statis di tempat."
         />
       </Card>
     );
@@ -80,20 +85,26 @@ export default function RegisterFacePage() {
   return (
     <Card>
       <Title level={4}>Daftarkan Wajah</Title>
-      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         {hasFace && (
           <Alert
             type="warning"
             showIcon
-            message="Kamu sudah punya wajah terdaftar. Mendaftarkan ulang akan menggantikan wajah lama."
+            title="Kamu sudah punya wajah terdaftar. Mendaftarkan ulang akan menggantikan wajah lama."
           />
         )}
         <Text type="secondary">
-          Arahkan wajah ke kamera, pastikan pencahayaan cukup dan wajah terlihat jelas. Wajah ini dipakai untuk
-          verifikasi saat absen masuk/pulang.
+          Arahkan wajah ke kamera, pastikan pencahayaan cukup dan wajah terlihat jelas. Wajah ini
+          dipakai untuk verifikasi saat absen masuk/pulang.
         </Text>
         <FaceCamera requireBlink={false} onFaceChange={setFace} />
-        <Button type="primary" size="large" disabled={!face.hasFace} loading={submitting} onClick={submit}>
+        <Button
+          type="primary"
+          size="large"
+          disabled={!face.hasFace}
+          loading={submitting}
+          onClick={submit}
+        >
           {face.hasFace ? "Daftarkan Wajah Ini" : "Tunggu wajah terdeteksi..."}
         </Button>
       </Space>

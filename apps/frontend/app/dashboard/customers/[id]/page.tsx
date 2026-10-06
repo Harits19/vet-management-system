@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, Descriptions, Table, Typography } from "antd";
-import { apiFetch } from "../../../context/auth";
+import { apiFetch } from "@/hooks/useVetQuery";
 import { useParams } from "next/navigation";
 
 const { Title } = Typography;
@@ -21,7 +21,14 @@ interface CustomerDetail {
 }
 
 function formatAddress(c: CustomerDetail) {
-  const parts = [c.address, c.hamlet ? `Dusun ${c.hamlet}` : "", c.village, c.district, c.regency, c.province].filter(Boolean);
+  const parts = [
+    c.address,
+    c.hamlet ? `Dusun ${c.hamlet}` : "",
+    c.village,
+    c.district,
+    c.regency,
+    c.province,
+  ].filter(Boolean);
   return parts.join(", ") || "-";
 }
 
@@ -36,10 +43,13 @@ export default function CustomerDetailPage() {
     Promise.all([
       apiFetch<{ data: CustomerDetail }>(`/api/customers/${id}`),
       apiFetch<{ data: any[] }>(`/api/pets?customerId=${id}`),
-    ]).then(([c, p]) => {
-      setCustomer(c.data);
-      setPets(p.data);
-    }).catch(console.error).finally(() => setLoading(false));
+    ])
+      .then(([c, p]) => {
+        setCustomer(c.data);
+        setPets(p.data);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [id]);
 
   if (!customer) return null;
@@ -47,7 +57,12 @@ export default function CustomerDetailPage() {
   const petColumns = [
     { title: "Nama", dataIndex: "name", key: "name" },
     { title: "Jenis", dataIndex: "kind", key: "kind" },
-    { title: "Gender", dataIndex: "gender", key: "gender", render: (v: string) => v === "male" ? "Jantan" : "Betina" },
+    {
+      title: "Gender",
+      dataIndex: "gender",
+      key: "gender",
+      render: (v: string) => (v === "male" ? "Jantan" : "Betina"),
+    },
     { title: "Catatan", dataIndex: "notes", key: "notes", render: (v?: string) => v || "-" },
   ];
 
@@ -58,11 +73,19 @@ export default function CustomerDetailPage() {
         <Descriptions column={{ xs: 1, sm: 2 }} bordered>
           <Descriptions.Item label="Nama">{customer.name}</Descriptions.Item>
           <Descriptions.Item label="WhatsApp">{customer.whatsapp || "-"}</Descriptions.Item>
-          <Descriptions.Item label="Alamat" span={2}>{formatAddress(customer)}</Descriptions.Item>
+          <Descriptions.Item label="Alamat" span={2}>
+            {formatAddress(customer)}
+          </Descriptions.Item>
         </Descriptions>
       </Card>
       <Card title="Hewan Peliharaan" style={{ marginTop: 16 }}>
-        <Table dataSource={pets} columns={petColumns} rowKey="_id" pagination={false} size="small" />
+        <Table
+          dataSource={pets}
+          columns={petColumns}
+          rowKey="_id"
+          pagination={false}
+          size="small"
+        />
       </Card>
     </div>
   );

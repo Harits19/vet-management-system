@@ -1,14 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Form, Select, Input, DatePicker, Typography, Space, Button, Alert, Radio, Checkbox, theme as antdTheme } from "antd";
+import {
+  Card,
+  Form,
+  Select,
+  Input,
+  DatePicker,
+  Typography,
+  Space,
+  Button,
+  Alert,
+  Radio,
+  Checkbox,
+  theme as antdTheme,
+} from "antd";
 import { ArrowLeft, Save } from "lucide-react";
-import { apiFetch, useAuth } from "../../../context/auth";
+import { useAuth } from "../../../context/auth";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import SignaturePad from "../../components/SignaturePad";
 import { LETTER_TYPE_OPTIONS, LETTER_TYPE_META } from "../constants";
+import { apiFetch } from "@/hooks/useVetQuery";
 
 const { Title, Text } = Typography;
 
@@ -38,11 +52,15 @@ export default function CreateLetterPage() {
   const meta = LETTER_TYPE_META[letterType];
 
   const searchPets = async (q = "") => {
-    const res = await apiFetch<{ data: PetOpt[] }>(`/api/pets?search=${encodeURIComponent(q)}&limit=100`);
+    const res = await apiFetch<{ data: PetOpt[] }>(
+      `/api/pets?search=${encodeURIComponent(q)}&limit=100`
+    );
     setPets(res.data);
   };
 
-  useEffect(() => { searchPets(); }, []);
+  useEffect(() => {
+    searchPets();
+  }, []);
 
   // Auto-fill nama penandatangan dari pemilik pasien
   const selectedPet = pets.find((p) => p._id === petId);
@@ -66,14 +84,24 @@ export default function CreateLetterPage() {
   // supaya tanda tangan yang baru disimpan langsung terdeteksi tanpa reload halaman.
   useEffect(() => {
     apiFetch<{ data: { doctorSignature?: string } }>("/api/auth/me")
-      .then((res) => { if (res.data?.doctorSignature) setSavedDoctorSig(res.data.doctorSignature); })
-      .catch(() => { /* abaikan */ });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+      .then((res) => {
+        if (res.data?.doctorSignature) setSavedDoctorSig(res.data.doctorSignature);
+      })
+      .catch(() => {
+        /* abaikan */
+      });
+  }, []);
 
   const handleSubmit = async () => {
-    if (!signature) { msg.warning("Pemilik harus menandatangani dulu"); return; }
+    if (!signature) {
+      msg.warning("Pemilik harus menandatangani dulu");
+      return;
+    }
     const finalDoctorSig = savedDoctorSig && useSavedDoctorSig ? savedDoctorSig : doctorSignature;
-    if (!finalDoctorSig) { msg.warning("Dokter harus menandatangani dulu"); return; }
+    if (!finalDoctorSig) {
+      msg.warning("Dokter harus menandatangani dulu");
+      return;
+    }
     try {
       const values = await form.validateFields();
       setSubmitting(true);
@@ -111,24 +139,39 @@ export default function CreateLetterPage() {
   return (
     <div>
       <Space style={{ marginBottom: 16 }}>
-        <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>Kembali</Button>
-        <Title level={4} style={{ margin: 0 }}>Buat Surat</Title>
+        <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()}>
+          Kembali
+        </Button>
+        <Title level={4} style={{ margin: 0 }}>
+          Buat Surat
+        </Title>
       </Space>
 
       <Card style={{ maxWidth: 720 }}>
         <Form form={form} layout="vertical">
-          <Form.Item name="letterType" label="Jenis Surat" rules={[{ required: true, message: "Pilih jenis surat" }]}>
+          <Form.Item
+            name="letterType"
+            label="Jenis Surat"
+            rules={[{ required: true, message: "Pilih jenis surat" }]}
+          >
             <Select placeholder="Pilih jenis surat" options={LETTER_TYPE_OPTIONS} />
           </Form.Item>
 
-          <Form.Item name="petId" label="Pasien" rules={[{ required: true, message: "Pilih pasien" }]}>
+          <Form.Item
+            name="petId"
+            label="Pasien"
+            rules={[{ required: true, message: "Pilih pasien" }]}
+          >
             <Select
               showSearch
               placeholder="Cari pasien..."
               onSearch={searchPets}
               onFocus={() => searchPets()}
               filterOption={false}
-              options={pets.map((p) => ({ value: p._id, label: `${p.name}${p.kind ? ` (${p.kind})` : ""}` }))}
+              options={pets.map((p) => ({
+                value: p._id,
+                label: `${p.name}${p.kind ? ` (${p.kind})` : ""}`,
+              }))}
             />
           </Form.Item>
 
@@ -141,7 +184,12 @@ export default function CreateLetterPage() {
             />
           )}
 
-          <Form.Item name="date" label="Tanggal Surat" rules={[{ required: true, message: "Pilih tanggal" }]} initialValue={dayjs()}>
+          <Form.Item
+            name="date"
+            label="Tanggal Surat"
+            rules={[{ required: true, message: "Pilih tanggal" }]}
+            initialValue={dayjs()}
+          >
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
           </Form.Item>
 
@@ -150,7 +198,10 @@ export default function CreateLetterPage() {
           </Form.Item>
 
           <Form.Item name="notes" label="Catatan / Keterangan">
-            <Input.TextArea rows={3} placeholder="Catatan tambahan, risiko, biaya, dll (opsional)" />
+            <Input.TextArea
+              rows={3}
+              placeholder="Catatan tambahan, risiko, biaya, dll (opsional)"
+            />
           </Form.Item>
 
           <Form.Item label="Tanda Tangan Pemilik" required>
@@ -160,14 +211,21 @@ export default function CreateLetterPage() {
             </Text>
           </Form.Item>
 
-          <Form.Item name="ownerSignedName" label="Nama Penandatangan" rules={[{ required: true, message: "Nama penandatangan wajib" }]}>
+          <Form.Item
+            name="ownerSignedName"
+            label="Nama Penandatangan"
+            rules={[{ required: true, message: "Nama penandatangan wajib" }]}
+          >
             <Input placeholder="Nama pemilik yang menandatangani" />
           </Form.Item>
 
           <Form.Item label="Tanda Tangan Dokter" required style={{ marginTop: 24 }}>
             {savedDoctorSig && (
               <div style={{ marginBottom: 8 }}>
-                <Radio.Group value={useSavedDoctorSig} onChange={(e) => setUseSavedDoctorSig(e.target.value)}>
+                <Radio.Group
+                  value={useSavedDoctorSig}
+                  onChange={(e) => setUseSavedDoctorSig(e.target.value)}
+                >
                   <Radio value={true}>Pakai tanda tangan tersimpan</Radio>
                   <Radio value={false}>Gambar baru</Radio>
                 </Radio.Group>
@@ -175,7 +233,15 @@ export default function CreateLetterPage() {
                   <img
                     src={savedDoctorSig}
                     alt="Tanda tangan dokter tersimpan"
-                    style={{ display: "block", marginTop: 8, height: 100, border: `1px solid ${token.colorBorder}`, borderRadius: 8, background: "#fff", padding: 8 }}
+                    style={{
+                      display: "block",
+                      marginTop: 8,
+                      height: 100,
+                      border: `1px solid ${token.colorBorder}`,
+                      borderRadius: 8,
+                      background: "#fff",
+                      padding: 8,
+                    }}
                   />
                 )}
               </div>
@@ -199,11 +265,20 @@ export default function CreateLetterPage() {
             </Text>
           </Form.Item>
 
-          <Form.Item name="doctorSignedName" label="Nama Dokter" rules={[{ required: true, message: "Nama dokter wajib" }]}>
+          <Form.Item
+            name="doctorSignedName"
+            label="Nama Dokter"
+            rules={[{ required: true, message: "Nama dokter wajib" }]}
+          >
             <Input placeholder="Nama dokter yang menandatangani" />
           </Form.Item>
 
-          <Button type="primary" icon={<Save size={16} />} loading={submitting} onClick={handleSubmit}>
+          <Button
+            type="primary"
+            icon={<Save size={16} />}
+            loading={submitting}
+            onClick={handleSubmit}
+          >
             Simpan Surat
           </Button>
         </Form>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, Descriptions, Table, Typography, Button, Space, Tag } from "antd";
 import { FileText } from "lucide-react";
-import { apiFetch } from "../../../context/auth";
+import { apiFetch } from "@/hooks/useVetQuery";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
 import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
@@ -55,17 +55,27 @@ export default function PetDetailPage() {
       ]);
       setPet(petRes.data);
       setRecords(mhRes.data.records || []);
-    } catch (err: any) { msg.error(err.message); } finally { setLoading(false); }
+    } catch (err: any) {
+      msg.error(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchData(); }, [id]);
+  useEffect(() => {
+    fetchData();
+  }, [id]);
 
   if (!pet) return null;
 
   const petAge = computePetAge(pet);
 
   const mhColumns = [
-    { title: "Tanggal", dataIndex: "visitDate", render: (v: string) => dayjs(v).format("DD/MM/YYYY") },
+    {
+      title: "Tanggal",
+      dataIndex: "visitDate",
+      render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
+    },
     { title: "Diagnosis", dataIndex: "diagnosis" },
     {
       title: "Keluhan",
@@ -81,11 +91,18 @@ export default function PetDetailPage() {
           ? `${r.weight ?? "-"} kg / ${r.temperature ?? "-"} °C`
           : "-",
     },
-    { title: "Dokter", key: "doctor", render: (_: any, r: MedicalRecord) => r.doctorId?.name || "-" },
     {
-      title: "Aksi", key: "action",
+      title: "Dokter",
+      key: "doctor",
+      render: (_: any, r: MedicalRecord) => r.doctorId?.name || "-",
+    },
+    {
+      title: "Aksi",
+      key: "action",
       render: (_: any, r: MedicalRecord) => (
-        <Button size="small" onClick={() => router.push(`/dashboard/medical-histories/${r._id}`)}>Detail</Button>
+        <Button size="small" onClick={() => router.push(`/dashboard/medical-histories/${r._id}`)}>
+          Detail
+        </Button>
       ),
     },
   ];
@@ -105,12 +122,16 @@ export default function PetDetailPage() {
           <Descriptions.Item label="Jenis">{pet.kind}</Descriptions.Item>
           <Descriptions.Item label="Ras">{pet.breed || "-"}</Descriptions.Item>
           <Descriptions.Item label="Warna Bulu">{pet.furColor || "-"}</Descriptions.Item>
-          <Descriptions.Item label="Gender">{pet.gender === "male" ? "Jantan" : "Betina"}</Descriptions.Item>
+          <Descriptions.Item label="Gender">
+            {pet.gender === "male" ? "Jantan" : "Betina"}
+          </Descriptions.Item>
           <Descriptions.Item label="Umur">
             {petAge ? <Tag color="green">{petAge.label}</Tag> : "-"}
           </Descriptions.Item>
           <Descriptions.Item label="Pemilik">{pet.customerId?.name}</Descriptions.Item>
-          <Descriptions.Item label="Catatan" span={2}>{pet.notes || "-"}</Descriptions.Item>
+          <Descriptions.Item label="Catatan" span={2}>
+            {pet.notes || "-"}
+          </Descriptions.Item>
         </Descriptions>
       </Card>
 
@@ -119,11 +140,20 @@ export default function PetDetailPage() {
         style={{ marginTop: 16 }}
         extra={
           <Space>
-            <Button type="primary" icon={<FileText size={16} />} onClick={handleStartConsultation}>Konsultasi Baru (SOAP)</Button>
+            <Button type="primary" icon={<FileText size={16} />} onClick={handleStartConsultation}>
+              Konsultasi Baru (SOAP)
+            </Button>
           </Space>
         }
       >
-        <Table dataSource={records} columns={mhColumns} rowKey="_id" pagination={false} size="small" loading={loading} />
+        <Table
+          dataSource={records}
+          columns={mhColumns}
+          rowKey="_id"
+          pagination={false}
+          size="small"
+          loading={loading}
+        />
       </Card>
     </div>
   );

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { Card, Form, Input, Button, Typography, Tag, Space, Divider, Alert } from "antd";
 import { Save, KeyRound, FileSignature } from "lucide-react";
-import { apiFetch, useAuth } from "../../context/auth";
+import { useAuth } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
+import { apiFetch } from "@/hooks/useVetQuery";
 
 const { Title, Text } = Typography;
 
@@ -72,29 +73,50 @@ export default function ProfilePage() {
 
   return (
     <div>
-      <Title level={4} style={{ marginTop: 0 }}>Edit Profil</Title>
+      <Title level={4} style={{ marginTop: 0 }}>
+        Edit Profil
+      </Title>
 
       <Card style={{ maxWidth: 640 }}>
         <Form form={form} layout="vertical" autoComplete="off">
           <Divider orientation="left" plain>
-            <Space><FileSignature size={14} /> Data Akun</Space>
+            <Space>
+              <FileSignature size={14} /> Data Akun
+            </Space>
           </Divider>
 
-          <Form.Item name="name" label="Nama" rules={[{ required: true, message: "Nama wajib diisi" }]}>
+          <Form.Item
+            name="name"
+            label="Nama"
+            rules={[{ required: true, message: "Nama wajib diisi" }]}
+          >
             <Input placeholder="Nama lengkap" />
           </Form.Item>
 
-          <Form.Item name="username" label="Username" rules={[{ required: true, message: "Username wajib diisi" }]}>
+          <Form.Item
+            name="username"
+            label="Username"
+            rules={[{ required: true, message: "Username wajib diisi" }]}
+          >
             <Input placeholder="Username untuk login" autoComplete="username" />
           </Form.Item>
 
-          <Form.Item name="email" label="Email" rules={[{ required: true, message: "Email wajib diisi" }, { type: "email", message: "Format email tidak valid" }]}>
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: "Email wajib diisi" },
+              { type: "email", message: "Format email tidak valid" },
+            ]}
+          >
             <Input placeholder="email@contoh.com" />
           </Form.Item>
 
           <Form.Item label="Role">
             <Tag color="blue">{ROLE_LABEL[user.role] ?? user.role}</Tag>
-            <Text type="secondary" style={{ marginLeft: 8 }}>Role tidak bisa diubah di sini.</Text>
+            <Text type="secondary" style={{ marginLeft: 8 }}>
+              Role tidak bisa diubah di sini.
+            </Text>
           </Form.Item>
 
           {user.role === "doctor" && (
@@ -102,15 +124,23 @@ export default function ProfilePage() {
               type={user.doctorSignature ? "success" : "info"}
               showIcon
               style={{ marginBottom: 24 }}
-              message={user.doctorSignature ? "Tanda tangan dokter tersimpan." : "Belum ada tanda tangan dokter tersimpan."}
-              description={user.doctorSignature
-                ? "Tanda tangan ini akan dipakai saat membuat surat."
-                : "Tanda tangan bisa disimpan saat membuat surat baru (halaman Surat)."}
+              message={
+                user.doctorSignature
+                  ? "Tanda tangan dokter tersimpan."
+                  : "Belum ada tanda tangan dokter tersimpan."
+              }
+              description={
+                user.doctorSignature
+                  ? "Tanda tangan ini akan dipakai saat membuat surat."
+                  : "Tanda tangan bisa disimpan saat membuat surat baru (halaman Surat)."
+              }
             />
           )}
 
           <Divider orientation="left" plain>
-            <Space><KeyRound size={14} /> Ganti Password</Space>
+            <Space>
+              <KeyRound size={14} /> Ganti Password
+            </Space>
           </Divider>
 
           <Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
@@ -136,7 +166,11 @@ export default function ProfilePage() {
             <Input.Password placeholder="Password saat ini" autoComplete="current-password" />
           </Form.Item>
 
-          <Form.Item name="newPassword" label="Password Baru" rules={[{ min: 6, message: "Password minimal 6 karakter" }]}>
+          <Form.Item
+            name="newPassword"
+            label="Password Baru"
+            rules={[{ min: 6, message: "Password minimal 6 karakter" }]}
+          >
             <Input.Password placeholder="Minimal 6 karakter" autoComplete="new-password" />
           </Form.Item>
 

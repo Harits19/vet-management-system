@@ -3,7 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Card, Button, Space, Typography, Alert, Table, Tag, Spin, Row, Col, Statistic, Tabs,
+  Card,
+  Button,
+  Space,
+  Typography,
+  Alert,
+  Table,
+  Tag,
+  Spin,
+  Row,
+  Col,
+  Statistic,
+  Tabs,
 } from "antd";
 import { useAuth } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
@@ -67,9 +78,19 @@ export default function AttendancePage() {
   const [history, setHistory] = useState<AttendanceRow[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  const [face, setFace] = useState<FaceInfo>({ hasFace: false, descriptor: null, blinks: 0, livenessPassed: false });
+  const [face, setFace] = useState<FaceInfo>({
+    hasFace: false,
+    descriptor: null,
+    blinks: 0,
+    livenessPassed: false,
+  });
   const [locState, setLocState] = useState<"idle" | "getting" | "ok" | "error">("idle");
-  const [loc, setLoc] = useState<{ lat: number; lng: number; accuracy: number; distance: number } | null>(null);
+  const [loc, setLoc] = useState<{
+    lat: number;
+    lng: number;
+    accuracy: number;
+    distance: number;
+  } | null>(null);
   const [locErrorMsg, setLocErrorMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   // QR: qrPending = tombol scan ditekan, menunggu decode kamera
@@ -124,7 +145,12 @@ export default function AttendancePage() {
           config.officeLat as number,
           config.officeLng as number
         );
-        setLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy, distance });
+        setLoc({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          distance,
+        });
         setLocState(distance <= config.radiusMeters ? "ok" : "error");
       },
       () => {
@@ -199,8 +225,8 @@ export default function AttendancePage() {
   if (user.role === "superadmin") {
     return (
       <Card>
-        <Space direction="vertical" size="middle">
-          <Alert type="info" showIcon message="Superadmin dikecualikan dari absensi." />
+        <Space orientation="vertical" size="middle">
+          <Alert type="info" showIcon title="Superadmin dikecualikan dari absensi." />
           <Button type="primary" onClick={() => router.push("/dashboard/attendance/qr")}>
             Cetak QR Absensi
           </Button>
@@ -212,7 +238,7 @@ export default function AttendancePage() {
   if (loadingData || !status || !config) {
     return (
       <Card>
-        <Spin tip="Memuat..." style={{ display: "block", textAlign: "center", padding: 40 }} />
+        <Spin style={{ display: "block", textAlign: "center", padding: 40 }} />
       </Card>
     );
   }
@@ -221,9 +247,10 @@ export default function AttendancePage() {
   const canAbsenOut = !!status.todayIn && !status.todayOut;
 
   const facePanel = (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       <Text type="secondary">
-        Arahkan wajah ke kamera lalu kedipkan mata. Absen hanya diproses jika wajah cocok dengan wajah terdaftar.
+        Arahkan wajah ke kamera lalu kedipkan mata. Absen hanya diproses jika wajah cocok dengan
+        wajah terdaftar.
       </Text>
       <FaceCamera requireBlink onFaceChange={setFace} />
       <Space wrap>
@@ -252,10 +279,10 @@ export default function AttendancePage() {
   );
 
   const qrPanel = (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       <Text type="secondary">
-        Scan QR statis yang ditempel di tempat absen. Lokasi device dicek terhadap titik kantor — absen hanya
-        diproses jika kamu berada di tempat.
+        Scan QR statis yang ditempel di tempat absen. Lokasi device dicek terhadap titik kantor —
+        absen hanya diproses jika kamu berada di tempat.
       </Text>
       {!qrPending && (
         <Space wrap>
@@ -292,7 +319,8 @@ export default function AttendancePage() {
     {
       title: "Tipe",
       dataIndex: "type",
-      render: (v: string) => (v === "in" ? <Tag color="green">Masuk</Tag> : <Tag color="orange">Pulang</Tag>),
+      render: (v: string) =>
+        v === "in" ? <Tag color="green">Masuk</Tag> : <Tag color="orange">Pulang</Tag>,
     },
     { title: "Metode", dataIndex: "method", render: (v: string) => METHOD_LABEL[v] || v },
     {
@@ -303,7 +331,7 @@ export default function AttendancePage() {
   ];
 
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       <Card>
         <Title level={4}>Absensi — {status.today}</Title>
         <Row gutter={[16, 16]}>
@@ -311,22 +339,25 @@ export default function AttendancePage() {
             <Statistic
               title="Absen Masuk"
               value={status.todayIn ? fmtTime(status.todayIn.timestamp) : "Belum"}
-              valueStyle={status.todayIn ? { color: "#3f8600" } : undefined}
+              styles={{ content: status.todayIn ? { color: "#3f8600" } : undefined }}
             />
           </Col>
           <Col xs={24} sm={8}>
             <Statistic
               title="Absen Pulang"
               value={status.todayOut ? fmtTime(status.todayOut.timestamp) : "Belum"}
-              valueStyle={status.todayOut ? { color: "#cf1322" } : undefined}
+              styles={{ content: status.todayOut ? { color: "#cf1322" } : undefined }}
             />
           </Col>
           <Col xs={24} sm={8}>
             <Statistic
               title="Metode Terakhir"
               value={
-                status.todayOut ? METHOD_LABEL[status.todayOut.method] :
-                status.todayIn ? METHOD_LABEL[status.todayIn.method] : "-"
+                status.todayOut
+                  ? METHOD_LABEL[status.todayOut.method]
+                  : status.todayIn
+                    ? METHOD_LABEL[status.todayIn.method]
+                    : "-"
               }
             />
           </Col>
@@ -335,20 +366,20 @@ export default function AttendancePage() {
 
       {config.locationEnabled && (
         <Card size="small">
-          <Space direction="vertical" size={8}>
+          <Space orientation="vertical" size={8}>
             {locState === "getting" && <Text type="secondary">Mendeteksi lokasi GPS...</Text>}
             {locState === "ok" && loc && (
               <Text type="success">
-                ✓ Di dalam area kantor (jarak {Math.round(loc.distance)} m dari titik kantor, akurasi ±
-                {Math.round(loc.accuracy)} m)
+                ✓ Di dalam area kantor (jarak {Math.round(loc.distance)} m dari titik kantor,
+                akurasi ±{Math.round(loc.accuracy)} m)
               </Text>
             )}
             {locState === "error" && (
-              <Space direction="vertical" size={8}>
+              <Space orientation="vertical" size={8}>
                 <Alert
                   type="error"
                   showIcon
-                  message={
+                  title={
                     locErrorMsg ||
                     (loc
                       ? `Di luar area kantor (jarak ${Math.round(loc.distance)} m dari titik kantor, maks ${config.radiusMeters} m)`
@@ -392,7 +423,9 @@ export default function AttendancePage() {
         <Card size="small">
           <Space>
             <Text type="secondary">QR statis untuk dipajang di tempat absen:</Text>
-            <Button onClick={() => router.push("/dashboard/attendance/qr")}>Lihat / Cetak QR</Button>
+            <Button onClick={() => router.push("/dashboard/attendance/qr")}>
+              Lihat / Cetak QR
+            </Button>
           </Space>
         </Card>
       )}

@@ -1,10 +1,28 @@
 import { apiFetch } from "@/context/auth";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAntdMessage } from "./useAntdMessage";
+
+type Path =
+  | "customers"
+  | "letters"
+  | "dashboard/summary"
+  | "diagnosis-templates"
+  | "letters"
+  | "medical-histories"
+  | "pets"
+  | "products"
+  | "services"
+  | "transactions"
+  | "users"
+  | "auth/me"
+  | "auth/login"
+  | "auth/logout";
+
+export type VetPath = `/api/${Path}`;
 
 export interface VetQueryProps extends RequestInit {
   params?: Record<string, string | number | undefined>;
-  url: string;
+  url: VetPath;
   enabled?: boolean;
 }
 
@@ -39,6 +57,36 @@ export function useVetQuery<TData>({ url, enabled = true, ...options }: VetQuery
 
   return {
     ...query,
+    invalidate,
+  };
+}
+
+export function useVetMutation<TResponse, TRequest>({
+  url,
+  options,
+}: {
+  url: VetPath;
+  options?: { method: "POST" | "PUT" | "DELETE" | "PATCH" };
+}) {
+  const msg = useAntdMessage();
+  const queryClient = useQueryClient();
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: [url] });
+  };
+  const mutation = useMutation<TResponse, any, TRequest>({
+    mutationFn: async (value) => {
+      try {
+        const res = await apiFetch(url, { ...options, body: JSON.stringify(value) });
+        return res as TResponse;
+      } catch (error: any) {
+        msg.error(error.message);
+        throw error;
+      }
+    },
+  });
+
+  return {
+    ...mutation,
     invalidate,
   };
 }

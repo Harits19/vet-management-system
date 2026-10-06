@@ -68,6 +68,7 @@ export interface AuthLoginResponse {
     username: string;
     email: string;
     role: UserRole;
+    doctorSignature?: string;
   };
 }
 

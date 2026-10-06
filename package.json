@@ -11,6 +11,7 @@
     "build": "npm run build --workspace @vet/shared && npm run build --workspace @vet/backend && npm run build --workspace @vet/frontend",
     "dev:frontend": "BACKEND_PROXY_URL=https://wedi-animal-care.ahlabs.my.id npm run dev --workspace @vet/frontend",
     "dev:backend": "npm run dev --workspace @vet/backend",
+    "ssh:tunnel": "ssh -L 27017:127.0.0.1:27017 ubuntu@43.157.225.200",
     "typecheck": "npm run typecheck --workspace @vet/shared && npm run typecheck --workspace @vet/backend",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",

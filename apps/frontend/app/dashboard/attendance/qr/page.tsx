@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Card, Button, Space, Typography, Alert, Spin } from "antd";
-import { useAuth, apiFetch, API_URL } from "../../../context/auth";
+import { useAuth } from "../../../context/auth";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
 import { useAntdModal } from "../../../hooks/useAntdModal";
+import { API_URL, apiFetch } from "@/hooks/useVetQuery";
 
 const { Title, Text } = Typography;
 

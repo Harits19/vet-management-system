@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, Table, Button, Input, Space, Modal, Form, Typography, Row, Col, Tag } from "antd";
 import { Plus, Edit, Trash2 } from "lucide-react";
-import { apiFetch } from "../../context/auth";
+import { apiFetch } from "@/hooks/useVetQuery";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
 import { Service, useGetServices } from "@/api/useGetServices";
@@ -28,14 +28,26 @@ export default function ServicesPage() {
     isLoading: loading,
   } = useGetServices({ page, limit, search, sortBy, order });
 
-  const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
-  const openEdit = (s: Service) => { setEditing(s); form.resetFields(); form.setFieldsValue(s); setModalOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    form.resetFields();
+    setModalOpen(true);
+  };
+  const openEdit = (s: Service) => {
+    setEditing(s);
+    form.resetFields();
+    form.setFieldsValue(s);
+    setModalOpen(true);
+  };
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
       if (editing) {
-        await apiFetch(`/api/services/${editing._id}`, { method: "PUT", body: JSON.stringify(values) });
+        await apiFetch(`/api/services/${editing._id}`, {
+          method: "PUT",
+          body: JSON.stringify(values),
+        });
         msg.success("Jasa diupdate");
       } else {
         await apiFetch("/api/services", { method: "POST", body: JSON.stringify(values) });
@@ -63,19 +75,47 @@ export default function ServicesPage() {
     });
   };
 
-  const fmt = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
+  const fmt = (n: number) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(n);
 
   const columns = [
     { title: "Nama", dataIndex: "name", key: "name", sorter: true },
-    { title: "Deskripsi", dataIndex: "description", key: "description", render: (v?: string) => v || "-" },
-    { title: "Harga", dataIndex: "price", key: "price", sorter: true, render: (v: number) => fmt(v) },
-    { title: "Status", dataIndex: "isActive", key: "active", render: (v: boolean) => v ? <Tag color="green">Aktif</Tag> : <Tag color="red">Nonaktif</Tag> },
     {
-      title: "Aksi", key: "action",
+      title: "Deskripsi",
+      dataIndex: "description",
+      key: "description",
+      render: (v?: string) => v || "-",
+    },
+    {
+      title: "Harga",
+      dataIndex: "price",
+      key: "price",
+      sorter: true,
+      render: (v: number) => fmt(v),
+    },
+    {
+      title: "Status",
+      dataIndex: "isActive",
+      key: "active",
+      render: (v: boolean) =>
+        v ? <Tag color="green">Aktif</Tag> : <Tag color="red">Nonaktif</Tag>,
+    },
+    {
+      title: "Aksi",
+      key: "action",
       render: (_: any, r: Service) => (
         <Space>
           <Button size="small" icon={<Edit size={14} />} onClick={() => openEdit(r)} />
-          <Button size="small" danger icon={<Trash2 size={14} />} onClick={() => handleDelete(r._id)} />
+          <Button
+            size="small"
+            danger
+            icon={<Trash2 size={14} />}
+            onClick={() => handleDelete(r._id)}
+          />
         </Space>
       ),
     },
@@ -87,13 +127,26 @@ export default function ServicesPage() {
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">
-            <Input.Search placeholder="Cari jasa..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={() => setPage(1)} enterButton style={{ width: 250 }} />
+            <Input.Search
+              placeholder="Cari jasa..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onSearch={() => setPage(1)}
+              enterButton
+              style={{ width: 250 }}
+            />
           </Col>
           <Col>
-            <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>Tambah Jasa</Button>
+            <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>
+              Tambah Jasa
+            </Button>
           </Col>
         </Row>
-        <Table dataSource={data?.data ?? []} columns={columns} rowKey="_id" loading={loading}
+        <Table
+          dataSource={data?.data ?? []}
+          columns={columns}
+          rowKey="_id"
+          loading={loading}
           onChange={(_, __, sorter, extra) => {
             // Ant Design memanggil onChange ini JUGA saat pindah halaman (extra.action === "paginate").
             // Tanpa guard, setPage(1) menimpa halaman yang baru dipilih → indikator balik ke 1.
@@ -101,19 +154,35 @@ export default function ServicesPage() {
             const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
             const sb = s?.order ? String(s.field) : "createdAt";
             const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
-            setSortBy(sb); setOrder(od); setPage(1);
+            setSortBy(sb);
+            setOrder(od);
+            setPage(1);
           }}
           pagination={{
             current: page,
             total: data?.meta.total ?? 0,
             pageSize: limit,
-            onChange: (p, l) => { setPage(p); setLimit(l); },
-          }} />
+            onChange: (p, l) => {
+              setPage(p);
+              setLimit(l);
+            },
+          }}
+        />
       </Card>
 
-      <Modal title={editing ? "Edit Jasa" : "Tambah Jasa"} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={500}>
+      <Modal
+        title={editing ? "Edit Jasa" : "Tambah Jasa"}
+        open={modalOpen}
+        onOk={handleSubmit}
+        onCancel={() => setModalOpen(false)}
+        width={500}
+      >
         <Form form={form} layout="vertical">
-          <Form.Item name="name" label="Nama Jasa / Tindakan" rules={[{ required: true, message: "Wajib" }]}>
+          <Form.Item
+            name="name"
+            label="Nama Jasa / Tindakan"
+            rules={[{ required: true, message: "Wajib" }]}
+          >
             <Input placeholder="Contoh: Konsultasi, Vaksinasi, Grooming, Operasi" />
           </Form.Item>
           <Form.Item name="description" label="Deskripsi">

@@ -17,7 +17,7 @@ import {
   AutoComplete,
 } from "antd";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
-import { apiFetch } from "../../context/auth";
+import { apiFetch } from "@/hooks/useVetQuery";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
 import { useRouter } from "next/navigation";

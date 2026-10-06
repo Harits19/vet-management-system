@@ -101,3 +101,26 @@ export interface JwtPayload {
   username: string;
   role: UserRole;
 }
+
+/**
+ * @deprecated use apiFetch from hooks/useVetQuery
+ */
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+export { API_URL };
+
+/**
+ * @deprecated use apiFetch from hooks/useVetQuery
+ */
+export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    ...options,
+  });
+  const json = await res.json();
+  if (!res.ok || json.success === false) {
+    throw new Error(json.message || "Request failed");
+  }
+  return json as T;
+}

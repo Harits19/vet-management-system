@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Card, Table, Tag, Typography, Input, Select, DatePicker, Space, Alert } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
-import { useAuth, apiFetch } from "../../../context/auth";
+import { useAuth } from "../../../context/auth";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
+import { apiFetch } from "@/hooks/useVetQuery";
 
 const { Title, Text } = Typography;
 

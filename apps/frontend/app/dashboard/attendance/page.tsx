@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import {
   Card, Button, Space, Typography, Alert, Table, Tag, Spin, Row, Col, Statistic, Tabs,
 } from "antd";
-import { useAuth, apiFetch } from "../../context/auth";
+import { useAuth } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import FaceCamera, { type FaceInfo } from "../../../components/FaceCamera";
 import QRScanner from "../../../components/QRScanner";
+import { apiFetch } from "@/hooks/useVetQuery";
 
 const { Title, Text } = Typography;
 

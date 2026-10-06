@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, Table, Button, Input, Space, Select, Typography, Tag } from "antd";
 import { Plus, Eye, Trash2 } from "lucide-react";
-import { apiFetch } from "../../context/auth";
+import { apiFetch } from "@/hooks/useVetQuery";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
 import { useRouter } from "next/navigation";
@@ -47,17 +47,47 @@ export default function LettersPage() {
 
   const columns = [
     { title: "Nomor Surat", dataIndex: "letterNumber", key: "letterNumber", sorter: true },
-    { title: "Jenis", dataIndex: "letterType", key: "letterType", render: (t: string) => <Tag color={letterTypeColor(t)}>{letterTypeLabel(t)}</Tag> },
-    { title: "Pasien", key: "pet", render: (_: any, r: LetterRow) => r.petId?.name || "-" },
-    { title: "Pemilik", key: "customer", render: (_: any, r: LetterRow) => r.customerId?.name || "-" },
-    { title: "Tanggal", dataIndex: "date", key: "date", sorter: true, render: (d: string) => dayjs(d).format("DD/MM/YYYY") },
-    { title: "Tanda Tangan", key: "signed", render: (_: any, r: LetterRow) => (r.ownerSignature ? <Tag color="green">Sudah</Tag> : <Tag color="orange">Belum</Tag>) },
     {
-      title: "Aksi", key: "action",
+      title: "Jenis",
+      dataIndex: "letterType",
+      key: "letterType",
+      render: (t: string) => <Tag color={letterTypeColor(t)}>{letterTypeLabel(t)}</Tag>,
+    },
+    { title: "Pasien", key: "pet", render: (_: any, r: LetterRow) => r.petId?.name || "-" },
+    {
+      title: "Pemilik",
+      key: "customer",
+      render: (_: any, r: LetterRow) => r.customerId?.name || "-",
+    },
+    {
+      title: "Tanggal",
+      dataIndex: "date",
+      key: "date",
+      sorter: true,
+      render: (d: string) => dayjs(d).format("DD/MM/YYYY"),
+    },
+    {
+      title: "Tanda Tangan",
+      key: "signed",
+      render: (_: any, r: LetterRow) =>
+        r.ownerSignature ? <Tag color="green">Sudah</Tag> : <Tag color="orange">Belum</Tag>,
+    },
+    {
+      title: "Aksi",
+      key: "action",
       render: (_: any, r: LetterRow) => (
         <Space>
-          <Button size="small" icon={<Eye size={14} />} onClick={() => router.push(`/dashboard/letters/${r._id}`)} />
-          <Button size="small" danger icon={<Trash2 size={14} />} onClick={() => handleDelete(r._id)} />
+          <Button
+            size="small"
+            icon={<Eye size={14} />}
+            onClick={() => router.push(`/dashboard/letters/${r._id}`)}
+          />
+          <Button
+            size="small"
+            danger
+            icon={<Trash2 size={14} />}
+            onClick={() => handleDelete(r._id)}
+          />
         </Space>
       ),
     },
@@ -82,9 +112,16 @@ export default function LettersPage() {
             style={{ width: 260 }}
             options={LETTER_TYPE_OPTIONS}
             value={letterType}
-            onChange={(v) => { setLetterType(v); setPage(1); }}
+            onChange={(v) => {
+              setLetterType(v);
+              setPage(1);
+            }}
           />
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => router.push("/dashboard/letters/create")}>
+          <Button
+            type="primary"
+            icon={<Plus size={16} />}
+            onClick={() => router.push("/dashboard/letters/create")}
+          >
             Buat Surat
           </Button>
         </Space>
@@ -100,13 +137,18 @@ export default function LettersPage() {
             const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
             const sb = s?.order ? String(s.field) : "date";
             const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
-            setSortBy(sb); setOrder(od); setPage(1);
+            setSortBy(sb);
+            setOrder(od);
+            setPage(1);
           }}
           pagination={{
             current: page,
             total: data?.meta.total ?? 0,
             pageSize: limit,
-            onChange: (p, l) => { setPage(p); setLimit(l); },
+            onChange: (p, l) => {
+              setPage(p);
+              setLimit(l);
+            },
           }}
         />
       </Card>

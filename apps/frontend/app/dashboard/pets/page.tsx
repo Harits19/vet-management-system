@@ -1,9 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Table, Button, Input, Space, Modal, Form, Select, Typography, Row, Col, Tag, Empty, DatePicker, InputNumber, Radio, AutoComplete } from "antd";
+import {
+  Card,
+  Table,
+  Button,
+  Input,
+  Space,
+  Modal,
+  Form,
+  Select,
+  Typography,
+  Row,
+  Col,
+  Tag,
+  Empty,
+  DatePicker,
+  InputNumber,
+  Radio,
+  AutoComplete,
+} from "antd";
 import { Plus, Edit, Trash2, UserPlus, Eye } from "lucide-react";
-import { apiFetch } from "../../context/auth";
+import { apiFetch } from "@/hooks/useVetQuery";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
 import { useRouter } from "next/navigation";
@@ -45,7 +63,9 @@ export default function PetsPage() {
       if (field === "kind") setKindOptions(opts);
       else if (field === "breed") setBreedOptions(opts);
       else setNotesOptions(opts);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   const fetchCustomers = async (q = "") => {
@@ -60,7 +80,12 @@ export default function PetsPage() {
     });
   };
 
-  useEffect(() => { fetchCustomers(); fetchDistinct("kind"); fetchDistinct("breed"); fetchDistinct("notes"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    fetchCustomers();
+    fetchDistinct("kind");
+    fetchDistinct("breed");
+    fetchDistinct("notes");
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openCreate = () => {
     setEditing(null);
@@ -91,7 +116,8 @@ export default function PetsPage() {
       const values = await form.validateFields();
       // Input kondisional: hanya satu sumber umur yang boleh terisi
       const useBirthDate = values.ageMode !== "initialAge";
-      const birthDate = useBirthDate && values.birthDate ? dayjs(values.birthDate).toISOString() : undefined;
+      const birthDate =
+        useBirthDate && values.birthDate ? dayjs(values.birthDate).toISOString() : undefined;
       const payload: any = {
         code: values.code || undefined,
         name: values.name,
@@ -105,7 +131,10 @@ export default function PetsPage() {
         initialAge: !useBirthDate && values.initialAge?.value ? values.initialAge : undefined,
       };
       if (editing) {
-        await apiFetch(`/api/pets/${editing._id}`, { method: "PUT", body: JSON.stringify(payload) });
+        await apiFetch(`/api/pets/${editing._id}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
         msg.success("Pasien diupdate");
       } else {
         await apiFetch("/api/pets", { method: "POST", body: JSON.stringify(payload) });
@@ -134,22 +163,52 @@ export default function PetsPage() {
   };
 
   const columns = [
-    { title: "Kode", dataIndex: "code", key: "code", render: (v?: string) => v ? <Tag>{v}</Tag> : "-" },
+    {
+      title: "Kode",
+      dataIndex: "code",
+      key: "code",
+      render: (v?: string) => (v ? <Tag>{v}</Tag> : "-"),
+    },
     { title: "Nama", dataIndex: "name", key: "name", sorter: true },
     { title: "Jenis", dataIndex: "kind", key: "kind", sorter: true },
     { title: "Ras", dataIndex: "breed", key: "breed", render: (v?: string) => v || "-" },
-    { title: "Warna Bulu", dataIndex: "furColor", key: "furColor", render: (v?: string) => v || "-" },
-    { title: "Umur", key: "age", render: (_: any, r: Pet) => computePetAge(r)?.label || "-" },
-    { title: "Gender", dataIndex: "gender", key: "gender", render: (v: string) => v === "male" ? "Jantan" : "Betina" },
-    { title: "Pemilik", key: "owner", render: (_: any, r: Pet) => r.customerId?.name || "-" },
-    { title: "Catatan", dataIndex: "notes", key: "notes", render: (v?: string) => v ? <Tag color="blue">{v}</Tag> : "-" },
     {
-      title: "Aksi", key: "action",
+      title: "Warna Bulu",
+      dataIndex: "furColor",
+      key: "furColor",
+      render: (v?: string) => v || "-",
+    },
+    { title: "Umur", key: "age", render: (_: any, r: Pet) => computePetAge(r)?.label || "-" },
+    {
+      title: "Gender",
+      dataIndex: "gender",
+      key: "gender",
+      render: (v: string) => (v === "male" ? "Jantan" : "Betina"),
+    },
+    { title: "Pemilik", key: "owner", render: (_: any, r: Pet) => r.customerId?.name || "-" },
+    {
+      title: "Catatan",
+      dataIndex: "notes",
+      key: "notes",
+      render: (v?: string) => (v ? <Tag color="blue">{v}</Tag> : "-"),
+    },
+    {
+      title: "Aksi",
+      key: "action",
       render: (_: any, r: Pet) => (
         <Space>
-          <Button size="small" icon={<Eye size={14} />} onClick={() => router.push(`/dashboard/pets/${r._id}`)} />
+          <Button
+            size="small"
+            icon={<Eye size={14} />}
+            onClick={() => router.push(`/dashboard/pets/${r._id}`)}
+          />
           <Button size="small" icon={<Edit size={14} />} onClick={() => openEdit(r)} />
-          <Button size="small" danger icon={<Trash2 size={14} />} onClick={() => handleDelete(r._id)} />
+          <Button
+            size="small"
+            danger
+            icon={<Trash2 size={14} />}
+            onClick={() => handleDelete(r._id)}
+          />
         </Space>
       ),
     },
@@ -161,13 +220,25 @@ export default function PetsPage() {
       <Card>
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col flex="auto">
-            <Input.Search placeholder="Cari pasien..." value={search} onChange={(e) => setSearch(e.target.value)} onSearch={() => setPage(1)} enterButton />
+            <Input.Search
+              placeholder="Cari pasien..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onSearch={() => setPage(1)}
+              enterButton
+            />
           </Col>
           <Col>
-            <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>Tambah Pasien</Button>
+            <Button type="primary" icon={<Plus size={16} />} onClick={openCreate}>
+              Tambah Pasien
+            </Button>
           </Col>
         </Row>
-        <Table dataSource={data?.data ?? []} columns={columns} rowKey="_id" loading={loading}
+        <Table
+          dataSource={data?.data ?? []}
+          columns={columns}
+          rowKey="_id"
+          loading={loading}
           onChange={(_, __, sorter, extra) => {
             // Ant Design memanggil onChange ini JUGA saat pindah halaman (extra.action === "paginate").
             // Tanpa guard, setPage(1) menimpa halaman yang baru dipilih → indikator balik ke 1.
@@ -175,19 +246,33 @@ export default function PetsPage() {
             const s: any = Array.isArray(sorter) ? sorter[0] : sorter;
             const sb = s?.order ? String(s.field) : "createdAt";
             const od = s?.order === "ascend" ? "asc" : s?.order === "descend" ? "desc" : "desc";
-            setSortBy(sb); setOrder(od); setPage(1);
+            setSortBy(sb);
+            setOrder(od);
+            setPage(1);
           }}
           pagination={{
             current: page,
             total: data?.meta.total ?? 0,
             pageSize: limit,
-            onChange: (p, l) => { setPage(p); setLimit(l); },
-          }} />
+            onChange: (p, l) => {
+              setPage(p);
+              setLimit(l);
+            },
+          }}
+        />
       </Card>
 
-      <Modal title={editing ? "Edit Pasien" : "Tambah Pasien"} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={500}>
+      <Modal
+        title={editing ? "Edit Pasien" : "Tambah Pasien"}
+        open={modalOpen}
+        onOk={handleSubmit}
+        onCancel={() => setModalOpen(false)}
+        width={500}
+      >
         <Form form={form} layout="vertical">
-          <Typography.Title level={5} style={{ marginBottom: 8 }}>Data Pasien</Typography.Title>
+          <Typography.Title level={5} style={{ marginBottom: 8 }}>
+            Data Pasien
+          </Typography.Title>
           <Form.Item name="code" label="Kode Pasien">
             <Input placeholder="Contoh: KCG-2026-0001 (opsional)" />
           </Form.Item>
@@ -198,28 +283,47 @@ export default function PetsPage() {
             <AutoComplete
               options={kindOptions}
               placeholder="Pilih atau ketik jenis hewan (Kucing, Anjing...)"
-              filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
+              filterOption={(input, option) =>
+                (option?.value || "").toLowerCase().includes(input.toLowerCase())
+              }
             />
           </Form.Item>
 
-          <Typography.Title level={5} style={{ marginBottom: 8 }}>Signalment</Typography.Title>
+          <Typography.Title level={5} style={{ marginBottom: 8 }}>
+            Signalment
+          </Typography.Title>
           <Form.Item name="breed" label="Ras Hewan">
             <AutoComplete
               options={breedOptions}
               placeholder="Pilih atau ketik ras (Persian, Labrador...)"
-              filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
+              filterOption={(input, option) =>
+                (option?.value || "").toLowerCase().includes(input.toLowerCase())
+              }
             />
           </Form.Item>
           <Form.Item name="furColor" label="Warna Bulu">
             <Input placeholder="Warna bulu, contoh: Oren, Putih (opsional)" />
           </Form.Item>
-          <Form.Item name="gender" label="Jenis Kelamin" rules={[{ required: true, message: "Wajib" }]}>
-            <Select options={[{ value: "male", label: "Jantan" }, { value: "female", label: "Betina" }]} />
+          <Form.Item
+            name="gender"
+            label="Jenis Kelamin"
+            rules={[{ required: true, message: "Wajib" }]}
+          >
+            <Select
+              options={[
+                { value: "male", label: "Jantan" },
+                { value: "female", label: "Betina" },
+              ]}
+            />
           </Form.Item>
           <Form.Item name="ageMode" label="Sumber Umur">
             <Radio.Group optionType="button" buttonStyle="solid" style={{ width: "100%" }}>
-              <Radio.Button value="birthDate" style={{ width: "50%", textAlign: "center" }}>📅 Tanggal Lahir</Radio.Button>
-              <Radio.Button value="initialAge" style={{ width: "50%", textAlign: "center" }}>🐣 Umur Awal</Radio.Button>
+              <Radio.Button value="birthDate" style={{ width: "50%", textAlign: "center" }}>
+                📅 Tanggal Lahir
+              </Radio.Button>
+              <Radio.Button value="initialAge" style={{ width: "50%", textAlign: "center" }}>
+                🐣 Umur Awal
+              </Radio.Button>
             </Radio.Group>
           </Form.Item>
           {ageMode !== "initialAge" ? (
@@ -228,11 +332,25 @@ export default function PetsPage() {
             </Form.Item>
           ) : (
             <>
-              <Form.Item name={["initialAge", "value"]} label="Umur Awal" rules={[{ required: true, message: "Wajib" }]}>
+              <Form.Item
+                name={["initialAge", "value"]}
+                label="Umur Awal"
+                rules={[{ required: true, message: "Wajib" }]}
+              >
                 <InputNumber style={{ width: "100%" }} min={0} placeholder="Contoh: 6" />
               </Form.Item>
-              <Form.Item name={["initialAge", "unit"]} label="Satuan Umur Awal" rules={[{ required: true, message: "Pilih satuan" }]}>
-                <Select placeholder="Pilih satuan" options={[{ value: "month", label: "Bulan" }, { value: "year", label: "Tahun" }]} />
+              <Form.Item
+                name={["initialAge", "unit"]}
+                label="Satuan Umur Awal"
+                rules={[{ required: true, message: "Pilih satuan" }]}
+              >
+                <Select
+                  placeholder="Pilih satuan"
+                  options={[
+                    { value: "month", label: "Bulan" },
+                    { value: "year", label: "Tahun" },
+                  ]}
+                />
               </Form.Item>
             </>
           )}
@@ -240,11 +358,17 @@ export default function PetsPage() {
             <AutoComplete
               options={notesOptions}
               placeholder="Ciri khas / tanda khusus hewan (opsional)"
-              filterOption={(input, option) => (option?.value || "").toLowerCase().includes(input.toLowerCase())}
+              filterOption={(input, option) =>
+                (option?.value || "").toLowerCase().includes(input.toLowerCase())
+              }
             />
           </Form.Item>
 
-          <Form.Item name="customerId" label="Pemilik" rules={[{ required: true, message: "Pilih pemilik" }]}>
+          <Form.Item
+            name="customerId"
+            label="Pemilik"
+            rules={[{ required: true, message: "Pilih pemilik" }]}
+          >
             <Select
               showSearch
               placeholder="Cari pemilik..."
@@ -252,11 +376,15 @@ export default function PetsPage() {
               filterOption={false}
               options={customers.map((c) => ({ value: c._id, label: c.name }))}
               notFoundContent={
-                <Empty
-                  description="Tidak ada pemilik"
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                >
-                  <Button type="link" icon={<UserPlus size={14} />} onClick={() => { setModalOpen(false); router.push("/dashboard/customers"); }}>
+                <Empty description="Tidak ada pemilik" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+                  <Button
+                    type="link"
+                    icon={<UserPlus size={14} />}
+                    onClick={() => {
+                      setModalOpen(false);
+                      router.push("/dashboard/customers");
+                    }}
+                  >
                     Tambah Pemilik Baru
                   </Button>
                 </Empty>

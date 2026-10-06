@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { Card, Table, Button, Input, Space, Modal, Form, Typography, Row, Col, Tag, AutoComplete } from "antd";
 import { Plus, Edit, Trash2 } from "lucide-react";
-import { apiFetch } from "../../context/auth";
 import { useAntdMessage } from "../../hooks/useAntdMessage";
 import { useAntdModal } from "../../hooks/useAntdModal";
 import { Product, useGetProducts } from "@/api/useGetProducts";
+import { apiFetch } from "@/hooks/useVetQuery";
 
 const { Title } = Typography;
 

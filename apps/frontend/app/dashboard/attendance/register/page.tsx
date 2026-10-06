@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, Button, Space, Typography, Alert } from "antd";
-import { useAuth, apiFetch } from "../../../context/auth";
+import { useAuth } from "../../../context/auth";
 import { useAntdMessage } from "../../../hooks/useAntdMessage";
 import FaceCamera, { type FaceInfo } from "../../../../components/FaceCamera";
+import { apiFetch } from "@/hooks/useVetQuery";
 
 const { Title, Text } = Typography;
 

@@ -26,23 +26,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-
-export { API_URL };
-
-export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    credentials: "include",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    ...options,
-  });
-  const json = await res.json();
-  if (!res.ok || json.success === false) {
-    throw new Error(json.message || "Request failed");
-  }
-  return json as T;
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 

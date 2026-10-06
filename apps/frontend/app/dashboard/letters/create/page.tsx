@@ -180,7 +180,7 @@ export default function CreateLetterPage() {
               type="info"
               showIcon
               style={{ marginBottom: 16 }}
-              message={`Pemilik: ${selectedPet.customerId.name}${selectedPet.customerId.whatsapp ? ` (${selectedPet.customerId.whatsapp})` : ""}`}
+              title={`Pemilik: ${selectedPet.customerId.name}${selectedPet.customerId.whatsapp ? ` (${selectedPet.customerId.whatsapp})` : ""}`}
             />
           )}
 

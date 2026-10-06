@@ -79,7 +79,7 @@ export default function ProfilePage() {
 
       <Card style={{ maxWidth: 640 }}>
         <Form form={form} layout="vertical" autoComplete="off">
-          <Divider orientation="left" plain>
+          <Divider orientation="horizontal" plain>
             <Space>
               <FileSignature size={14} /> Data Akun
             </Space>
@@ -124,7 +124,7 @@ export default function ProfilePage() {
               type={user.doctorSignature ? "success" : "info"}
               showIcon
               style={{ marginBottom: 24 }}
-              message={
+              title={
                 user.doctorSignature
                   ? "Tanda tangan dokter tersimpan."
                   : "Belum ada tanda tangan dokter tersimpan."
@@ -137,7 +137,7 @@ export default function ProfilePage() {
             />
           )}
 
-          <Divider orientation="left" plain>
+          <Divider orientation="horizontal" plain>
             <Space>
               <KeyRound size={14} /> Ganti Password
             </Space>

@@ -180,14 +180,14 @@ export default function FaceCamera({ requireBlink = false, onFaceChange }: FaceC
       </div>
       {error ? (
         <Space orientation="vertical" size={8} style={{ width: "100%", marginTop: 8 }}>
-          <Alert type="error" showIcon message={error} />
+          <Alert type="error" showIcon title={error} />
           <Button onClick={() => setAttempt((a) => a + 1)}>Coba Lagi</Button>
         </Space>
       ) : (
         <Alert
           type={requireBlink ? "info" : "success"}
           showIcon
-          message={ready ? status : "Memuat model wajah (sekali, ±2 MB)... "}
+          title={ready ? status : "Memuat model wajah (sekali, ±2 MB)... "}
           style={{ marginTop: 8 }}
         />
       )}

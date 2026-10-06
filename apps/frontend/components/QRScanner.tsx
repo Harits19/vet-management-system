@@ -113,11 +113,11 @@ export default function QRScanner({ onDecode, onError }: QRScannerProps) {
       </div>
       {error ? (
         <Space orientation="vertical" size={8} style={{ width: "100%", marginTop: 8 }}>
-          <Alert type="error" showIcon message={error} />
+          <Alert type="error" showIcon title={error} />
           <Button onClick={() => setAttempt((a) => a + 1)}>Coba Lagi</Button>
         </Space>
       ) : (
-        <Alert type="info" showIcon message={status} style={{ marginTop: 8 }} />
+        <Alert type="info" showIcon title={status} style={{ marginTop: 8 }} />
       )}
     </div>
   );

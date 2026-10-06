@@ -40,9 +40,15 @@ export interface VetQueryProps extends RequestInit {
   params?: Record<string, string | number | undefined>;
   url: VetPath;
   enabled?: boolean;
+  showError?: boolean;
 }
 
-export function useVetQuery<TData>({ url, enabled = true, ...options }: VetQueryProps) {
+export function useVetQuery<TData>({
+  url,
+  enabled = true,
+  showError = true,
+  ...options
+}: VetQueryProps) {
   const params = new URLSearchParams();
   if (options.params) {
     Object.entries(options.params).forEach(([key, value]) => {
@@ -65,7 +71,9 @@ export function useVetQuery<TData>({ url, enabled = true, ...options }: VetQuery
         const res = await apiFetch(finalURL, options);
         return res as TData;
       } catch (error: any) {
-        msg.error(error.message);
+        if (showError) {
+          msg.error(error.message);
+        }
         throw error;
       }
     },

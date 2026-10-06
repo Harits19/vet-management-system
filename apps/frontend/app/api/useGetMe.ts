@@ -17,5 +17,6 @@ export interface GetMeResponse {
 export function useGetMe() {
   return useVetQuery<GetMeResponse>({
     url: "/api/auth/me",
+    showError: false,
   });
 }

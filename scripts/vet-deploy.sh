@@ -196,7 +196,10 @@ cmd_cert() {
     ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
     local san="DNS:${domain},DNS:localhost,IP:127.0.0.1"
     [ -n "$ip" ] && san="${san},IP:${ip}"
-    mkdir -p ssl
+    mkdir -p ssl 2>/dev/null || true
+    if [ ! -d ssl ] || [ ! -w ssl ]; then
+      die "ssl/ tidak bisa ditulis user ini — biasanya karena dibuat Docker sebagai root. Perbaiki: sudo chown -R \"\$USER\": ssl certbot-webroot"
+    fi
     openssl req -x509 -nodes -newkey rsa:2048 -days "$SELF_SIGNED_DAYS" \
       -keyout ssl/privkey.pem -out ssl/fullchain.pem \
       -subj "/CN=${domain}" -addext "subjectAltName=${san}" >/dev/null 2>&1

@@ -1,6 +1,7 @@
 # Deploy
 
 Dokumen lengkap (on-premise, LAN, backup, troubleshooting): `docs/on-premise-deployment.md`.
+Versi ringkas 6 perintah: `docs/deploy-quickstart.md`.
 
 Jalur cepat — VPS + domain publik (Let's Encrypt):
 

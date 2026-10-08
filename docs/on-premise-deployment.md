@@ -4,6 +4,8 @@ Panduan menjalankan Vet Management System di server sendiri (on-premise / VPS / 
 memakai Docker. Semua langkah bisa diselesaikan tanpa menyentuh kode: satu file `.env`,
 satu helper `scripts/vet-deploy.sh`, dan `docker compose`.
 
+Instalasi cepat 6 perintah: `docs/deploy-quickstart.md`.
+
 Target pembaca: operator/IT yang memasang dan merawat instalasi, bukan developer.
 
 ---

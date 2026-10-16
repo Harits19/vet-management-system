@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "../context/auth";
+import { apiFetch } from "./useVetQuery";
 
 export interface StoreInfo {
   name: string;

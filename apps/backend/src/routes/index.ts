@@ -11,3 +11,4 @@ export { default as diagnosisTemplateRoutes } from "./diagnosis-template.route.j
 export { default as letterRoutes } from "./letter.route.js";
 export { default as userRoutes } from "./user.route.js";
 export { default as attendanceRoutes } from "./attendance.route.js";
+export { default as whatsappRoutes } from "./whatsapp.route.js";

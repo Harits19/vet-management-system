@@ -6,11 +6,22 @@ import { connectDB } from "./config/database.js";
 import { seedDefaultUsers } from "./services/auth.service.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import {
-  authRoutes, customerRoutes, petRoutes, productRoutes, serviceRoutes,
-  dashboardRoutes, medicalHistoryRoutes, transactionRoutes,
-  syncRoutes, diagnosisTemplateRoutes, letterRoutes, userRoutes, attendanceRoutes,
+  authRoutes,
+  customerRoutes,
+  petRoutes,
+  productRoutes,
+  serviceRoutes,
+  dashboardRoutes,
+  medicalHistoryRoutes,
+  transactionRoutes,
+  syncRoutes,
+  diagnosisTemplateRoutes,
+  letterRoutes,
+  userRoutes,
+  attendanceRoutes,
 } from "./routes/index.js";
 import { frontendOrigins } from "./config/auth.js";
+import { initWhatsapp } from "./services/whatsapp.service.js";
 
 const app = express();
 
@@ -53,8 +64,9 @@ app.use(errorHandler);
 
 // Start
 async function main() {
-  await connectDB();
-  await seedDefaultUsers();
+  initWhatsapp();
+  // await connectDB();
+  // await seedDefaultUsers();
   app.listen(env.PORT, () => console.log(`🚀 Server running on http://localhost:${env.PORT}`));
 }
 main().catch(console.error);

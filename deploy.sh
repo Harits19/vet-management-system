@@ -14,7 +14,12 @@ command -v docker >/dev/null 2>&1 || {
 }
 
 if [ ! -s ssl/fullchain.pem ]; then
-  if [ "$(uname -s)" = "Linux" ]; then
+  if [ "${SELF_SIGNED:-0}" = "1" ]; then
+    echo "== terbitkan sertifikat self-signed (on-prem tanpa internet)"
+    bash scripts/vet-deploy.sh cert self-signed
+  elif [ "${SKIP_HTTPS:-0}" = "1" ]; then
+    echo "⚠️  SKIP_HTTPS=1 — sertifikat dilewati. nginx butuh ssl/fullchain.pem sebelum start."
+  elif [ "$(uname -s)" = "Linux" ]; then
     echo "== terbitkan sertifikat HTTPS"
     sudo bash setup-https.sh
   else

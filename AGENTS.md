@@ -56,6 +56,21 @@ npm run dev                    # predev (mongo-init.js) → backend :3001 → fr
 
 Frontend dev mem-proxy `/api` → `localhost:3001` (rewrite di `apps/frontend/next.config.js`).
 
+## Struktur root
+
+Hanya file yang dipakai build/operasional. Semua dokumentasi ada di `AGENTS.md` ini.
+
+| Path | Fungsi |
+| ---- | ------ |
+| `apps/`, `packages/` | kode aplikasi |
+| `deploy.sh`, `install-docker.sh`, `setup-https.sh`, `renew-ssl.sh` | deploy & HTTPS |
+| `docker-compose.yml`, `nginx.conf`, `mongo-init.js` | infrastruktur |
+| `restore-mongo.sh` | restore dump manual (folder `backup/` tidak di-commit, isi sendiri) |
+| `scripts/seed-diagnosis-templates.mjs` | seed template diagnosis (butuh data master service/product) |
+
+Data mentah (dump MongoDB, CSV/XLSX pet clinic lama, PDF/epub referensi obat, hasil scraping)
+dan catatan pengembangan historis sengaja **tidak** disimpan di repo.
+
 ## Produksi
 
 - VPS `ubuntu@43.157.225.200`, repo di `/home/ubuntu/vet-management-system`,

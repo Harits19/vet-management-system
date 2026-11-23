@@ -8,6 +8,5 @@ dist/
 ssl/
 ssl-dev/
 certbot-webroot/
-backup/
 
 apps/backend/.wwebjs_*
